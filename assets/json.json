@@ -35,30 +35,33 @@
         "year": 1992,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934385/unnamed_upomme.webp",
         "tracks": [
-          { "title": "Title Theme", "url": "", "shufle": "false" },
-          { "title": "Emerald Hill Zone", "url": "", "shufle": "true" },
-          { "title": "Chemical Plant Zone", "url": "", "shufle": "true" },
+          { "title": "Title Theme", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065974/Title_Theme_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_ihxpes.mp4", "shufle": "false" },
+          { "title": "Emerald Hill Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065980/Emerald_Hill_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_cego8o.mp4", "shufle": "true", "crossmusic": [
+            { "title": "2P", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065979/Emerald_Hill_Zone_2P_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_ptmell.mp4" }
+          ] },
+          { "title": "Chemical Plant Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065979/Chemical_Plant_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_wnc64a.mp4", "shufle": "true" },
           { "title": "Aquatic Ruin Zone", "url": "", "shufle": "true" },
-          { "title": "Casino Night Zone", "url": "", "shufle": "true" },
-          { "title": "Hill Top Zone", "url": "", "shufle": "true" },
-          { "title": "Mystic Cave Zone", "url": "", "shufle": "true" },
+          { "title": "Casino Night Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065981/Casino_Night_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_siptlf.mp4", "shufle": "true", "crossmusic": [
+            { "title": "2P", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065979/Casino_Night_Zone_2P_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_qquxmg.mp4" }
+          ] },
+          { "title": "Hill Top Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065977/Hill_Top_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_skdzrl.mp4", "shufle": "true" },
+          { "title": "Mystic Cave Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065976/Mystic_Cave_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_bpgxzj.mp4", "shufle": "true", "crossmusic": [
+            { "title": "2P", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065976/Mystic_Cave_Zone_2P_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_dzrzwh.mp4" }
+          ] },
           { "title": "Oil Ocean Zone", "url": "", "shufle": "true" },
-          { "title": "Metropolis Zone", "url": "", "shufle": "true" },
-          { "title": "Sky Chase Zone", "url": "", "shufle": "true" },
-          { "title": "Wing Fortress Zone", "url": "", "shufle": "true" },
-          { "title": "Death Egg Zone", "url": "", "shufle": "true" },
-          { "title": "Boss", "url": "", "shufle": "false" },
+          { "title": "Metropolis Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065976/Metropolis_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_pxas6z.mp4", "shufle": "true" },
+          { "title": "Sky Chase Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065975/Sky_Chase_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_hsxcwt.mp4", "shufle": "true" },
+          { "title": "Wing Fortress Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065975/Wing_Fortress_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_az1a8k.mp4", "shufle": "true" },
+          { "title": "Death Egg Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065978/Death_Egg_Zone_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_rnr9as.mp4", "shufle": "true" },
+          { "title": "Boss", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065981/Boss_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_hdlwgy.mp4", "shufle": "false" },
           { "title": "Death Egg Robot", "url": "", "shufle": "false" },
           { "title": "Ending Stage", "url": "", "shufle": "false" },
           { "title": "Super Sonic", "url": "", "shufle": "false" },
-          { "title": "Invincibility", "url": "", "shufle": "false" },
-          { "title": "Options", "url": "", "shufle": "false" },
-          { "title": "Emerald Hill Zone (2P)", "url": "", "shufle": "true" },
-          { "title": "Mystic Cave Zone (2P)", "url": "", "shufle": "true" },
-          { "title": "Casino Night Zone (2P)", "url": "", "shufle": "true" },
-          { "title": "Results", "url": "", "shufle": "false" },
-          { "title": "Credits", "url": "", "shufle": "false" },
-          { "title": "Hidden Palace Zone (Unused)", "url": "", "shufle": "true" }
+          { "title": "Invincibility", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065977/Invincibility_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_nboxxh.mp4", "shufle": "false" },
+          { "title": "Options", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065975/Options_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_aj9jfr.mp4", "shufle": "false" },
+          { "title": "Results", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065980/Results_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_c52iok.mp4", "shufle": "false" },
+          { "title": "Credits", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065982/Credits_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_u63dc5.mp4", "shufle": "false" },
+          { "title": "Hidden Palace Zone (Unused)", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761065978/Hidden_Palace_Zone_Unused_-_Sonic_the_Hedgehog_2_OST_128kbit_AAC_sjpikr.mp4", "shufle": "true" }
         ]
       },
       {
@@ -208,32 +211,32 @@
         "year": 2005,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934348/MV5BOGFkYzg4NmMtMWU3MC00YTE3LWEzNDMtOWZlNjI1ZTcxMzU1XkEyXkFqcGc._V1__esouw5.jpg",
         "tracks": [
-          { "title": "Right There, Ride On", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934904/Right_There_Ride_On_nf7hgz.mp4", "shufle": "true", "alternatives": [
+          { "title": "Right There, Ride On", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934904/Right_There_Ride_On_nf7hgz.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934881/Right_There_Ride_On_Blazy_Mix_jgpkve.mp4" }
           ] },
-          { "title": "Back 2 Back", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934913/Back_2_Back_eiamxf.mp4", "shufle": "true", "alternatives": [
+          { "title": "Back 2 Back", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934913/Back_2_Back_eiamxf.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934892/Back_2_Back_Blazy_Mix_qhie6y.mp4" }
           ] },
-          { "title": "What U Need", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934930/What_U_Need_aywaiu.mp4", "shufle": "true", "alternatives": [
+          { "title": "What U Need", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934930/What_U_Need_aywaiu.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934895/What_U_Need_Blazy_Mix_rdpckn.mp4" },
             { "title": "Remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934872/What_U_Need_is_Remix_zqjmdr.mp4"}
           ] },
-          { "title": "Jeh Jeh Rocket", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934933/Jeh_Jeh_Rocket_rvhzfg.mp4", "shufle": "true", "alternatives": [
+          { "title": "Jeh Jeh Rocket", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934933/Jeh_Jeh_Rocket_rvhzfg.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934901/Jeh_Jeh_Rocket_Blazy_Mix_f7pq1d.mp4" }
           ] },
-          { "title": "Ska Cha Cha", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934916/Ska_Cha_Cha_qtuqte.mp4", "shufle": "true", "alternatives": [
+          { "title": "Ska Cha Cha", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934916/Ska_Cha_Cha_qtuqte.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934907/Ska_Cha_Cha_Blazy_Mix_aafx1y.mp4" }
           ] },
-          { "title": "Vela-Nova", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934921/Vela-Nova_kcgivr.mp4", "shufle": "true", "alternatives": [
+          { "title": "Vela-Nova", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934921/Vela-Nova_kcgivr.mp4", "shufle": "true", "crossmusic": [
             { "title": "Part 2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934860/Vela-Nova_Part_2_nn1m80.mp4" }
           ] },
-          { "title": "Wrapped in Black", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934910/Wrapped_in_Black_ofqguc.mp4", "shufle": "true", "alternatives": [
+          { "title": "Wrapped in Black", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934910/Wrapped_in_Black_ofqguc.mp4", "shufle": "true", "crossmusic": [
             { "title": "Part 2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934869/Wrapped_in_Black_Part_2_pehp0f.mp4" }
           ] },
-          { "title": "A New Day", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934924/A_New_Day_eycmab.mp4", "shufle": "true", "alternatives": [
+          { "title": "A New Day", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934924/A_New_Day_eycmab.mp4", "shufle": "true", "crossmusic": [
             { "title": "Intermission", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934866/A_New_Day_Intermission_-_Sonic_Rush_OST_160kbit_Opus_gu56qm.ogg" }
           ] },
-          { "title": "Groove Rush", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934846/Groove_Rush_1_ltqqfm.mp4", "shufle": "false", "alternatives": [
+          { "title": "Groove Rush", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934846/Groove_Rush_1_ltqqfm.mp4", "shufle": "false", "crossmusic": [
             { "title": "Rush #2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934841/Groove_Rush_2_gyjs4s.mp4" },
             { "title": "Rush #3", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934833/Groove_Rush_3_kun59g.mp4" },
             { "title": "Rush #4", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934838/Groove_Rush_4_cggdt2.mp4" },
@@ -242,20 +245,20 @@
             { "title": "Rush #8", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934830/Groove_Rush_8_l2rixp.mp4" }
           ] },
           { "title": "Enemy or Friend", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934844/Enemy_or_Friend_aak652.mp4", "shufle": "true" },
-          { "title": "Ethno Circus", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934890/Ethno_Circus_x0tbut.mp4", "shufle": "true", "alternatives": [
+          { "title": "Ethno Circus", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934890/Ethno_Circus_x0tbut.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934898/Ethno_Circus_Blazy_Mix_wh0gvd.mp4" }
           ]},
-          { "title": "Metal Scratchin’", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934875/Metal_Scratchin_tfnpqb.mp4", "shufle": "true", "alternatives": [
+          { "title": "Metal Scratchin’", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934875/Metal_Scratchin_tfnpqb.mp4", "shufle": "true", "crossmusic": [
             { "title": "Part 2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934855/Metal_Scratchin_Part_2_r3v2gn.mp4" }
           ] },
           { "title": "I Wanna Breathe", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934852/I_Wanna_Breathe_c3kfct.mp4", "shufle": "false" },
-          { "title": "Get Edgy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934878/Get_Edgy_leerkn.mp4", "shufle": "true", "alternatives": [
+          { "title": "Get Edgy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934878/Get_Edgy_leerkn.mp4", "shufle": "true", "crossmusic": [
             { "title": "Blazy", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934884/Get_Edgy_Blazy_Mix_mbahwc.mp4" }
           ] },
-          { "title": "Bomber Barbara", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934887/Bomber_Barbara_rxe5rs.mp4", "shufle": "true", "alternatives": [
+          { "title": "Bomber Barbara", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934887/Bomber_Barbara_rxe5rs.mp4", "shufle": "true", "crossmusic": [
             { "title": "Part 2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934858/Bomber_Barbara_Part_2_ri2xbv.mp4" }
           ] },
-          { "title": "Raisin’ Me Up", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934919/Raisin_Me_Up_aqh21g.mp4", "shufle": "false", "alternatives": [
+          { "title": "Raisin’ Me Up", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934919/Raisin_Me_Up_aqh21g.mp4", "shufle": "false", "crossmusic": [
             { "title": "Prologue", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934863/Raisin_Me_Up_Prologue_kfhvjg.mp4" }
           ]},
           { "title": "Medley Rush", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760934928/Medley_Rush_o0ydal.mp4", "shufle": "false" }
@@ -352,31 +355,31 @@
         "year": 2001,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934372/sonic-adventure-2-pc-jeu-steam-cover_sc24fy.jpg",
         "tracks": [
-          { "title": "It Doesn’t Matter", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955670/It_Doesn_t_Matter_n80rso.mp4", "shufle": "false", "alternatives": [
+          { "title": "It Doesn’t Matter", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955670/It_Doesn_t_Matter_n80rso.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955670/It_Doesn_t_Matter_Instrumental_qagyjl.mp4" }
           ] },
-          { "title": "Believe in Myself", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955713/Believe_in_Myself_sfw747.mp4", "shufle": "false", "alternatives": [
+          { "title": "Believe in Myself", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955713/Believe_in_Myself_sfw747.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955714/Believe_in_Myself_Instrumental_n1lfgi.mp4" }
           ] },
-          { "title": "Unknown From M.E.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955665/Unknown_From_M.E._vmnm55.mp4", "shufle": "false", "alternatives": [
+          { "title": "Unknown From M.E.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955665/Unknown_From_M.E._vmnm55.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955719/Unknown_From_M.E._Instrumental_bzfk4z.mp4" }
           ] },
-          { "title": "Fly in the Freedom", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955718/Fly_in_the_Freedom_dt0cgy.mp4", "shufle": "false", "alternatives": [
+          { "title": "Fly in the Freedom", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955718/Fly_in_the_Freedom_dt0cgy.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955717/Fly_in_the_Freedom_Instrumental_zdcaml.mp4" }
           ] },
-          { "title": "Throw It All Away", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955720/Throw_It_All_Away_j4ggam.mp4", "shufle": "false", "alternatives": [
+          { "title": "Throw It All Away", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955720/Throw_It_All_Away_j4ggam.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955720/Throw_It_All_Away_Instrumental_ry1yvk.mp4" }
           ] },
-          { "title": "E.G.G.M.A.N.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955673/E.G.G.M.A.N._cvcxtp.mp4", "shufle": "false", "alternatives": [
+          { "title": "E.G.G.M.A.N.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955673/E.G.G.M.A.N._cvcxtp.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955674/E.G.G.M.A.N._Instrumental_a2ybk8.mp4" }
           ] },
           { "title": "My Sweet Passion", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955717/My_Sweet_Passion_dmwmyo.mp4", "shufle": "false" },
-          { "title": "SA2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955654/SA2_Main_Riff_kzbf0a.mp4", "shufle": "false", "alternatives": [
+          { "title": "SA2", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955654/SA2_Main_Riff_kzbf0a.mp4", "shufle": "false", "crossmusic": [
             { "title": "Ver B.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955654/SA2_Ver.B_zttvge.mp4" },
             { "title": "Ver C.",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955655/SA2_Ver.C_zi1vw6.mp4" }
           ] },
           { "title": "Let’s Make It!", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955659/Let_s_Make_It_mmldp4.mp4", "shufle": "false" },
-          { "title": "Escape From the City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955673/Escape_From_the_City_City_Escape_gcnd9j.mp4", "shufle": "true", "alternatives": [
+          { "title": "Escape From the City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955673/Escape_From_the_City_City_Escape_gcnd9j.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955674/Escape_From_the_City_Instrumental_hrplxu.mp4" }
           ] },
           { "title": "The Mad Convoy Race", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955653/The_Mad_Convoy_Race_City_Escape_jacap6.mp4", "shufle": "true" },
@@ -432,7 +435,7 @@
           { "title": "Deep Inside Of...", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955681/Deep_Inside_Of..._Cannon_s_Core_Ver.3_vm4st9.mp4", "shufle": "true" },
           { "title": "Supporting Me", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955664/Supporting_Me_w0cig6.mp4", "shufle": "false" },
           { "title": "Madness", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955657/Madness_xwl987.mp4", "shufle": "false" },
-          { "title": "Live and Learn", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955717/Live_and_Learn_g4tykp.mp4", "shufle": "false", "alternatives": [
+          { "title": "Live and Learn", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955717/Live_and_Learn_g4tykp.mp4", "shufle": "false", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955717/Live_and_Learn_Instrumental_ot5ydb.mp4" }
           ] },
           { "title": "The Last Scene", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760955655/The_Last_Scene_iej8nj.mp4", "shufle": "false" }
@@ -990,23 +993,23 @@
         "year": 1997,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934380/sonicr-1650496863615_vauqe6.webp",
         "tracks": [
-          { "title": "Super Sonic Racing", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933402/Super_Sonic_Racing_qelh9y.mp4", "shufle": "true", "alternatives": [
+          { "title": "Super Sonic Racing", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933402/Super_Sonic_Racing_qelh9y.mp4", "shufle": "true", "crossmusic": [
             { "title": "Title Ver.", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933399/Super_Sonic_Racing_Title_Ver._pqkg9a.mp4" },
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933408/Super_Sonic_Racing_Instrumental_tcpgps.mp4"}
           ] },
-          { "title": "Can You Feel the Sunshine", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933430/Can_You_Feel_the_Sunshine_sdp9s5.mp4", "shufle": "true", "alternatives": [
+          { "title": "Can You Feel the Sunshine", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933430/Can_You_Feel_the_Sunshine_sdp9s5.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933428/Can_You_Feel_the_Sunshine_Instrumental_mjdqch.mp4" }
           ] },
-          { "title": "Living in the City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933421/Living_in_the_City_zw4jia.mp4", "shufle": "true", "alternatives": [
+          { "title": "Living in the City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933421/Living_in_the_City_zw4jia.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933406/Living_in_the_City_Instrumental_oiawob.mp4" }
           ] },
-          { "title": "Back in Time", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933425/Back_in_Time_mukyhv.mp4", "shufle": "true", "alternatives": [
+          { "title": "Back in Time", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933425/Back_in_Time_mukyhv.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933423/Back_in_Time_Instrumental_sbxigq.mp4" }
           ] },
-          { "title": "Work It Out", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933413/Work_It_Out_uqxa9f.mp4", "shufle": "true", "alternatives": [
+          { "title": "Work It Out", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933413/Work_It_Out_uqxa9f.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933411/Work_It_Out_Instrumental_toqmgg.mp4" }
           ] },
-          { "title": "Diamond in the Sky", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933419/Diamond_in_the_Sky_cya4gj.mp4", "shufle": "true", "alternatives": [
+          { "title": "Diamond in the Sky", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933419/Diamond_in_the_Sky_cya4gj.mp4", "shufle": "true", "crossmusic": [
             { "title": "Instrumental", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933416/Diamond_in_the_Sky_Instrumental_oumeye.mp4" }
           ] },
           { "title": "Options Screen", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760933398/Options_Screen_utuejb.mp4", "shufle": "false" },
@@ -1078,7 +1081,7 @@
         "year": 2010,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934388/wave-master-sonic-free-riders-original-soundtrack-break-free-cd-game_xldm0d.jpg",
         "tracks": [
-          { "title": "Free (Main Theme)", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760932997/Free_asj8p5.mp4", "shufle": "true", "alternatives": [
+          { "title": "Free (Main Theme)", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760932997/Free_asj8p5.mp4", "shufle": "true", "crossmusic": [
             { "title": "Crush 40", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760932991/Free_Crush_40_Version_hhjnnz.mp4" }
           ]},
           { "title": "Start Up Your EX Gear! (Free Riders Version)", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760932986/Start_Up_Your_EX_Gear_lqr5tv.mp4", "shufle": "false" },
@@ -1282,153 +1285,153 @@
           "pause": "assets/icons/test-pause.png"
         },
         "tracks": [
-          { "title": "E-Stadium", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/E-Stadium_xlbvmi.mp3", "shufle": "true", "alternatives": [
+          { "title": "E-Stadium", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/E-Stadium_xlbvmi.mp3", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/E-Stadium_Intro_blinew.mp3" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/E-Stadium_Final_Lap_nxyoo4.mp3" }
           ] },
-          { "title": "Rainbow Garden", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Rainbow_Garden_e4hk0b.mp3", "shufle": "true", "alternatives": [
+          { "title": "Rainbow Garden", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Rainbow_Garden_e4hk0b.mp3", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927098/Rainbow_Garden_Intro_k9wrh0.mp3" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Rainbow_Garden_Final_Lap_v5m3vk.mp3" }
           ] },
-          { "title": "Water Palace", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Water_Palace_rmtsrb.mp3", "shufle": "true", "alternatives": [
+          { "title": "Water Palace", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Water_Palace_rmtsrb.mp3", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Water_Palace_Intro_jh59a3.mp3" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760927099/Water_Palace_Final_Lap_hudbz6.mp3" }
           ] },
-          { "title": "Metal Harbor", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930138/Metal_Harbor_bhk7dg.mp4", "shufle": "true", "alternatives": [
+          { "title": "Metal Harbor", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930138/Metal_Harbor_bhk7dg.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930090/Metal_Harbor_Intro_o7h9i3.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930137/Metal_Harbor_Final_Lap_eqtwae.mp4" }
           ] },
-          { "title": "Sand Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930146/Sand_Road_xrpias.mp4", "shufle": "true", "alternatives": [
+          { "title": "Sand Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930146/Sand_Road_xrpias.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930146/Sand_Road_Intro_n6k1zg.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930146/Sand_Road_Final_Lap_c0slun.mp4" }
           ] },
-          { "title": "Colorful Mall", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930158/Colorful_Mall_nqejwt.mp4", "shufle": "true", "alternatives": [
+          { "title": "Colorful Mall", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930158/Colorful_Mall_nqejwt.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930077/Colorful_Mall_Intro_xslhty.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930113/Colorful_Mall_Final_Lap_asa61r.mp4" }
           ] },
-          { "title": "Mystic Jungle", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930140/Mystic_Jungle_m8cipg.mp4", "shufle": "true", "alternatives": [
+          { "title": "Mystic Jungle", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930140/Mystic_Jungle_m8cipg.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930094/Mystic_Jungle_Intro_phb7jd.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930093/Mystic_Jungle_Final_Lap_lzfld8.mp4" }
           ] },
-          { "title": "Apotos", "url": "", "shufle": "true", "alternatives": [
+          { "title": "Apotos", "url": "", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930165/Apotos_Final_Lap_lzztbz.mp4" }
           ] },
-          { "title": "Wonder Museum", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/Wonder_Museum_ebhur2.mp4", "shufle": "true", "alternatives": [
+          { "title": "Wonder Museum", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/Wonder_Museum_ebhur2.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930136/Wonder_Museum_Intro_korqmb.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930163/Wonder_Museum_Final_Lap_bmxxyo.mp4" }
           ] },
-          { "title": "Crystal Mine", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930159/Crystal_Mine_vunvwu.mp4", "shufle": "true", "alternatives": [
+          { "title": "Crystal Mine", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930159/Crystal_Mine_vunvwu.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930079/Crystal_Mine_Intro_tccfxs.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930115/Crystal_Mine_Final_Lap_deefej.mp4" }
           ] },
-          { "title": "Ocean View", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930142/Ocean_View_j3okma.mp4", "shufle": "true", "alternatives": [
+          { "title": "Ocean View", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930142/Ocean_View_j3okma.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930096/Ocean_View_Intro_vtqkt9.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930097/Ocean_View_Final_Lap_a9tg0r.mp4" }
           ] },
-          { "title": "Pumpkin Mansion", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930143/Pumpkin_Mansion_yn1zqe.mp4", "shufle": "true", "alternatives": [
+          { "title": "Pumpkin Mansion", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930143/Pumpkin_Mansion_yn1zqe.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930098/Pumpkin_Mansion_Intro_vw67cs.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930097/Pumpkin_Mansion_Final_Lap_uqi2id.mp4" }
           ] },
-          { "title": "Urban Canyon", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930167/Urban_Canyon_t5ulrm.mp4", "shufle": "true", "alternatives": [
+          { "title": "Urban Canyon", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930167/Urban_Canyon_t5ulrm.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930111/Urban_Canyon_Intro_g4gaho.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930110/Urban_Canyon_Final_Lap_q8s5br.mp4" }
           ] },
-          { "title": "Market Street", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760929606/Market_Street_ryncf9.mp4", "shufle": "true", "alternatives": [
+          { "title": "Market Street", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760929606/Market_Street_ryncf9.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760929605/Market_Street_Intro_ays2au.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760929605/Market_Street_Final_Lap_ntvhsl.mp4" }
           ] },
-          { "title": "Coral Town", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930114/Coral_Town_z79xyx.mp4", "shufle": "true", "alternatives": [
+          { "title": "Coral Town", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930114/Coral_Town_z79xyx.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930078/Coral_Town_Intro_omlvmm.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930077/Coral_Town_Final_Lap_nq2scw.mp4" }
           ] },
-          { "title": "Blizzard Valley", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930155/Blizzard_Valley_u1am9f.mp4", "shufle": "true", "alternatives": [
+          { "title": "Blizzard Valley", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930155/Blizzard_Valley_u1am9f.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930074/Blizzard_Valley_Intro_ahqmiz.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930075/Blizzard_Valley_Final_Lap_beqicz.mp4" }
           ] },
-          { "title": "Radical Highway", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930143/Radical_Highway_s9tfyx.mp4", "shufle": "true", "alternatives": [
+          { "title": "Radical Highway", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930143/Radical_Highway_s9tfyx.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930101/Radical_Highway_Intro_dd0zyz.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930101/Radical_Highway_Final_Lap_rzqp9q.mp4" }
           ] },
-          { "title": "Chao Park", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930112/Chao_Park_gtthf5.mp4", "shufle": "true", "alternatives": [
+          { "title": "Chao Park", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930112/Chao_Park_gtthf5.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930075/Chao_Park_Intro_ncuex5.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930075/Chao_Park_Final_Lap_cd8zjd.mp4" }
           ] },
-          { "title": "Donpa Factory", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930120/Donpa_Factory_r2a1cm.mp4", "shufle": "true", "alternatives": [
+          { "title": "Donpa Factory", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930120/Donpa_Factory_r2a1cm.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930081/Donpa_Factory_Intro_gl3pap.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930081/Donpa_Factory_Final_Lap_vsni1l.mp4" }
           ] },
-          { "title": "Aqua Forest", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/Aqua_Forest_fg9lwp.mp4", "shufle": "true", "alternatives": [
+          { "title": "Aqua Forest", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/Aqua_Forest_fg9lwp.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930139/Aqua_Forest_Intro_gn8ttg.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930166/Aqua_Forest_Final_Lap_o3cdij.mp4" }
           ] },
-          { "title": "Eggman Expo", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930123/Eggman_Expo_hhqi7p.mp4", "shufle": "true", "alternatives": [
+          { "title": "Eggman Expo", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930123/Eggman_Expo_hhqi7p.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930083/Eggman_Expo_Intro_vog8mg.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930082/Eggman_Expo_Final_Lap_wz8voe.mp4" }
           ] },
-          { "title": "Kronos Island", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930163/Kronos_Island_kcuf1t.mp4", "shufle": "true", "alternatives": [
+          { "title": "Kronos Island", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930163/Kronos_Island_kcuf1t.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930130/Kronos_Island_Final_Lap_f2ctwu.mp4" }
           ] },
-          { "title": "Northstar Islands", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930141/Northstar_Islands_zvbqzq.mp4", "shufle": "true", "alternatives": [
+          { "title": "Northstar Islands", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930141/Northstar_Islands_zvbqzq.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930095/Northstar_Islands_Intro_gjszyg.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930094/Northstar_Islands_Final_Lap_tuywxm.mp4" }
           ] },
-          { "title": "White Space", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/White_Space_eo5t6t.mp4", "shufle": "true", "alternatives": [
+          { "title": "White Space", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930168/White_Space_eo5t6t.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930133/White_Space_Intro_hhekr6.mp4" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930122/White_Space_Final_Lap_dscbex.mp4" }
           ] },
-          { "title": "Steampunk City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930153/Steampunk_City_Final_Lap_crxrd5.mp4", "shufle": "true", "alternatives": [
+          { "title": "Steampunk City", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930153/Steampunk_City_Final_Lap_crxrd5.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930153/Steampunk_City_Final_Lap_crxrd5.mp4" }
           ] },
-          { "title": "Cyberspace", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930159/Cyberspace_kxwywk.mp4", "shufle": "true", "alternatives": [
+          { "title": "Cyberspace", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930159/Cyberspace_kxwywk.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930080/Cyberspace_Final_Lap_ynsueh.mp4" }
           ] },
-          { "title": "White Cave", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930161/White_Cave_nson95.mp4", "shufle": "true", "alternatives": [
+          { "title": "White Cave", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930161/White_Cave_nson95.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930121/White_Cave_Final_Lap_prrbfb.mp4" }
           ] },
-          { "title": "Golden Temple", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930127/Golden_Temple_or5n8d.mp4", "shufle": "true", "alternatives": [
+          { "title": "Golden Temple", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930127/Golden_Temple_or5n8d.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930126/Golden_Temple_Final_Lap_zhfnpp.mp4" }
           ] },
-          { "title": "Galactic Parade", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930125/Galactic_Parade_q4vbwj.mp4", "shufle": "true", "alternatives": [
+          { "title": "Galactic Parade", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930125/Galactic_Parade_q4vbwj.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930122/Galactic_Parade_Final_Lap_kzy07h.mp4" }
           ] },
-          { "title": "Sweet Mountain", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930156/Sweet_Mountain_uz8c4c.mp4", "shufle": "true", "alternatives": [
+          { "title": "Sweet Mountain", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930156/Sweet_Mountain_uz8c4c.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930154/Sweet_Mountain_Final_Lap_v03zuk.mp4" }
           ] },
-          { "title": "Hidden World", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930128/Hidden_World_vcbf0v.mp4", "shufle": "true", "alternatives": [
+          { "title": "Hidden World", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930128/Hidden_World_vcbf0v.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930087/Hidden_World_Final_Lap_cedwmb.mp4" }
           ] },
-          { "title": "Digital Circuit", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930117/Digital_Circuit_vaf7g0.mp4", "shufle": "true", "alternatives": [
+          { "title": "Digital Circuit", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930117/Digital_Circuit_vaf7g0.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930080/Digital_Circuit_Final_Lap_cpsydt.mp4" }
           ] },
-          { "title": "Sky Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930149/Sky_Road_lvlfal.mp4", "shufle": "true", "alternatives": [
+          { "title": "Sky Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930149/Sky_Road_lvlfal.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930148/Sky_Road_Final_Lap_jyqvds.mp4" }
           ] },
-          { "title": "Roulette Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930145/Roulette_Road_xlpgmr.mp4", "shufle": "true", "alternatives": [
+          { "title": "Roulette Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930145/Roulette_Road_xlpgmr.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930144/Roulette_Road_Final_Lap_gxf7e9.mp4" }
           ] },
-          { "title": "Dragon Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930160/Dragon_Road_lv7yuv.mp4", "shufle": "true", "alternatives": [
+          { "title": "Dragon Road", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930160/Dragon_Road_lv7yuv.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930119/Dragon_Road_Final_Lap_vmmlwy.mp4" }
           ] },
-          { "title": "Holoska", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930163/Holoska_eedtki.mp4", "shufle": "true", "alternatives": [
+          { "title": "Holoska", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930163/Holoska_eedtki.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930128/Holoska_Final_Lap_mz1kal.mp4" }
           ] },
-          { "title": "Magma Planet", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930135/Magma_Planet_tmarmc.mp4", "shufle": "true", "alternatives": [
+          { "title": "Magma Planet", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930135/Magma_Planet_tmarmc.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930133/Magma_Planet_Final_Lap_nfhev1.mp4" }
           ] },
-          { "title": "Kraken Bay", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930131/Kraken_Bay_oaabgm.mp4", "shufle": "true", "alternatives": [
+          { "title": "Kraken Bay", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930131/Kraken_Bay_oaabgm.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930129/Kraken_Bay_Final_Lap_zt7itc.mp4" }
           ] },
-          { "title": "Dinosaur Jungle", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930117/Dinosaur_Jungle_hhqob7.mp4", "shufle": "true", "alternatives": [
+          { "title": "Dinosaur Jungle", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930117/Dinosaur_Jungle_hhqob7.mp4", "shufle": "true", "crossmusic": [
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930116/Dinosaur_Jungle_Final_Lap_wayvox.mp4" }
           ] },
-          { "title": "Minecraft World", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930139/Minecraft_World_Overworld_ilp2ni.mp4", "shufle": "true", "alternatives": [
+          { "title": "Minecraft World", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930139/Minecraft_World_Overworld_ilp2ni.mp4", "shufle": "true", "crossmusic": [
             { "title": "Nether", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930090/Minecraft_World_Nether_ss5cgy.mp4" },
             { "title": "Overworld Final Lap", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930091/Minecraft_World_Overworld_Final_Lap_azbgah.mp4" },
             { "title": "End Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930093/Minecraft_World_The_End_Final_Lap_kdr3u9.mp4" }
           ] },
-          { "title": "Bikini Bottom", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930107/Bikini_Bottom_rzh3pw.mp4", "shufle": "true", "alternatives": [
+          { "title": "Bikini Bottom", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930107/Bikini_Bottom_rzh3pw.mp4", "shufle": "true", "crossmusic": [
             { "title": "Introduction", "url": "" },
             { "title": "Final Lap",  "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1760930107/Bikini_Bottom_Final_Lap_lbohnt.mp4" }
           ] }
