@@ -185,14 +185,9 @@ export default function AlbumScreen({ route, navigation }) {
                 <View key={index} style={styles.trackWrapper}>
                   <TouchableOpacity
                     onPress={() => {
-                      // Optionnel : définir la queue globale sur l’album pour le random/next
-                      setGlobalTracks(
-                        album.tracks.map((t) => ({
-                          ...t,
-                          album: album.title,
-                          image: album.image,
-                        }))
-                      );
+                      // ⚠️ Quand on clique sur une piste spécifique, on lit *seulement cette piste*
+                      // et on vide la queue (aucune suite automatique)
+                      setGlobalTracks([]); // vide la queue globale
                       playTrack({ ...track, album: album.title, image: album.image });
                     }}
                     disabled={!playable}
