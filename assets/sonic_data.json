@@ -460,7 +460,7 @@
           { "title": "Team Chaotix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068028/Team_Chaotix_-_Sonic_Heroes_OST_128kbit_AAC_bfiyhu.mp4", "shuffle": "true" },
           { "title": "Seaside Hill", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068067/Seaside_Hill_-_Sonic_Heroes_OST_128kbit_AAC_r9b2ey.mp4", "shuffle": "true" },
           { "title": "Ocean Palace", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068070/Ocean_Palace_-_Sonic_Heroes_OST_128kbit_AAC_wlg187.mp4", "shuffle": "true" },
-          { "title": "Egg Hawk", "url": "", "shuffle": "false" },
+          { "title": "Egg Hawk", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761070230/Egg_Hawk_-_Sonic_Heroes_OST_128kbit_AAC_wjnwzr.mp4", "shuffle": "false" },
           { "title": "System Screen: Select", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068032/System_Screen_Select_-_Sonic_Heroes_OST_128kbit_AAC_mctwgs.mp4", "shuffle": "false", "crossmusic": [
             { "title": "Menu", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068033/System_Screen_Menu_-_Sonic_Heroes_OST_128kbit_AAC_sqkela.mp4" },
             { "title": "2P Vs", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761068026/System_Screen_2P_VS_Menu_-_Sonic_Heroes_OST_128kbit_AAC_kmvnr3.mp4" }
