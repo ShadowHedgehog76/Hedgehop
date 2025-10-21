@@ -105,7 +105,7 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 100, paddingTop: 50 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.header}>🎧 Sonic Albums</Text>
+      <Text style={styles.header}>💫 Hedgehop 💫</Text>
 
       {/* === Barre de filtres === */}
       <View style={styles.filterBar}>
