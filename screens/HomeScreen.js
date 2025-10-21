@@ -21,7 +21,7 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop-Data/main/sonic_music_catalog.json')
+    fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
       .then(res => res.json())
       .then(data => setCategories(data))
       .catch(err => console.error('❌ Erreur chargement JSON:', err))

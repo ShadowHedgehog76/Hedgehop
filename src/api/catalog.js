@@ -2,10 +2,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RAW_URL_PRIMARY =
-  'https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop-Data/refs/heads/main/sonic_music_catalog.json';
+  'https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json';
 // Fallback "classique" si jamais le primary renvoie 404/403
 const RAW_URL_FALLBACK =
-  'https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop-Data/main/sonic_music_catalog.json';
+  'https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json';
 
 const STORAGE_KEY = 'hedgehog_catalog_json';
 const STORAGE_TIME_KEY = 'hedgehog_catalog_saved_at';
