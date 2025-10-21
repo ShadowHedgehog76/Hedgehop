@@ -22,7 +22,9 @@ import {
   isTrackPlaying,
   playTrack,
   getQueue,
-} from '../src/api/player'; // getQueue ajouté pour simuler previous/next
+  playNext,
+  playPrevious,
+} from '../src/api/player';
 
 const { width } = Dimensions.get('window');
 const safeImage = 'https://i.imgur.com/ODLC1hY.jpeg';
@@ -41,16 +43,18 @@ export default function PlayerScreen({ navigation }) {
   const [titleWidth, setTitleWidth] = useState(0);
   const [albumWidth, setAlbumWidth] = useState(0);
 
-  // Récupération de la queue pour calculer previous/next
+  // Récupération de la queue
   useEffect(() => {
     const q = getQueue ? getQueue() : [];
     setQueue(q);
   }, []);
 
+  // Souscriptions du player
   useEffect(() => {
     const playSub = playerEmitter.addListener('play', ({ track }) => {
       setTrack(track);
       setIsPlaying(true);
+      setQueue(getQueue ? getQueue() : []);
     });
     const pauseSub = playerEmitter.addListener('pause', () => setIsPlaying(false));
     const resumeSub = playerEmitter.addListener('resume', () => setIsPlaying(true));
@@ -134,11 +138,6 @@ export default function PlayerScreen({ navigation }) {
     }
   }, [track]);
 
-  // Calcule previous/next à partir de la queue
-  const currentIndex = queue.findIndex((t) => t?.id === track?.id);
-  const previous = queue[currentIndex - 1];
-  const next = queue[currentIndex + 1];
-
   const formatTime = (millis) => {
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -167,7 +166,6 @@ export default function PlayerScreen({ navigation }) {
     if (item.isOriginal) {
       const original = item.original;
       if (!original) return;
-
       playTrack({
         ...original,
         album: original.album || safeAlbum,
@@ -195,6 +193,8 @@ export default function PlayerScreen({ navigation }) {
     );
   }
 
+  const hasQueue = queue && queue.length > 1;
+
   return (
     <View style={styles.container}>
       {/* === FOND IMAGE + DÉGRADÉ === */}
@@ -217,67 +217,26 @@ export default function PlayerScreen({ navigation }) {
         <Ionicons name="close" size={26} color="white" />
       </TouchableOpacity>
 
-      {/* === Cartes gauche/droite === */}
-      {previous && (
-        <TouchableOpacity
-          style={[styles.sideCard, styles.leftCard]}
-          activeOpacity={0.8}
-          onPress={() => playerEmitter.emit('previous')}
-        >
-          <Image source={{ uri: previous.image || safeImage }} style={styles.sideCardImage} />
-          <LinearGradient
-            colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.9)']}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <Text style={[styles.sideCardTitle, { transform: [{ rotate: '-90deg' }] }]}>
-            {previous.title}
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {next && (
-        <TouchableOpacity
-          style={[styles.sideCard, styles.rightCard]}
-          activeOpacity={0.8}
-          onPress={() => playerEmitter.emit('next')}
-        >
-          <Image source={{ uri: next.image || safeImage }} style={styles.sideCardImage} />
-          <LinearGradient
-            colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.9)']}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <Text style={[styles.sideCardTitle, { transform: [{ rotate: '90deg' }] }]}>
-            {next.title}
-          </Text>
-        </TouchableOpacity>
-      )}
-
+      {/* === CENTRE DU PLAYER === */}
       <View style={styles.center}>
         {/* === TITRE === */}
         <View style={styles.titleBlock}>
-          <View style={styles.titleRow}>
-            <Animated.View
-              style={{
-                transform: [{ translateX: scrollXTitle }],
-                maxWidth: width * 0.8,
-                overflow: 'hidden',
-              }}
-              onLayout={(e) => setTitleWidth(e.nativeEvent.layout.width)}
-            >
-              <Text style={styles.title}>
-                {track.crossTitle ? track.crossTitle : track.title}
-              </Text>
-            </Animated.View>
-          </View>
+          <Animated.View
+            style={{
+              transform: [{ translateX: scrollXTitle }],
+              maxWidth: width * 0.8,
+              overflow: 'hidden',
+            }}
+            onLayout={(e) => setTitleWidth(e.nativeEvent.layout.width)}
+          >
+            <Text style={styles.title}>
+              {track.crossTitle ? track.crossTitle : track.title}
+            </Text>
+          </Animated.View>
 
           {track.crossTitle && (
             <View style={styles.crossBadge}>
-              <Ionicons
-                name="musical-notes"
-                size={18}
-                color="#1f4cff"
-                style={{ marginHorizontal: 4 }}
-              />
+              <Ionicons name="musical-notes" size={18} color="#1f4cff" style={{ marginHorizontal: 4 }} />
               <Text style={styles.crossTitle}>{track.title}</Text>
             </View>
           )}
@@ -314,7 +273,7 @@ export default function PlayerScreen({ navigation }) {
 
         {/* === CONTRÔLES === */}
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => playerEmitter.emit('previous')}>
+          <TouchableOpacity onPress={playPrevious}>
             <Ionicons name="play-skip-back" size={36} color="white" />
           </TouchableOpacity>
 
@@ -322,26 +281,28 @@ export default function PlayerScreen({ navigation }) {
             <Ionicons name={isPlaying ? 'pause' : 'play'} size={40} color="black" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => playerEmitter.emit('next')}>
+          <TouchableOpacity onPress={playNext}>
             <Ionicons name="play-skip-forward" size={36} color="white" />
           </TouchableOpacity>
         </View>
 
-        {/* === CROSSMUSIC === */}
-        {crossList.length > 0 && (
+        {/* === QUEUE OU CROSSMUSIC === */}
+        {hasQueue ? (
           <View style={styles.crossSection}>
+            <Text style={styles.queueTitle}>File de lecture</Text>
             <FlatList
-              data={crossList}
+              data={queue}
               horizontal
-              keyExtractor={(item, i) =>
-                item.isOriginal ? 'original' : `${item.title}-${i}`
-              }
+              keyExtractor={(item, i) => item.id ? item.id.toString() : `${item.title}-${i}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 20 }}
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <TouchableOpacity
-                  style={styles.crossCard}
-                  onPress={() => handlePlayCross(item)}
+                  style={[
+                    styles.crossCard,
+                    item.id === track.id && { borderColor: '#1f4cff', borderWidth: 2 },
+                  ]}
+                  onPress={() => playTrack(item, index)}
                   activeOpacity={0.8}
                 >
                   <Image
@@ -362,7 +323,7 @@ export default function PlayerScreen({ navigation }) {
                     numberOfLines={1}
                     style={[
                       styles.crossCardTitle,
-                      item.isOriginal && { color: '#1f4cff', fontWeight: '900' },
+                      item.id === track.id && { color: '#1f4cff', fontWeight: '900' },
                     ]}
                   >
                     {item.title}
@@ -371,6 +332,52 @@ export default function PlayerScreen({ navigation }) {
               )}
             />
           </View>
+        ) : (
+          crossList.length > 0 && (
+            <View style={styles.crossSection}>
+              <Text style={styles.queueTitle}>CrossMusic</Text>
+              <FlatList
+                data={crossList}
+                horizontal
+                keyExtractor={(item, i) =>
+                  item.isOriginal ? 'original' : `${item.title}-${i}`
+                }
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.crossCard}
+                    onPress={() => handlePlayCross(item)}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: item.image || track.image }}
+                      style={styles.crossImage}
+                      resizeMode="cover"
+                    />
+                    <LinearGradient
+                      colors={[
+                        'transparent',
+                        'rgba(0,0,0,0.6)',
+                        'rgba(0,0,0,0.9)',
+                        'rgba(0,0,0,1)',
+                      ]}
+                      style={styles.crossGradient}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.crossCardTitle,
+                        item.isOriginal && { color: '#1f4cff', fontWeight: '900' },
+                      ]}
+                    >
+                      {item.title}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )
         )}
       </View>
     </View>
@@ -383,31 +390,6 @@ const styles = StyleSheet.create({
   emptyText: { color: '#777' },
   closeBtn: { position: 'absolute', top: 50, left: 20, zIndex: 10 },
 
-  // Cartes latérales
-  sideCard: {
-    position: 'absolute',
-    top: '30%',
-    width: 100,
-    height: 160,
-    borderRadius: 20,
-    overflow: 'hidden',
-    opacity: 0.7,
-    zIndex: 5,
-  },
-  leftCard: { left: -30 },
-  rightCard: { right: -30 },
-  sideCardImage: { width: '100%', height: '100%', borderRadius: 20 },
-  sideCardTitle: {
-    position: 'absolute',
-    color: 'white',
-    fontWeight: '800',
-    fontSize: 14,
-    textAlign: 'center',
-    width: 160,
-    left: -30,
-    bottom: 50,
-  },
-
   center: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -416,7 +398,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   titleBlock: { alignItems: 'center', marginBottom: 30 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   title: { color: 'white', fontSize: 28, fontWeight: '900', textAlign: 'center' },
 
   crossBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
@@ -452,6 +433,14 @@ const styles = StyleSheet.create({
   },
 
   crossSection: { marginBottom: 40, width: '100%', alignItems: 'center' },
+  queueTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+    marginLeft: 20,
+  },
   crossCard: {
     width: width * 0.4,
     height: width * 0.4,

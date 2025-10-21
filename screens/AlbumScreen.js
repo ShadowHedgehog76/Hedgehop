@@ -127,7 +127,23 @@ export default function AlbumScreen({ route, navigation }) {
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: 'white' }]}
-                onPress={() => console.log('▶️ Lecture de tout l’album')}
+                onPress={() => {
+                  const playableTracks = album.tracks
+                    .filter((t) => t.url)
+                    .map((t) => ({
+                      ...t,
+                      album: album.title,
+                      image: album.image,
+                    }));
+
+                  if (playableTracks.length > 0) {
+                    setGlobalTracks(playableTracks);
+                    playTrack(playableTracks[0], 0); // démarre au premier morceau
+                  } else {
+                    console.warn('Aucune piste lisible dans cet album.');
+                  }
+                }}
+
               >
                 <Ionicons name="play" size={18} color="black" style={{ marginRight: 6 }} />
                 <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>

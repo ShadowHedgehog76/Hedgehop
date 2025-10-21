@@ -1,3 +1,4 @@
+// player.js
 import { Audio } from 'expo-av';
 import { EventEmitter } from 'fbemitter';
 
@@ -10,30 +11,39 @@ let playbackStatus = { positionMillis: 0, durationMillis: 1 };
 
 // --- Liste de toutes les pistes disponibles ---
 let globalTracks = [];
+let currentIndex = -1; // nouvel index de la queue
 
-// 🔹 Définir la liste globale des pistes (doit être appelée depuis l'app)
+// 🔹 Définir la liste globale des pistes
 export function setGlobalTracks(list) {
   if (Array.isArray(list)) {
     globalTracks = list.filter((t) => t?.url); // on garde que les valides
-    console.log('🎵 Global tracks enregistrées :', globalTracks.length);
+    currentIndex = 0;
+    console.log('🎵 File de lecture définie :', globalTracks.length, 'pistes');
   }
 }
 
-// --- Lecture d'une piste ---
-export async function playTrack(track) {
+// --- Lecture d'une piste spécifique ---
+export async function playTrack(track, index = null) {
   try {
     if (!track?.url) {
       console.warn('❌ Aucune URL pour cette piste :', track);
       return;
     }
 
-    // Décharge l'ancienne piste
+    // Stopper la piste précédente
     if (currentSound) {
       await currentSound.unloadAsync();
       currentSound = null;
     }
 
-    // Crée et lit la nouvelle
+    // Trouver l’index si pas fourni
+    if (index !== null) {
+      currentIndex = index;
+    } else {
+      currentIndex = globalTracks.findIndex((t) => t.url === track.url);
+    }
+
+    // Créer et lire la nouvelle piste
     const { sound } = await Audio.Sound.createAsync(
       { uri: track.url },
       { shouldPlay: true },
@@ -44,11 +54,40 @@ export async function playTrack(track) {
     currentTrack = track;
     isPlaying = true;
 
-    console.log('▶️ Lecture :', track.title);
-    playerEmitter.emit('play', { track });
+    console.log(`▶️ Lecture : ${track.title} (index ${currentIndex})`);
+    playerEmitter.emit('play', { track, index: currentIndex });
   } catch (err) {
     console.error('Erreur lecture:', err);
   }
+}
+
+// --- Lecture de la piste suivante ---
+export async function playNext() {
+  if (!globalTracks.length) return;
+
+  const nextIndex = currentIndex + 1;
+  if (nextIndex >= globalTracks.length) {
+    console.log('⏹️ Fin de la queue.');
+    await stopTrack();
+    return;
+  }
+
+  const nextTrack = globalTracks[nextIndex];
+  await playTrack(nextTrack, nextIndex);
+}
+
+// --- Lecture de la piste précédente ---
+export async function playPrevious() {
+  if (!globalTracks.length) return;
+
+  const prevIndex = currentIndex - 1;
+  if (prevIndex < 0) {
+    console.log('⏮️ Début de la queue.');
+    return;
+  }
+
+  const prevTrack = globalTracks[prevIndex];
+  await playTrack(prevTrack, prevIndex);
 }
 
 // --- Pause ---
@@ -95,39 +134,9 @@ async function onPlaybackStatusUpdate(status) {
   playerEmitter.emit('progress', status);
 
   if (status.didJustFinish && !status.isLooping) {
-    console.log('⏹️ Piste terminée → recherche suivante...');
-    await handleTrackEnd();
+    console.log('⏭️ Fin de la piste → suivante...');
+    await playNext(); // 🔥 avance automatiquement dans la queue
   }
-}
-
-// --- Sélection d'une nouvelle piste aléatoire ---
-async function handleTrackEnd() {
-  if (!globalTracks.length) {
-    console.warn('⚠️ Aucun globalTracks défini → fin de lecture');
-    return;
-  }
-
-  // Filtrage intelligent : pas la même, ni cross liée
-  const filtered = globalTracks.filter((t) => {
-    if (!t || !currentTrack) return false;
-    const same =
-      t.title?.trim().toLowerCase() === currentTrack.title?.trim().toLowerCase();
-    const crossConflict =
-      (t.crossTitle && t.crossTitle === currentTrack.title) ||
-      (currentTrack.crossTitle && currentTrack.crossTitle === t.title);
-    return !same && !crossConflict;
-  });
-
-  if (filtered.length === 0) {
-    console.warn('Aucune autre piste trouvée après filtrage.');
-    return;
-  }
-
-  // Choix aléatoire
-  const nextTrack = filtered[Math.floor(Math.random() * filtered.length)];
-  console.log('🎲 Lecture aléatoire suivante :', nextTrack.title);
-
-  await playTrack(nextTrack);
 }
 
 // --- Getters ---
@@ -139,4 +148,10 @@ export function getPlaybackStatus() {
 }
 export function isTrackPlaying() {
   return isPlaying;
+}
+export function getQueue() {
+  return globalTracks;
+}
+export function getCurrentIndex() {
+  return currentIndex;
 }
