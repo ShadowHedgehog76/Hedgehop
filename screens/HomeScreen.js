@@ -19,6 +19,7 @@ const CARD_HEIGHT = CARD_WIDTH + 40;
 export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('All');
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
@@ -28,18 +29,20 @@ export default function HomeScreen({ navigation }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // --- Statut d’un album ---
   const getAlbumStatus = (album) => {
     const tracks = album.tracks || [];
     const total = tracks.length;
     const playable = tracks.filter(t => !!t.url).length;
 
     if (total === 0 || playable === 0)
-      return { label: 'Coming soon', color: '#ffae42', icon: 'hourglass-outline' };
+      return { label: 'Coming soon', color: '#ffae42', icon: 'hourglass-outline', status: 'ComingSoon' };
     if (playable === total)
-      return { label: 'Completed', color: '#00ff7f', icon: 'checkmark-circle' };
-    return { label: `${playable}/${total} ready`, color: '#1f4cff', icon: 'time' };
+      return { label: 'Completed', color: '#00ff7f', icon: 'checkmark-circle', status: 'Completed' };
+    return { label: `${playable}/${total} ready`, color: '#1f4cff', icon: 'time', status: 'Working' };
   };
 
+  // --- Carte d’album ---
   const AlbumCard = ({ album }) => {
     const status = getAlbumStatus(album);
     return (
@@ -58,7 +61,7 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  // 👇 Groupe les albums par paires de 2 (pour avoir deux lignes par "colonne")
+  // --- Grouper les albums par 2 (affichage 2 par colonne)
   const chunkAlbums = (albums) => {
     const result = [];
     for (let i = 0; i < albums.length; i += 2) {
@@ -67,6 +70,25 @@ export default function HomeScreen({ navigation }) {
     return result;
   };
 
+  // --- Filtres disponibles avec couleurs ---
+  const filters = [
+    { key: 'All', label: 'All', color: '#fff' },
+    { key: 'Completed', label: 'Completed', color: '#00ff7f' },
+    { key: 'Working', label: 'Working', color: '#1f4cff' },
+    { key: 'ComingSoon', label: 'News', color: '#ffae42' },
+  ];
+
+  // --- Appliquer le filtre sur les catégories ---
+  const filteredCategories = categories.map(cat => {
+    const filteredAlbums = cat.albums.filter(album => {
+      const status = getAlbumStatus(album).status;
+      if (activeFilter === 'All') return true;
+      return status === activeFilter;
+    });
+    return { ...cat, albums: filteredAlbums };
+  }).filter(cat => cat.albums.length > 0);
+
+  // --- Loader ---
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -76,6 +98,7 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  // --- Rendu principal ---
   return (
     <ScrollView
       style={styles.container}
@@ -84,39 +107,66 @@ export default function HomeScreen({ navigation }) {
     >
       <Text style={styles.header}>🎧 Sonic Albums</Text>
 
-      {categories.map((cat, idx) => {
-        const albumPairs = chunkAlbums(cat.albums);
-        return (
-          <View key={idx} style={styles.categoryBlock}>
-            <Text style={styles.categoryTitle}>{cat.category}</Text>
+      {/* === Barre de filtres === */}
+      <View style={styles.filterBar}>
+        {filters.map(f => (
+          <TouchableOpacity
+            key={f.key}
+            style={[
+              styles.filterButton,
+              { borderColor: f.color },
+              activeFilter === f.key && { backgroundColor: f.color }
+            ]}
+            onPress={() => setActiveFilter(f.key)}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                { color: f.color },
+                activeFilter === f.key && { color: 'black', fontWeight: '700' }
+              ]}
+            >
+              {f.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-            <FlatList
-              key={`cat-${idx}`}
-              data={albumPairs}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 12 }}
-              renderItem={({ item }) => (
-                <View style={styles.column}>
-                  {item.map((album, index) => (
-                    <AlbumCard key={index} album={album} />
-                  ))}
-                </View>
-              )}
-            />
-          </View>
-        );
-      })}
+      {/* === Liste des catégories filtrées === */}
+      {filteredCategories.length === 0 ? (
+        <Text style={styles.noAlbums}>Aucun album trouvé pour ce filtre.</Text>
+      ) : (
+        filteredCategories.map((cat, idx) => {
+          const albumPairs = chunkAlbums(cat.albums);
+          return (
+            <View key={idx} style={styles.categoryBlock}>
+              <Text style={styles.categoryTitle}>{cat.category}</Text>
+
+              <FlatList
+                key={`cat-${idx}`}
+                data={albumPairs}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 12 }}
+                renderItem={({ item }) => (
+                  <View style={styles.column}>
+                    {item.map((album, index) => (
+                      <AlbumCard key={index} album={album} />
+                    ))}
+                  </View>
+                )}
+              />
+            </View>
+          );
+        })
+      )}
     </ScrollView>
   );
 }
 
 // --- Styles ---
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+  container: { flex: 1, backgroundColor: '#000' },
   header: {
     color: 'white',
     fontSize: 26,
@@ -124,9 +174,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  categoryBlock: {
-    marginBottom: 25,
+  filterBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 20,
   },
+  filterButton: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    marginHorizontal: 6,
+    marginBottom: 10,
+  },
+  filterText: {
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  categoryBlock: { marginBottom: 25 },
   categoryTitle: {
     color: 'white',
     fontSize: 20,
@@ -160,19 +226,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  statusText: {
-    marginLeft: 4,
-    fontSize: 12,
-  },
+  statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  statusText: { marginLeft: 4, fontSize: 12 },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
+  },
+  noAlbums: {
+    color: '#888',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 20,
   },
 });
