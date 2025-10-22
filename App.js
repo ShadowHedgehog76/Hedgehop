@@ -26,6 +26,7 @@ function MainLayout() {
             backgroundColor: '#0a0a0a',
             borderTopColor: '#222',
             height: 60,
+            radius: 60,
           },
           tabBarActiveTintColor: '#1f4cff',
           tabBarInactiveTintColor: '#aaa',
