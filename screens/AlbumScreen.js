@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+// AlbumScreen.js
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +7,6 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   Platform,
@@ -16,9 +16,10 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { playTrack, setGlobalTracks } from '../src/api/player';
 import { toggleFavorite, getFavorites, favEmitter } from '../src/api/favorites';
-import { getPlaylists, addTrack, createPlaylist } from '../src/api/playlists';
+import { getPlaylists } from '../src/api/playlists';
 
 const { width } = Dimensions.get('window');
 
@@ -30,18 +31,19 @@ export default function AlbumScreen({ route, navigation }) {
   const { album } = route.params;
   const [favorites, setFavorites] = useState([]);
   const [showCross, setShowCross] = useState(false);
-  const [activeTrack, setActiveTrack] = useState(null);
-  const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
-  const [playlists, setPlaylists] = useState([]);
 
   const imageScale = useRef(new Animated.Value(0.8)).current;
   const listOpacity = useRef(new Animated.Value(0)).current;
   const listTranslate = useRef(new Animated.Value(50)).current;
 
-  // Normalise les clés pour "crossmusic"
   const getCrossArray = (t) => t?.crossmusic ?? t?.crossMusic ?? t?.cross ?? [];
 
-  // Animations d’entrée
+  // Total cross
+  const totalCrossCount = useMemo(() => {
+    return album.tracks?.reduce((acc, t) => acc + (getCrossArray(t)?.length || 0), 0);
+  }, [album]);
+
+  // Animations d'entrée
   useEffect(() => {
     Animated.sequence([
       Animated.spring(imageScale, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }),
@@ -62,18 +64,6 @@ export default function AlbumScreen({ route, navigation }) {
     return () => sub.remove();
   }, []);
 
-  // Playlists
-  useEffect(() => {
-    (async () => {
-      try {
-        const savedPlaylists = await getPlaylists();
-        setPlaylists(savedPlaylists || []);
-      } catch (err) {
-        console.error('Erreur chargement playlists', err);
-      }
-    })();
-  }, []);
-
   const isFav = (track) =>
     favorites.some(
       (f) =>
@@ -92,15 +82,6 @@ export default function AlbumScreen({ route, navigation }) {
     setFavorites(await getFavorites());
   };
 
-  const addTrackToPlaylist = async (playlistId, track) => {
-    await addTrack(playlistId, { ...track, album: album.title, image: album.image });
-  };
-
-  const createNewPlaylist = async (track) => {
-    const newPlaylist = await createPlaylist('Nouvelle playlist', [track]);
-    setPlaylists([...playlists, newPlaylist]);
-  };
-
   return (
     <View style={styles.container}>
       {/* Fond flou */}
@@ -108,213 +89,255 @@ export default function AlbumScreen({ route, navigation }) {
       <BlurView intensity={60} tint="dark" style={RNStyleSheet.absoluteFillObject} />
       <View style={styles.darkOverlay} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
-        {/* Back */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={26} color="white" />
-        </TouchableOpacity>
+      {/* 🏷️ ÉTIQUETTES glossy en haut à droite */}
+      <View style={styles.topBadges}>
+        {/* État de disponibilité de l’album */}
+        {(() => {
+          const totalTracks = album.tracks?.length || 0;
+          const availableTracks = album.tracks?.filter((t) => t.url)?.length || 0;
+          let stateLabel = 'Coming Soon';
+          let color = '#f97316';
+          let icon = 'time';
 
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <Animated.Image
-            source={{ uri: album.image }}
-            style={[styles.albumImage, { transform: [{ scale: imageScale }] }]}
-          />
-          <View style={styles.albumTextBlock}>
-            <Text style={styles.albumTitle}>{album.title}</Text>
-            <Text style={styles.trackCount}>{album.tracks?.length || 0} pistes</Text>
+          if (availableTracks === totalTracks && totalTracks > 0) {
+            stateLabel = 'Completed';
+            color = '#22c55e';
+            icon = 'checkmark-circle';
+          } else if (availableTracks > 0) {
+            stateLabel = 'Working';
+            color = '#3b82f6';
+            icon = 'construct';
+          }
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: 'white' }]}
-                onPress={() => {
-                  const playableTracks = album.tracks
-                    .filter((t) => t.url)
-                    .map((t) => ({
-                      ...t,
-                      album: album.title,
-                      image: album.image,
-                    }));
-
-                  if (playableTracks.length > 0) {
-                    setGlobalTracks(playableTracks);
-                    playTrack(playableTracks[0], 0); // démarre au premier morceau
-                  } else {
-                    console.warn('Aucune piste lisible dans cet album.');
-                  }
+          return (
+            <View style={[styles.crossMusicBadgeTop, { top: 50, right: -23, backgroundColor: color }]}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.25)', 'transparent']}
+                style={{
+                  ...RNStyleSheet.absoluteFillObject,
+                  top: 0,
+                  height: '50%',
+                  borderTopLeftRadius: 14,
+                  borderBottomLeftRadius: 14,
+                  borderTopRightRadius: 26,
+                  borderBottomRightRadius: 26,
                 }}
-
-              >
-                <Ionicons name="play" size={18} color="black" style={{ marginRight: 6 }} />
-                <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: '#1f4cff' }]}
-                onPress={() => {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                  setShowCross((v) => !v);
-                }}
-              >
-                <Ionicons
-                  name="shuffle"
-                  size={18}
-                  color="white"
-                  style={{ marginRight: 6, transform: [{ rotate: showCross ? '90deg' : '0deg' }] }}
-                />
-                <Text style={[styles.actionText, { color: 'white' }]}>
-                  {showCross ? 'Standard' : 'CrossMusic'}
-                </Text>
-              </TouchableOpacity>
-
-              <View style={[styles.actionButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-                <Ionicons name="ellipsis-horizontal" size={18} color="#777" style={{ marginRight: 6 }} />
-                <Text style={[styles.actionText, { color: '#777' }]}>More...</Text>
-              </View>
+              />
+              <Ionicons name={icon} size={16} color="#fff" style={{ marginRight: 6 }} />
+              <Text style={styles.crossBadgeTextTop}>{stateLabel}</Text>
             </View>
+          );
+        })()}
+
+        {/* Total cross */}
+        {totalCrossCount > 0 && (
+          <View style={[styles.crossMusicBadgeTop, { top: 100, right: -23 }]}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.25)', 'transparent']}
+              style={{
+                ...RNStyleSheet.absoluteFillObject,
+                top: 0,
+                height: '50%',
+                borderTopLeftRadius: 14,
+                borderBottomLeftRadius: 14,
+                borderTopRightRadius: 26,
+                borderBottomRightRadius: 26,
+              }}
+            />
+            <Ionicons name="musical-notes" size={18} color="#fff" />
+            <Text style={styles.crossBadgeTextTop}>{totalCrossCount} Cross</Text>
           </View>
-        </View>
+        )}
+      </View>
 
-        {/* Contenu */}
-        <Animated.View style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}>
-          {!showCross ? (
-            // === MODE STANDARD ===
-            album.tracks?.map((track, index) => {
-              const playable = !!track.url;
-              return (
-                <View key={index} style={styles.trackWrapper}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      // ⚠️ Quand on clique sur une piste spécifique, on lit *seulement cette piste*
-                      // et on vide la queue (aucune suite automatique)
-                      setGlobalTracks([]); // vide la queue globale
-                      playTrack({ ...track, album: album.title, image: album.image });
-                    }}
-                    disabled={!playable}
-                    style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
-                  >
-                    <Image source={{ uri: album.image }} style={styles.trackIcon} />
-                    <Text
-                      style={[styles.trackTitle, { color: playable ? 'white' : '#777' }]}
-                      numberOfLines={1}
-                    >
-                      {track.title}
-                    </Text>
+      <FlatList
+        data={showCross ? album.tracks.filter((t) => getCrossArray(t).length > 0) : album.tracks}
+        keyExtractor={(_, i) => i.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 90 }} // ✅ espace sous la PlayerBar
+        ListHeaderComponent={
+          <>
+            {/* Bouton retour */}
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="close" size={26} color="white" />
+            </TouchableOpacity>
 
-                    {/* Favori */}
-                    <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
-                      <Ionicons
-                        name={isFav(track) ? 'heart' : 'heart-outline'}
-                        size={18}
-                        color={isFav(track) ? 'red' : 'white'}
-                      />
-                    </TouchableOpacity>
+            {/* Header */}
+            <View style={styles.headerSection}>
+              <Animated.Image
+                source={{ uri: album.image }}
+                style={[styles.albumImage, { transform: [{ scale: imageScale }] }]}
+              />
 
-                    {/* Menu */}
-                    <TouchableOpacity style={styles.trackRight} onPress={() => setActiveTrack(track)}>
-                      <Ionicons name="ellipsis-vertical" size={20} color="#aaa" />
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                </View>
-              );
-            })
-          ) : (
-            // === MODE CROSSMUSIC ===
-            album.tracks
-              .filter((t) => getCrossArray(t).length > 0)
-              .map((track, index) => {
-                const crossArr = getCrossArray(track); // toutes les variantes
+              {/* ✅ Barre de progression Working (centrée sous la jaquette) */}
+              {(() => {
+                const totalTracks = album.tracks?.length || 0;
+                const availableTracks = album.tracks?.filter((t) => t.url)?.length || 0;
+                const completion = totalTracks > 0 ? availableTracks / totalTracks : 0;
+                const isWorking = availableTracks > 0 && availableTracks < totalTracks;
+
+                if (!isWorking) return null;
+
                 return (
-                  <View key={index} style={styles.crossGroup}>
-                    <Text style={styles.crossGroupTitle}>{track.title}</Text>
-
-                    <FlatList
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      data={crossArr}
-                      keyExtractor={(_, i) => i.toString()}
-                      renderItem={({ item }) => {
-                        const playableUrl = item.url ?? item.streamUrl ?? item.source ?? null;
-                        const artwork = item.image ?? item.cover ?? item.artwork ?? album.image;
-
-                        return (
-                          <View style={styles.crossAlbumCard}>
-                            {/* Image en haut */}
-                            <Image source={{ uri: artwork }} style={styles.crossAlbumImage} />
-
-                            {/* Footer titre + boutons */}
-                            <View style={styles.crossCardFooter}>
-                              <Text numberOfLines={1} style={styles.crossAlbumText}>
-                                {item.title}
-                              </Text>
-
-                              <View style={styles.crossCardButtons}>
-                                <TouchableOpacity onPress={() => handleFavorite({ ...item, crossTitle: track.title })}>
-                                  <Ionicons
-                                    name={isFav({ ...item, crossTitle: track.title }) ? 'heart' : 'heart-outline'}
-                                    size={18}
-                                    color={isFav({ ...item, crossTitle: track.title }) ? 'red' : 'white'}
-                                  />
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => setActiveTrack({ ...item, crossTitle: track.title })}>
-                                  <Ionicons name="ellipsis-vertical" size={18} color="#ccc" />
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-
-                            {/* === OVERLAY CLIQUABLE : ENVOIE LES MÉTADONNÉES REQUISES === */}
-                            <TouchableOpacity
-                              style={RNStyleSheet.absoluteFill}
-                              disabled={!playableUrl}
-                              onPress={() => {
-                                // 1) Construire l’original enrichi
-                                const originalTrack = {
-                                  ...track,
-                                  url: track.url ?? track.streamUrl ?? track.source ?? null,
-                                  album: album.title,
-                                  image: album.image,
-                                  crossmusic: crossArr, // indispensable pour PlayerScreen
-                                };
-
-                                // 2) Normaliser la liste des cross pour parentCrossList
-                                const parentCrossList = crossArr.map((x) => ({
-                                  ...x,
-                                  url: x.url ?? x.streamUrl ?? x.source ?? null,
-                                  album: album.title,
-                                  image: x.image ?? album.image,
-                                }));
-
-                                // Optionnel : définir la queue globale = original + toutes les cross
-                                setGlobalTracks([
-                                  originalTrack,
-                                  ...parentCrossList,
-                                ]);
-
-                                // 3) Lancer la variante sélectionnée avec le contexte complet
-                                playTrack({
-                                  ...item,
-                                  url: playableUrl,
-                                  album: album.title,
-                                  image: artwork,
-                                  crossTitle: track.title,           // nom de la “famille”
-                                  parentOriginalTrack: originalTrack, // ⬅️ requis par PlayerScreen
-                                  parentCrossList,                    // ⬅️ requis par PlayerScreen
-                                });
-                              }}
-                            />
-                          </View>
-                        );
-                      }}
-                    />
+                  <View style={styles.progressWrapper}>
+                    <View style={styles.progressBarBackground}>
+                      <View style={[styles.progressBarFill, { width: `${completion * 100}%` }]} />
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.25)', 'transparent']}
+                        style={styles.progressGloss}
+                      />
+                    </View>
+                    <Text style={styles.progressText}>{Math.round(completion * 100)}%</Text>
                   </View>
                 );
-              })
-          )}
-        </Animated.View>
-      </ScrollView>
+              })()}
 
-      {/* (Menus favoris / playlist retirés ici pour la brièveté si besoin) */}
+              <View style={styles.albumTextBlock}>
+                <Text style={styles.albumTitle}>{album.title}</Text>
+                <Text style={styles.trackCount}>{album.tracks?.length || 0} pistes</Text>
+
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: 'white' }]}
+                    onPress={() => {
+                      const playableTracks = album.tracks
+                        .filter((t) => t.url)
+                        .map((t) => ({
+                          ...t,
+                          album: album.title,
+                          image: album.image,
+                        }));
+
+                      if (playableTracks.length > 0) {
+                        setGlobalTracks(playableTracks);
+                        playTrack(playableTracks[0], 0);
+                      } else {
+                        console.warn('Aucune piste lisible dans cet album.');
+                      }
+                    }}
+                  >
+                    <Ionicons name="play" size={18} color="black" style={{ marginRight: 6 }} />
+                    <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: '#1f4cff' }]}
+                    onPress={() => {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      setShowCross((v) => !v);
+                    }}
+                  >
+                    <Ionicons
+                      name="shuffle"
+                      size={18}
+                      color="white"
+                      style={{ marginRight: 6, transform: [{ rotate: showCross ? '90deg' : '0deg' }] }}
+                    />
+                    <Text style={[styles.actionText, { color: 'white' }]}>
+                      {showCross ? 'Standard' : 'CrossMusic'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </>
+        }
+        renderItem={({ item: track }) => {
+          if (!showCross) {
+            // === MODE STANDARD ===
+            const playable = !!track.url;
+            return (
+              <View style={styles.trackWrapper}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setGlobalTracks([]);
+                    playTrack({ ...track, album: album.title, image: album.image });
+                  }}
+                  disabled={!playable}
+                  style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
+                >
+                  <Image source={{ uri: album.image }} style={styles.trackIcon} />
+                  <Text
+                    style={[styles.trackTitle, { color: playable ? 'white' : '#777' }]}
+                    numberOfLines={1}
+                  >
+                    {track.title}
+                  </Text>
+
+                  <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
+                    <Ionicons
+                      name={isFav(track) ? 'heart' : 'heart-outline'}
+                      size={18}
+                      color={isFav(track) ? 'red' : 'white'}
+                    />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
+            );
+          } else {
+            // === MODE CROSSMUSIC (grille) ===
+            const crossArr = getCrossArray(track);
+            if (!crossArr.length) return null;
+
+            return (
+              <View style={styles.crossGroup}>
+                <Text style={styles.crossGroupTitle}>{track.title}</Text>
+
+                <FlatList
+                  data={crossArr}
+                  keyExtractor={(_, i) => i.toString()}
+                  numColumns={2}
+                  scrollEnabled={false}
+                  renderItem={({ item }) => {
+                    const playableUrl = item.url ?? item.streamUrl ?? item.source ?? null;
+                    const artwork = item.image ?? item.cover ?? item.artwork ?? album.image;
+
+                    return (
+                      <TouchableOpacity
+                        style={styles.crossGridCard}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          const originalTrack = {
+                            ...track,
+                            url: track.url ?? track.streamUrl ?? track.source ?? null,
+                            album: album.title,
+                            image: album.image,
+                            crossmusic: crossArr,
+                          };
+
+                          const parentCrossList = crossArr.map((x) => ({
+                            ...x,
+                            url: x.url ?? x.streamUrl ?? x.source ?? null,
+                            album: album.title,
+                            image: x.image ?? album.image,
+                          }));
+
+                          setGlobalTracks([originalTrack, ...parentCrossList]);
+
+                          playTrack({
+                            ...item,
+                            url: playableUrl,
+                            album: album.title,
+                            image: artwork,
+                            crossTitle: track.title,
+                            parentOriginalTrack: originalTrack,
+                            parentCrossList,
+                          });
+                        }}
+                      >
+                        <Image source={{ uri: artwork }} style={styles.crossGridImage} />
+                        <Text numberOfLines={2} style={styles.crossGridText}>
+                          {item.title}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              </View>
+            );
+          }
+        }}
+      />
     </View>
   );
 }
@@ -322,6 +345,36 @@ export default function AlbumScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   darkOverlay: { ...RNStyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
+
+  topBadges: { position: 'absolute', top: 40, right: 0, zIndex: 30 },
+
+  crossMusicBadgeTop: {
+    position: 'absolute',
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+    borderTopRightRadius: 26,
+    borderBottomRightRadius: 26,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    paddingLeft: 12,
+    paddingRight: 32,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 60,
+    borderWidth: 3,
+    borderColor: 'rgba(0,0,0,0.6)',
+    overflow: 'hidden',
+  },
+  crossBadgeTextTop: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '900',
+    marginLeft: 8,
+    textShadowColor: 'rgba(255,255,255,0.35)',
+    textShadowRadius: 4,
+  },
   backButton: {
     position: 'absolute',
     top: 50,
@@ -333,6 +386,40 @@ const styles = StyleSheet.create({
   },
   headerSection: { alignItems: 'center', marginTop: 110, marginBottom: 30 },
   albumImage: { width: width * 0.6, height: width * 0.6, borderRadius: 20 },
+
+  // ✅ Barre de progression glossy
+  progressWrapper: {
+    width: '70%',
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  progressBarBackground: {
+    width: '100%',
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  progressBarFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#3b82f6',
+    borderRadius: 20,
+  },
+  progressGloss: {
+    ...RNStyleSheet.absoluteFillObject,
+    borderRadius: 20,
+  },
+  progressText: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+
   albumTextBlock: { alignItems: 'center', marginTop: 18 },
   albumTitle: { color: 'white', fontSize: 26, fontWeight: '900', textAlign: 'center' },
   trackCount: { color: '#aaa', fontSize: 14, marginTop: 6 },
@@ -358,31 +445,35 @@ const styles = StyleSheet.create({
   trackIcon: { width: 45, height: 45, borderRadius: 10, marginRight: 12 },
   trackTitle: { flex: 1, fontSize: 16, fontWeight: '600' },
   heartButton: { paddingHorizontal: 6, marginLeft: 4 },
-  trackRight: { marginLeft: 4, padding: 4 },
-  crossGroup: { marginBottom: 25 },
-  crossGroupTitle: { color: 'white', fontSize: 18, fontWeight: '700', marginLeft: 20, marginBottom: 10 },
-  crossAlbumCard: {
-    width: width * 0.4,
-    marginHorizontal: 10,
+  crossGroup: { marginBottom: 30 },
+  crossGroupTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '700',
+    marginLeft: 20,
+    marginBottom: 10,
+  },
+  crossGridCard: {
+    flex: 1,
+    margin: 8,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 16,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    position: 'relative',
   },
-  crossAlbumImage: { width: '100%', height: width * 0.4, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-  crossCardFooter: {
+  crossGridImage: {
     width: '100%',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    height: width * 0.4,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
-  crossAlbumText: { flex: 1, color: 'white', fontSize: 14, fontWeight: '600', marginRight: 6 },
-  crossCardButtons: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  crossGridText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginVertical: 8,
+    paddingHorizontal: 6,
+  },
 });

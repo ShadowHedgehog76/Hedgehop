@@ -12,10 +12,11 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { playTrack } from '../src/api/player';
+import { playTrack, setGlobalTracks } from '../src/api/player';
 import { getFavorites, toggleFavorite, favEmitter } from '../src/api/favorites';
 
 const { width } = Dimensions.get('window');
@@ -32,7 +33,7 @@ export default function FavoritesScreen() {
   const listOpacity = useRef(new Animated.Value(0)).current;
   const listTranslate = useRef(new Animated.Value(50)).current;
 
-  // --- Chargement & synchro ---
+  // --- Chargement & synchro favoris ---
   useEffect(() => {
     (async () => {
       const favs = await getFavorites();
@@ -43,7 +44,7 @@ export default function FavoritesScreen() {
     return () => sub.remove();
   }, []);
 
-  // --- Animation d'entrée ---
+  // --- Animations d’entrée ---
   useEffect(() => {
     Animated.sequence([
       Animated.spring(imageScale, { toValue: 1, useNativeDriver: true }),
@@ -58,14 +59,23 @@ export default function FavoritesScreen() {
     await toggleFavorite(track);
   };
 
-  const handleExpand = (index) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedIndex(expandedIndex === index ? null : index);
+  const isFav = (track) =>
+    favorites.some(
+      (f) =>
+        f.title === track.title &&
+        f.album === track.album &&
+        (f.crossTitle === track.crossTitle || !f.crossTitle)
+    );
+
+  // --- Lecture de tous les favoris ---
+  const handlePlayAll = () => {
+    const playable = favorites.filter((t) => t.url);
+    if (playable.length === 0) return;
+    setGlobalTracks(playable);
+    playTrack(playable[0], 0);
   };
 
-  const isFav = (track) => favorites.some((f) => f.id === track.id);
-
-  // --- Mosaïque de fond ---
+  // --- Générer la mosaïque du fond ---
   const getMosaicGrid = () => {
     const imgs = favorites.slice(0, 4).map((f) => f.image);
     while (imgs.length < 4) imgs.push(imgs[0] || null);
@@ -75,7 +85,7 @@ export default function FavoritesScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 🌌 FOND MOSAÏQUE + FLOU */}
+      {/* 🌌 Fond mosaïque + flou */}
       <View style={styles.backgroundWrapper}>
         {mosaicImages.map((img, i) => (
           <Image
@@ -85,18 +95,12 @@ export default function FavoritesScreen() {
             resizeMode="cover"
           />
         ))}
-        {/* Flou au-dessus de toutes les images */}
-        <BlurView
-          intensity={80}
-          tint="dark"
-          style={StyleSheet.absoluteFillObject}
-        />
-        {/* Légère surcouche sombre */}
+        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFillObject} />
         <View style={styles.darkOverlay} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
-        {/* --- EN-TÊTE --- */}
+        {/* === EN-TÊTE === */}
         <View style={styles.headerSection}>
           <Animated.View style={{ transform: [{ scale: imageScale }] }}>
             <View style={styles.mosaicContainer}>
@@ -113,7 +117,7 @@ export default function FavoritesScreen() {
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: 'white' }]}
-                onPress={() => console.log('▶️ Lecture de tous les favoris')}
+                onPress={handlePlayAll}
               >
                 <Ionicons name="play" size={18} color="black" style={{ marginRight: 6 }} />
                 <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>
@@ -122,7 +126,7 @@ export default function FavoritesScreen() {
           </View>
         </View>
 
-        {/* --- LISTE DES PISTES --- */}
+        {/* === LISTE DES FAVORIS === */}
         <Animated.View style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}>
           {favorites.length === 0 ? (
             <Text style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>
@@ -131,64 +135,38 @@ export default function FavoritesScreen() {
           ) : (
             favorites.map((track, index) => {
               const playable = !!track.url;
-              const hasCross = Array.isArray(track.crossmusic) && track.crossmusic.length > 0;
-              const expanded = expandedIndex === index;
-
               return (
-                <View key={index}>
-                  <View style={styles.trackWrapper}>
-                    <TouchableOpacity
-                      onPress={() => playTrack(track)}
-                      disabled={!playable}
-                      style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
-                    >
-                      <Image source={{ uri: track.image }} style={styles.trackIcon} />
+                <View key={index} style={styles.trackWrapper}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setGlobalTracks([]);
+                      playTrack(track)
+                    }}
+                    disabled={!playable}
+                    style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
+                  >
+                    <Image source={{ uri: track.image }} style={styles.trackIcon} />
+                    <View style={{ flex: 1 }}>
                       <Text
                         style={[styles.trackTitle, { color: playable ? 'white' : '#777' }]}
                         numberOfLines={1}
                       >
                         {track.title}
                       </Text>
+                      <Text style={styles.trackSubtitle} numberOfLines={1}>
+                        {track.album}
+                      </Text>
+                    </View>
 
-                      {/* ❤️ Bouton Favori */}
-                      <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
-                        <Ionicons
-                          name={isFav(track) ? 'heart' : 'heart-outline'}
-                          size={18}
-                          color={isFav(track) ? 'red' : 'white'}
-                        />
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  </View>
-
-                  {expanded && hasCross && (
-                    <Animated.View style={styles.crossListContainer}>
-                      <FlatList
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={{ marginHorizontal: 10 }}
-                        data={track.crossmusic}
-                        keyExtractor={(_, i) => i.toString()}
-                        renderItem={({ item }) => (
-                          <View style={styles.crossCard}>
-                            <TouchableOpacity
-                              disabled={!item.url}
-                              onPress={() => playTrack(item)}
-                              style={{ alignItems: 'center' }}
-                            >
-                              <Image
-                                source={{ uri: item.image || track.image }}
-                                style={[styles.crossImage, !item.url && { tintColor: 'gray', opacity: 0.4 }]}
-                              />
-                              <Text style={styles.crossTitle} numberOfLines={1}>
-                                {item.title}
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
-                        )}
+                    {/* ❤️ Bouton Favori */}
+                    <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
+                      <Ionicons
+                        name={isFav(track) ? 'heart' : 'heart-outline'}
+                        size={18}
+                        color={isFav(track) ? 'red' : 'white'}
                       />
-                    </Animated.View>
-                  )}
+                    </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
               );
             })
@@ -202,22 +180,16 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
 
-  /* === FOND MOSAÏQUE === */
+  // === FOND MOSAÏQUE ===
   backgroundWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    ...RNStyleSheet.absoluteFillObject,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  mosaicTile: {
-    width: '50%',
-    height: '50%',
-  },
-  darkOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
+  mosaicTile: { width: '50%', height: '50%' },
+  darkOverlay: { ...RNStyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
 
-  /* === EN-TÊTE === */
+  // === HEADER ===
   headerSection: { alignItems: 'center', marginTop: 110, marginBottom: 30 },
   mosaicContainer: {
     width: width * 0.6,
@@ -227,11 +199,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  mosaicImage: {
-    width: '50%',
-    height: '50%',
-    resizeMode: 'cover',
-  },
+  mosaicImage: { width: '50%', height: '50%', resizeMode: 'cover' },
   albumTextBlock: { alignItems: 'center', marginTop: 18 },
   albumTitle: { color: 'white', fontSize: 26, fontWeight: '900', textAlign: 'center' },
   trackCount: { color: '#aaa', fontSize: 14, marginTop: 6 },
@@ -246,7 +214,7 @@ const styles = StyleSheet.create({
   },
   actionText: { fontWeight: '600', fontSize: 14 },
 
-  /* === LISTE === */
+  // === LISTE ===
   trackWrapper: { marginHorizontal: 20, marginBottom: 10 },
   trackPill: {
     flexDirection: 'row',
@@ -257,26 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   trackIcon: { width: 45, height: 45, borderRadius: 10, marginRight: 12 },
-  trackTitle: { flex: 1, fontSize: 16, fontWeight: '600' },
+  trackTitle: { fontSize: 16, fontWeight: '600' },
+  trackSubtitle: { fontSize: 12, color: '#aaa', marginTop: 2 },
   heartButton: { paddingHorizontal: 6, marginLeft: 4 },
-  trackRight: { marginLeft: 4, padding: 4 },
-
-  crossListContainer: {
-    marginTop: 6,
-    marginBottom: 12,
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 30,
-    paddingVertical: 12,
-  },
-  crossCard: {
-    width: 120,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
-    padding: 10,
-    marginHorizontal: 6,
-    alignItems: 'center',
-  },
-  crossImage: { width: 90, height: 90, borderRadius: 10, marginBottom: 6 },
-  crossTitle: { color: 'white', fontSize: 12, textAlign: 'center' },
 });

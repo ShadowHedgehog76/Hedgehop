@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Animated,
   FlatList,
+  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -34,27 +35,32 @@ export default function PlayerScreen({ navigation }) {
   const [track, setTrack] = useState(getCurrentTrack());
   const [status, setStatus] = useState(getPlaybackStatus());
   const [isPlaying, setIsPlaying] = useState(isTrackPlaying());
-  const [crossList, setCrossList] = useState([]);
   const [queue, setQueue] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [crossList, setCrossList] = useState([]);
 
-  // Animation scroll texte
   const scrollXTitle = useRef(new Animated.Value(0)).current;
   const scrollXAlbum = useRef(new Animated.Value(0)).current;
-  const [titleWidth, setTitleWidth] = useState(0);
-  const [albumWidth, setAlbumWidth] = useState(0);
 
-  // Récupération de la queue
   useEffect(() => {
     const q = getQueue ? getQueue() : [];
     setQueue(q);
+    const idx = q.findIndex(
+      (t) => (track?.url && t.url === track.url) || (track?.id && t.id === track.id)
+    );
+    setCurrentIndex(idx);
   }, []);
 
-  // Souscriptions du player
   useEffect(() => {
     const playSub = playerEmitter.addListener('play', ({ track }) => {
       setTrack(track);
       setIsPlaying(true);
-      setQueue(getQueue ? getQueue() : []);
+      const q = getQueue ? getQueue() : [];
+      setQueue(q);
+      const idx = q.findIndex(
+        (t) => (track?.url && t.url === track.url) || (track?.id && t.id === track.id)
+      );
+      setCurrentIndex(idx);
     });
     const pauseSub = playerEmitter.addListener('pause', () => setIsPlaying(false));
     const resumeSub = playerEmitter.addListener('resume', () => setIsPlaying(true));
@@ -70,50 +76,9 @@ export default function PlayerScreen({ navigation }) {
     };
   }, []);
 
-  // Animation titre défilant
-  useEffect(() => {
-    if (titleWidth > width * 0.8) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scrollXTitle, {
-            toValue: -titleWidth + width * 0.8,
-            duration: 8000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scrollXTitle, {
-            toValue: 0,
-            duration: 8000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    }
-  }, [titleWidth]);
-
-  // Animation album défilant
-  useEffect(() => {
-    if (albumWidth > width * 0.6) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scrollXAlbum, {
-            toValue: -albumWidth + width * 0.6,
-            duration: 10000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scrollXAlbum, {
-            toValue: 0,
-            duration: 10000,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    }
-  }, [albumWidth]);
-
-  // CrossMusic
+  // Gérer la liste CrossMusic
   useEffect(() => {
     if (!track) return;
-
     if (track.crossTitle) {
       const parentList = track.parentCrossList || [];
       const siblings = parentList.filter((t) => t?.title && t.title !== track.title);
@@ -138,27 +103,16 @@ export default function PlayerScreen({ navigation }) {
     }
   }, [track]);
 
-  const formatTime = (millis) => {
-    const totalSeconds = Math.floor(millis / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   const duration = status.durationMillis || 1;
   const position = status.positionMillis || 0;
 
   const togglePlayPause = async () => {
-    try {
-      if (isPlaying) {
-        await pauseTrack();
-        setIsPlaying(false);
-      } else {
-        await resumeTrack();
-        setIsPlaying(true);
-      }
-    } catch (err) {
-      console.error('Erreur play/pause:', err);
+    if (isPlaying) {
+      await pauseTrack();
+      setIsPlaying(false);
+    } else {
+      await resumeTrack();
+      setIsPlaying(true);
     }
   };
 
@@ -194,66 +148,65 @@ export default function PlayerScreen({ navigation }) {
   }
 
   const hasQueue = queue && queue.length > 1;
+  const crossCount = track.crossmusic ? track.crossmusic.length : 0;
 
   return (
     <View style={styles.container}>
-      {/* === FOND IMAGE + DÉGRADÉ === */}
-      <Image source={{ uri: track.image }} style={StyleSheet.absoluteFillObject} />
+      <Image source={{ uri: track.image || safeImage }} style={StyleSheet.absoluteFillObject} />
       <LinearGradient
-        colors={[
-          'rgba(0,0,0,0.3)',
-          'rgba(0,0,0,0.6)',
-          'rgba(0,0,0,0.9)',
-          'rgba(0,0,0,1)',
-          'rgba(0,0,0,1)',
-        ]}
+        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,1)']}
         style={StyleSheet.absoluteFillObject}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
       />
 
-      {/* === Bouton retour === */}
+      {/* Bouton retour */}
       <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
         <Ionicons name="close" size={26} color="white" />
       </TouchableOpacity>
 
-      {/* === CENTRE DU PLAYER === */}
-      <View style={styles.center}>
-        {/* === TITRE === */}
-        <View style={styles.titleBlock}>
-          <Animated.View
+      {/* 🌟 PASTILLE EN HAUT À DROITE */}
+      {hasQueue && crossCount > 0 && (
+        <View style={styles.crossMusicBadgeTop}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.25)', 'transparent']}
             style={{
-              transform: [{ translateX: scrollXTitle }],
-              maxWidth: width * 0.8,
-              overflow: 'hidden',
+              ...RNStyleSheet.absoluteFillObject,
+              top: 0,
+              height: '50%',
+              borderTopLeftRadius: 14,
+              borderBottomLeftRadius: 14,
+              borderTopRightRadius: 26,
+              borderBottomRightRadius: 26,
             }}
-            onLayout={(e) => setTitleWidth(e.nativeEvent.layout.width)}
-          >
-            <Text style={styles.title}>
-              {track.crossTitle ? track.crossTitle : track.title}
-            </Text>
-          </Animated.View>
+          />
+          <Ionicons name="shuffle" size={18} color="#fff" />
+          <Text style={styles.crossBadgeTextTop}>{crossCount}</Text>
+        </View>
+      )}
 
+      <View style={styles.center}>
+        {/* === TITRE ET CROSS BADGE === */}
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>
+            {track.crossTitle ? track.crossTitle : track.title}
+          </Text>
+
+          {/* Indicateur CrossMusic */}
           {track.crossTitle && (
             <View style={styles.crossBadge}>
-              <Ionicons name="musical-notes" size={18} color="#1f4cff" style={{ marginHorizontal: 4 }} />
+              <Ionicons
+                name="musical-notes"
+                size={18}
+                color="#1f4cff"
+                style={{ marginHorizontal: 4 }}
+              />
               <Text style={styles.crossTitle}>{track.title}</Text>
             </View>
           )}
 
-          <Animated.View
-            style={{
-              transform: [{ translateX: scrollXAlbum }],
-              maxWidth: width * 0.6,
-              overflow: 'hidden',
-            }}
-            onLayout={(e) => setAlbumWidth(e.nativeEvent.layout.width)}
-          >
-            <Text style={styles.album}>{track.album}</Text>
-          </Animated.View>
+          <Text style={styles.album}>{track.album}</Text>
         </View>
 
-        {/* === SLIDER === */}
+        {/* SLIDER */}
         <View style={styles.progressContainer}>
           <Slider
             style={{ width: '100%', height: 40 }}
@@ -265,13 +218,9 @@ export default function PlayerScreen({ navigation }) {
             thumbTintColor="#1f4cff"
             onSlidingComplete={seekTo}
           />
-          <View style={styles.timeRow}>
-            <Text style={styles.timeText}>{formatTime(position)}</Text>
-            <Text style={styles.timeText}>{formatTime(duration)}</Text>
-          </View>
         </View>
 
-        {/* === CONTRÔLES === */}
+        {/* CONTROLS */}
         <View style={styles.controls}>
           <TouchableOpacity onPress={playPrevious}>
             <Ionicons name="play-skip-back" size={36} color="white" />
@@ -286,50 +235,64 @@ export default function PlayerScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* === QUEUE OU CROSSMUSIC === */}
+        {/* === FILE DE LECTURE OU MODE SOLO === */}
         {hasQueue ? (
           <View style={styles.crossSection}>
             <Text style={styles.queueTitle}>File de lecture</Text>
             <FlatList
               data={queue}
               horizontal
-              keyExtractor={(item, i) => item.id ? item.id.toString() : `${item.title}-${i}`}
+              keyExtractor={(item, i) => `${item.id || item.url || item.title}-${i}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 20 }}
-              renderItem={({ item, index }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.crossCard,
-                    item.id === track.id && { borderColor: '#1f4cff', borderWidth: 2 },
-                  ]}
-                  onPress={() => playTrack(item, index)}
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{ uri: item.image || track.image }}
-                    style={styles.crossImage}
-                    resizeMode="cover"
-                  />
-                  <LinearGradient
-                    colors={[
-                      'transparent',
-                      'rgba(0,0,0,0.6)',
-                      'rgba(0,0,0,0.9)',
-                      'rgba(0,0,0,1)',
-                    ]}
-                    style={styles.crossGradient}
-                  />
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.crossCardTitle,
-                      item.id === track.id && { color: '#1f4cff', fontWeight: '900' },
-                    ]}
+              renderItem={({ item, index }) => {
+                const isCurrent = index === currentIndex;
+                const crossCount = item.crossmusic ? item.crossmusic.length : 0;
+
+                return (
+                  <TouchableOpacity
+                    style={styles.crossCard}
+                    onPress={() => playTrack(item, index)}
+                    activeOpacity={0.8}
                   >
-                    {item.title}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                    <Image
+                      source={{ uri: item.image || safeImage }}
+                      style={styles.crossImage}
+                      resizeMode="cover"
+                    />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,1)']}
+                      style={styles.crossGradient}
+                    />
+                    {isCurrent && (
+                      <View style={styles.nowPlayingIconCentered}>
+                        <Ionicons name="musical-notes" size={60} color="white" />
+                      </View>
+                    )}
+                    {crossCount > 0 && (
+                      <View style={styles.crossMusicBadge}>
+                        <LinearGradient
+                          colors={['rgba(255,255,255,0.25)', 'transparent']}
+                          style={{
+                            ...RNStyleSheet.absoluteFillObject,
+                            top: 0,
+                            height: '50%',
+                            borderTopLeftRadius: 12,
+                            borderBottomLeftRadius: 12,
+                            borderTopRightRadius: 22,
+                            borderBottomRightRadius: 22,
+                          }}
+                        />
+                        <Ionicons name="shuffle" size={14} color="#fff" />
+                        <Text style={styles.crossBadgeText}>{crossCount}</Text>
+                      </View>
+                    )}
+                    <Text numberOfLines={1} style={styles.crossCardTitle}>
+                      {item.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         ) : (
@@ -339,10 +302,8 @@ export default function PlayerScreen({ navigation }) {
               <FlatList
                 data={crossList}
                 horizontal
-                keyExtractor={(item, i) =>
-                  item.isOriginal ? 'original' : `${item.title}-${i}`
-                }
                 showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, i) => item.isOriginal ? 'original' : `${item.title}-${i}`}
                 contentContainerStyle={{ paddingHorizontal: 20 }}
                 renderItem={({ item }) => (
                   <TouchableOpacity
@@ -356,12 +317,7 @@ export default function PlayerScreen({ navigation }) {
                       resizeMode="cover"
                     />
                     <LinearGradient
-                      colors={[
-                        'transparent',
-                        'rgba(0,0,0,0.6)',
-                        'rgba(0,0,0,0.9)',
-                        'rgba(0,0,0,1)',
-                      ]}
+                      colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,1)']}
                       style={styles.crossGradient}
                     />
                     <Text
@@ -386,87 +342,51 @@ export default function PlayerScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#777' },
   closeBtn: { position: 'absolute', top: 50, left: 20, zIndex: 10 },
-
-  center: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
+  center: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 40 },
   titleBlock: { alignItems: 'center', marginBottom: 30 },
-  title: { color: 'white', fontSize: 28, fontWeight: '900', textAlign: 'center' },
+  title: { color: '#fff', fontSize: 28, fontWeight: '900' },
+  album: { color: '#aaa', fontSize: 15, marginTop: 6 },
 
-  crossBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  crossBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+  },
   crossTitle: {
     color: '#1f4cff',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
-    textShadowColor: 'rgba(31,76,255,0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
-  album: { color: '#aaa', fontSize: 15, marginTop: 6, textAlign: 'center' },
 
   progressContainer: { width: '100%', marginBottom: 30 },
-  timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -5 },
-  timeText: { color: '#aaa', fontSize: 12 },
+  controls: { flexDirection: 'row', justifyContent: 'space-between', width: '70%', marginBottom: 30 },
+  playButton: { backgroundColor: '#fff', borderRadius: 50, padding: 22 },
+  crossSection: { width: '100%', alignItems: 'center', marginBottom: 40 },
+  queueTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 10, marginLeft: 20, alignSelf: 'flex-start' },
+  crossCard: { width: width * 0.4, height: width * 0.4, borderRadius: 16, overflow: 'hidden', marginHorizontal: 10 },
+  crossImage: { width: '100%', height: '100%' },
+  crossGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
+  crossCardTitle: { position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center', color: '#fff', fontWeight: '700' },
+  nowPlayingIconCentered: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
 
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '70%',
-    marginBottom: 30,
-  },
-  playButton: {
-    backgroundColor: 'white',
-    borderRadius: 50,
-    padding: 22,
-    shadowColor: '#1f4cff',
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-
-  crossSection: { marginBottom: 40, width: '100%', alignItems: 'center' },
-  queueTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-    marginLeft: 20,
-  },
-  crossCard: {
-    width: width * 0.4,
-    height: width * 0.4,
-    borderRadius: 16,
+  crossMusicBadgeTop: {
+    position: 'absolute', top: 50, right: -23,
+    backgroundColor: '#1f4cff',
+    borderTopLeftRadius: 14, borderBottomLeftRadius: 14, borderTopRightRadius: 26, borderBottomRightRadius: 26,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 7, paddingLeft: 12, paddingRight: 32,
+    elevation: 8, shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 60, borderWidth: 3, borderColor: 'rgba(0,0,0,0.6)',
     overflow: 'hidden',
-    marginHorizontal: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  crossImage: { width: '100%', height: '100%', borderRadius: 16 },
-  crossGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '70%',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+  crossBadgeTextTop: { color: '#fff', fontSize: 15, fontWeight: '900', marginLeft: 8, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 4 },
+  crossMusicBadge: {
+    position: 'absolute', bottom: 110, right: -15, backgroundColor: '#1f4cff',
+    borderTopLeftRadius: 12, borderBottomLeftRadius: 12, borderTopRightRadius: 22, borderBottomRightRadius: 22,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingLeft: 10, paddingRight: 26,
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 50, borderWidth: 3, borderColor: 'rgba(0,0,0,0.6)', overflow: 'hidden',
   },
-  crossCardTitle: {
-    position: 'absolute',
-    bottom: 8,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 14,
-  },
+  crossBadgeText: { color: '#fff', fontSize: 13, fontWeight: '800', marginLeft: 6, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 4 },
 });

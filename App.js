@@ -7,11 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 // --- Import des écrans principaux ---
 import HomeStack from './screens/HomeStack';
+import NewsStack from './screens/NewsStack'; // tout en haut
 import FavoritesScreen from './screens/FavoritesScreen';
-import PlaylistStack from './screens/PlaylistStack';
-import SettingsScreen from './screens/SettingsScreen';
 import PlayerScreen from './screens/PlayerScreen';
 import PlayerBar from './src/components/PlayerBar';
+import AlbumScreenDisabled from './screens/AlbumScreenDisabled'; // ✅ ajouté ici
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,11 +38,8 @@ function MainLayout() {
               case 'Favorites':
                 icon = 'heart';
                 break;
-              case 'Playlists':
-                icon = 'list';
-                break;
-              case 'Settings':
-                icon = 'settings';
+              case 'News':
+                icon = 'time';
                 break;
             }
             return <Ionicons name={icon} size={size} color={color} />;
@@ -51,19 +48,9 @@ function MainLayout() {
       >
         <Tab.Screen name="Home" component={HomeStack} />
         <Tab.Screen name="Favorites" component={FavoritesScreen} />
-        <Tab.Screen
-          name="Playlists"
-          component={PlaylistStack}
-          options={{
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="albums-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="News" component={NewsStack} />
       </Tab.Navigator>
 
-      {/* ✅ PlayerBar visible sur toutes les pages */}
       <PlayerBar />
     </View>
   );
@@ -75,6 +62,9 @@ export default function App() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="MainLayout" component={MainLayout} />
         <Stack.Screen name="PlayerScreen" component={PlayerScreen} />
+
+        {/* ✅ ajouté ici, accessible depuis n’importe quel onglet */}
+        <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
       </Stack.Navigator>
     </NavigationContainer>
   );

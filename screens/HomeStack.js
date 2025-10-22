@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './HomeScreen';
 import AlbumScreen from './AlbumScreen';
+import AlbumScreenDisabled from './AlbumScreenDisabled';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +23,15 @@ export default function HomeStack() {
       <Stack.Screen
         name="Album"
         component={AlbumScreen}
+        options={{
+          animationTypeForReplace: 'push',
+          gestureDirection: 'horizontal',
+        }}
+      />
+
+      <Stack.Screen
+        name="AlbumScreenDisabled"
+        component={AlbumScreenDisabled}
         options={{
           animationTypeForReplace: 'push',
           gestureDirection: 'horizontal',
