@@ -312,7 +312,7 @@ export default function AlbumScreen({ route, navigation }) {
                             image: x.image ?? album.image,
                           }));
 
-                          setGlobalTracks([originalTrack, ...parentCrossList]);
+                          setGlobalTracks([]);
 
                           playTrack({
                             ...item,
