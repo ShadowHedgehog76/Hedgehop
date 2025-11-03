@@ -13,11 +13,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import { getPlaylists, playlistEmitter } from '../src/api/playlists';
 
 export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [playlists, setPlaylists] = useState([]);
   
   const { isTablet, getGridColumns, getCardWidth, dimensions, isLandscape } = useDeviceType();
 
@@ -48,8 +50,8 @@ export default function HomeScreen({ navigation }) {
         setCategories(data);
       })
       .catch(err => {
-        console.error('❌ Erreur chargement JSON:', err);
-        // En cas d'erreur, garder les anciennes données si elles existent
+  console.error('❌ JSON load error:', err);
+  // On error, keep previous data if it exists
       })
       .finally(() => setLoading(false));
   };
@@ -59,8 +61,17 @@ export default function HomeScreen({ navigation }) {
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
       .then(res => res.json())
       .then(data => setCategories(data))
-      .catch(err => console.error('❌ Erreur chargement JSON:', err))
+  .catch(err => console.error('❌ JSON load error:', err))
       .finally(() => setLoading(false));
+
+    // Charger les playlists locales et s'abonner aux changements
+    (async () => {
+      const pls = await getPlaylists();
+      setPlaylists(pls);
+    })();
+
+    const sub = playlistEmitter.addListener('update', (pls) => setPlaylists(pls));
+    return () => sub.remove();
   }, []);
 
   const getAlbumStatus = (album) => {
@@ -149,6 +160,29 @@ export default function HomeScreen({ navigation }) {
     return result;
   };
 
+  const PlaylistCard = ({ item }) => {
+    const cardWidth = getCardWidth();
+    const cardHeight = cardWidth + 60;
+    const cover = item.tracks?.[0]?.image || 'https://via.placeholder.com/300x300/222/EEEEEE.png?text=Playlist';
+    const count = item.tracks?.length || 0;
+    return (
+      <TouchableOpacity
+        style={[styles.card, { width: cardWidth, height: cardHeight, marginRight: isTablet ? 12 : 14, marginBottom: 15 }]}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('PlaylistDetail', { playlistId: item.id })}
+      >
+        <View style={styles.imageWrapper}>
+          <Image source={{ uri: cover }} style={styles.image} />
+          <View style={[styles.statusBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}> 
+            <Ionicons name="musical-notes" size={14} color="#fff" style={{ marginRight: 4 }} />
+            <Text style={styles.badgeText}>{count} track{count>1?'s':''}</Text>
+          </View>
+        </View>
+        <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   const filters = [
     { key: 'All', label: 'All', color: '#fff' },
     { key: 'Completed', label: 'Completed', color: '#22c55e' },
@@ -171,7 +205,7 @@ export default function HomeScreen({ navigation }) {
     return (
       <View style={styles.loader}>
         <ActivityIndicator color="#1f4cff" size="large" />
-        <Text style={{ color: 'white', marginTop: 10 }}>Chargement des albums...</Text>
+  <Text style={{ color: 'white', marginTop: 10 }}>Loading albums...</Text>
       </View>
     );
   }
@@ -222,7 +256,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {filteredCategories.length === 0 ? (
-        <Text style={styles.noAlbums}>Aucun album trouvé pour ce filtre.</Text>
+  <Text style={styles.noAlbums}>No albums found for this filter.</Text>
       ) : (
         filteredCategories.map((cat, idx) => {
           // Both tablet and phone use horizontal scroll for better alignment
@@ -245,6 +279,22 @@ export default function HomeScreen({ navigation }) {
             </View>
           );
         })
+      )}
+
+      {/* 📂 Catégorie Playlists en bas */}
+      {playlists.length > 0 && (
+        <View style={[styles.categoryBlock, { marginTop: 10 }]}> 
+          <Text style={styles.categoryTitle}>Playlists</Text>
+          <FlatList
+            key="playlists-section"
+            data={playlists}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 12, paddingRight: 12 }}
+            renderItem={({ item }) => <PlaylistCard item={item} />}
+            keyExtractor={(pl) => pl.id}
+          />
+        </View>
       )}
     </ScrollView>
   );

@@ -27,12 +27,60 @@ const savePlaylists = async (playlists) => {
 };
 
 /** ➕ Crée une nouvelle playlist */
-export const createPlaylist = async (name = 'Nouvelle playlist', tracks = []) => {
+export const createPlaylist = async (name = 'New playlist', tracks = []) => {
   const playlists = await getPlaylists();
   const newPlaylist = {
     id: `pl_${Date.now().toString(36)}`,
     name,
     tracks,
+    createdAt: Date.now(),
+  };
+  const updated = [...playlists, newPlaylist];
+  await savePlaylists(updated);
+  return newPlaylist;
+};
+
+/** ✅ Upsert par nom (idempotent): si une playlist du même nom existe (insensible à la casse), on remplace ses morceaux; sinon on la crée. */
+export const upsertPlaylistByName = async (name = 'Playlist importée', tracks = []) => {
+  const playlists = await getPlaylists();
+
+  const norm = (name || '').trim();
+  const normLower = norm.toLowerCase();
+
+  // Dédoublonne les morceaux par (url || title+album+crossTitle)
+  const seen = new Set();
+  const dedupedTracks = [];
+  for (const t of Array.isArray(tracks) ? tracks : []) {
+    const key = t?.url
+      ? `u:${t.url}`
+      : `m:${t.title || ''}|${t.album || ''}|${t.crossTitle || ''}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      dedupedTracks.push(t);
+    }
+  }
+
+  const idx = playlists.findIndex((p) => (p.name || '').trim().toLowerCase() === normLower);
+  if (idx >= 0) {
+    // Remplace le contenu sans créer un doublon
+    const existing = playlists[idx];
+    const updatedOne = {
+      ...existing,
+      name: norm || existing.name,
+      tracks: dedupedTracks,
+      updatedAt: Date.now(),
+    };
+    const updated = [...playlists];
+    updated[idx] = updatedOne;
+    await savePlaylists(updated);
+    return updatedOne;
+  }
+
+  // Sinon, crée une nouvelle playlist
+  const newPlaylist = {
+    id: `pl_${Date.now().toString(36)}`,
+    name: norm || 'Playlist importée',
+    tracks: dedupedTracks,
     createdAt: Date.now(),
   };
   const updated = [...playlists, newPlaylist];

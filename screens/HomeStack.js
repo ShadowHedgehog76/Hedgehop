@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './HomeScreen';
 import AlbumScreen from './AlbumScreen';
 import AlbumScreenDisabled from './AlbumScreenDisabled';
+import PlaylistDetailScreen from './PlaylistDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,14 @@ export default function HomeStack() {
       <Stack.Screen
         name="AlbumScreenDisabled"
         component={AlbumScreenDisabled}
+        options={{
+          animationTypeForReplace: 'push',
+          gestureDirection: 'horizontal',
+        }}
+      />
+      <Stack.Screen
+        name="PlaylistDetail"
+        component={PlaylistDetailScreen}
         options={{
           animationTypeForReplace: 'push',
           gestureDirection: 'horizontal',

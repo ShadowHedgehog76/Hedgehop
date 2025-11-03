@@ -71,8 +71,8 @@ export default function CrossPartyBadgeNew({
 
   const handleRoomClosed = () => {
     Alert.alert(
-      'Salon fermé', 
-      isHost ? 'Vous avez fermé le salon' : 'L\'hôte a fermé le salon',
+      'Room closed', 
+      isHost ? 'You closed the room' : 'The host closed the room',
       [{ text: 'OK', onPress: onClose }]
     );
   };
@@ -82,7 +82,7 @@ export default function CrossPartyBadgeNew({
       await crossPartyService.closeRoom(roomId);
       onClose();
     } catch (error) {
-      console.error('Erreur fermeture salon:', error);
+  console.error('Room close error:', error);
     }
   };
 
@@ -91,27 +91,27 @@ export default function CrossPartyBadgeNew({
       await crossPartyService.leaveRoom(roomId, guestId);
       onClose();
     } catch (error) {
-      console.error('Erreur quitter salon:', error);
+  console.error('Leave room error:', error);
     }
   };
 
   const handleAction = () => {
     if (isHost) {
       Alert.alert(
-        'Fermer le salon ?',
-        'Tous les invités seront déconnectés.',
+        'Close room?',
+        'All guests will be disconnected.',
         [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Fermer', style: 'destructive', onPress: closeRoom }
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Close', style: 'destructive', onPress: closeRoom }
         ]
       );
     } else {
       Alert.alert(
-        'Quitter le salon ?',
-        'Vous ne pourrez plus écouter en groupe.',
+        'Leave room?',
+        'You will no longer listen together.',
         [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Quitter', style: 'destructive', onPress: leaveRoom }
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Leave', style: 'destructive', onPress: leaveRoom }
         ]
       );
     }
@@ -169,29 +169,29 @@ export default function CrossPartyBadgeNew({
 
           <View style={styles.infoSection}>
             <Text style={styles.roleText}>
-              {isHost ? '🏠 Hôte' : '👥 Invité'} • {guests.length} connecté(s)
+              {isHost ? '🏠 Host' : '👥 Guest'} • {guests.length} connected
             </Text>
           </View>
 
-          {/* QR pour hôte : partage rapide du code */}
+          {/* Host QR: quick share code */}
           {isHost && (
             <View style={styles.qrSection}>
               <View style={styles.qrWrapper}>
                 <QRCode value={roomCode || ''} size={160} backgroundColor="#fff" color="#000" />
               </View>
-              <Text style={styles.qrHint}>Scannez pour rejoindre ce salon</Text>
+              <Text style={styles.qrHint}>Scan to join this room</Text>
             </View>
           )}
 
           <View style={styles.currentTrackSection}>
             {roomData.currentTrack ? (
               <View>
-                <Text style={styles.currentTrackTitle}>En cours:</Text>
+                <Text style={styles.currentTrackTitle}>Now playing:</Text>
                 <Text style={styles.trackName}>{roomData.currentTrack.title}</Text>
                 <Text style={styles.trackArtist}>{roomData.currentTrack.album}</Text>
               </View>
             ) : (
-              <Text style={styles.noTrackText}>Aucune piste en cours</Text>
+              <Text style={styles.noTrackText}>No track playing</Text>
             )}
           </View>
 
@@ -200,7 +200,7 @@ export default function CrossPartyBadgeNew({
             onPress={handleAction}
           >
             <Text style={styles.actionButtonText}>
-              {isHost ? 'Fermer le salon' : 'Quitter le salon'}
+              {isHost ? 'Close room' : 'Leave room'}
             </Text>
           </TouchableOpacity>
         </View>

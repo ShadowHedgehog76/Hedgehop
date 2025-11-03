@@ -177,7 +177,7 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
       />
       
       <ActionButton
-        title="Désactiver Mode Dev"
+        title="Disable Dev Mode"
         icon="lock-closed"
         onPress={disableDevMode}
         color="#ef4444"
@@ -547,7 +547,7 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          🔒 Mode développeur activé
+          🔒 Dev Mode activated
         </Text>
       </View>
     </View>

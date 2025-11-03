@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Animated,
   FlatList,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -27,10 +29,11 @@ import {
   playPrevious,
   
 } from '../src/api/player';
+import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
 
 const { width } = Dimensions.get('window');
 const safeImage = 'https://i.imgur.com/ODLC1hY.jpeg';
-const safeAlbum = 'Inconnu';
+const safeAlbum = 'Unknown';
 
 export default function PlayerScreen({ navigation }) {
   const [track, setTrack] = useState(getCurrentTrack());
@@ -43,6 +46,9 @@ export default function PlayerScreen({ navigation }) {
   const { isTablet, dimensions, isLandscape } = useDeviceType();
   const scrollXTitle = useRef(new Animated.Value(0)).current;
   const scrollXAlbum = useRef(new Animated.Value(0)).current;
+  const [plistModal, setPlistModal] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [newPlName, setNewPlName] = useState('');
 
   useEffect(() => {
     const q = getQueue ? getQueue() : [];
@@ -52,6 +58,39 @@ export default function PlayerScreen({ navigation }) {
     );
     setCurrentIndex(idx);
   }, []);
+
+  const openAddToPlaylist = async () => {
+    const pls = await getPlaylists();
+    setPlaylists(pls);
+    setPlistModal(true);
+  };
+
+  const handleAddToExisting = async (playlistId) => {
+    if (!track) return;
+    await addTrack(playlistId, track);
+    setPlistModal(false);
+  };
+
+  const handleCreateAndAdd = async () => {
+    const name = (newPlName || 'New playlist').trim();
+    const pl = await createPlaylist(name);
+    if (pl) {
+      await addTrack(pl.id, track);
+      // Naviguer vers la playlist créée
+      if (isTablet) {
+        // En tablette, commuter sur l'onglet You (YouStack gère le détail depuis la liste)
+        navigation.navigate('You');
+      } else {
+        // Sur téléphone, deep-link vers YouStack > PlaylistDetail
+        navigation.navigate('MainLayout', {
+          screen: 'You',
+          params: { screen: 'PlaylistDetail', params: { playlistId: pl.id } },
+        });
+      }
+    }
+    setNewPlName('');
+    setPlistModal(false);
+  };
 
   useEffect(() => {
     const playSub = playerEmitter.addListener('play', ({ track }) => {
@@ -150,7 +189,7 @@ export default function PlayerScreen({ navigation }) {
   if (!track) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyText}>Aucune piste en lecture</Text>
+  <Text style={styles.emptyText}>No track playing</Text>
       </View>
     );
   }
@@ -257,7 +296,7 @@ export default function PlayerScreen({ navigation }) {
           style={StyleSheet.absoluteFillObject}
         />
 
-        {/* Header with badge */}
+        {/* Header with badge + Add to playlist */}
         <View style={styles.tabletHeader}>
           {hasQueue && crossCount > 0 && (
             <View style={styles.crossMusicBadgeTop}>
@@ -277,6 +316,9 @@ export default function PlayerScreen({ navigation }) {
               <Text style={styles.crossBadgeTextTop}>{crossCount}</Text>
             </View>
           )}
+          <TouchableOpacity style={styles.addBtn} onPress={openAddToPlaylist}>
+            <Ionicons name="add-circle" size={26} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         {/* Tablet main content */}
@@ -348,12 +390,56 @@ export default function PlayerScreen({ navigation }) {
             {hasQueue ? renderTabletQueue() : renderTabletCrossMusic()}
           </View>
         )}
+        {/* Modal Add to Playlist (tablet) */}
+        <Modal transparent visible={plistModal} animationType="fade" onRequestClose={() => setPlistModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add to playlist</Text>
+              <FlatList
+                data={playlists}
+                keyExtractor={(item) => item.id}
+                style={{ maxHeight: 240 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.plRow} onPress={() => handleAddToExisting(item.id)}>
+                    <Ionicons name="musical-notes" size={18} color="#1f4cff" />
+                    <Text style={styles.plRowText}>{item.name}</Text>
+                    <Text style={styles.plCount}>{item.tracks?.length || 0}</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={() => (
+                  <View style={{ paddingVertical: 12 }}>
+                    <Text style={{ color: '#aaa' }}>No playlists yet</Text>
+                  </View>
+                )}
+              />
+
+              <View style={styles.separator} />
+              <Text style={[styles.modalTitle, { marginTop: 8 }]}>New playlist</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Playlist name"
+                placeholderTextColor="#666"
+                value={newPlName}
+                onChangeText={setNewPlName}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setPlistModal(false)}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirm} onPress={handleCreateAndAdd}>
+                  <Text style={styles.modalConfirmText}>Create and add</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
 
   // Phone layout (original)
   return (
+    <>
     <View style={styles.container}>
       <Image source={{ uri: track.image || safeImage }} style={StyleSheet.absoluteFillObject} />
       <LinearGradient
@@ -362,9 +448,14 @@ export default function PlayerScreen({ navigation }) {
       />
 
       {/* Bouton retour */}
-      <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-        <Ionicons name="close" size={26} color="white" />
-      </TouchableOpacity>
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="close" size={26} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addBtn} onPress={openAddToPlaylist}>
+          <Ionicons name="add-circle" size={26} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* 🌟 PASTILLE EN HAUT À DROITE */}
       {hasQueue && crossCount > 0 && (
@@ -540,6 +631,50 @@ export default function PlayerScreen({ navigation }) {
         )}
       </View>
     </View>
+    {/* Modal Add to Playlist */}
+    <Modal transparent visible={plistModal} animationType="fade" onRequestClose={() => setPlistModal(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>Add to playlist</Text>
+          <FlatList
+            data={playlists}
+            keyExtractor={(item) => item.id}
+            style={{ maxHeight: 240 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.plRow} onPress={() => handleAddToExisting(item.id)}>
+                <Ionicons name="musical-notes" size={18} color="#1f4cff" />
+                <Text style={styles.plRowText}>{item.name}</Text>
+                <Text style={styles.plCount}>{item.tracks?.length || 0}</Text>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={() => (
+              <View style={{ paddingVertical: 12 }}>
+                <Text style={{ color: '#aaa' }}>No playlists yet</Text>
+              </View>
+            )}
+          />
+
+          <View style={styles.separator} />
+          <Text style={[styles.modalTitle, { marginTop: 8 }]}>New playlist</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Playlist name"
+            placeholderTextColor="#666"
+            value={newPlName}
+            onChangeText={setNewPlName}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setPlistModal(false)}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalConfirm} onPress={handleCreateAndAdd}>
+              <Text style={styles.modalConfirmText}>Create and add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -547,7 +682,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#777' },
-  closeBtn: { position: 'absolute', top: 50, left: 20, zIndex: 10 },
+  topBar: { position: 'absolute', top: 50, left: 20, right: 20, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  closeBtn: { },
+  addBtn: { },
   center: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 40 },
   titleBlock: { alignItems: 'center', marginBottom: 30 },
   title: { color: '#fff', fontSize: 28, fontWeight: '900' },
@@ -735,6 +872,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   crossBadgeTextTop: { color: '#fff', fontSize: 15, fontWeight: '900', marginLeft: 8, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 4 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  modalCard: { width: '86%', backgroundColor: '#151515', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  modalTitle: { color: '#fff', fontWeight: '800', fontSize: 16, marginBottom: 10 },
+  input: { backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 12 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
+  modalCancel: { paddingVertical: 10, paddingHorizontal: 12 },
+  modalCancelText: { color: '#aaa', fontWeight: '700' },
+  modalConfirm: { backgroundColor: '#1f4cff', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 },
+  modalConfirmText: { color: '#fff', fontWeight: '800' },
+  separator: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
+  plRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  plRowText: { color: '#fff', fontWeight: '700', flex: 1 },
+  plCount: { color: '#aaa', fontSize: 12 },
   crossMusicBadge: {
     position: 'absolute', bottom: 110, right: -15, backgroundColor: '#1f4cff',
     borderTopLeftRadius: 12, borderBottomLeftRadius: 12, borderTopRightRadius: 22, borderBottomRightRadius: 22,

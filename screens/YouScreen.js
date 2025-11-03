@@ -56,7 +56,7 @@ export default function YouScreen({ navigation }) {
   const { isTablet } = useDeviceType();
 
   useEffect(() => {
-    // Écouter les changements d'état d'authentification
+    // Listen to auth state changes
     const unsubscribe = authService.onAuthStateChanged((user) => {
       if (user) {
         setUser({
@@ -79,7 +79,7 @@ export default function YouScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
 
@@ -88,31 +88,31 @@ export default function YouScreen({ navigation }) {
       const result = await authService.login(email, password);
       
       if (result.success) {
-        // Synchroniser les favoris et statistiques locaux vers le cloud
+        // Sync local favorites and stats to cloud
         await syncFavoritesToCloud();
         await statsService.syncStatsToCloud();
         
         setShowLogin(false);
         setEmail('');
         setPassword('');
-        Alert.alert('Succès', 'Connexion réussie ! Vos favoris et statistiques ont été synchronisés.');
+        Alert.alert('Success', 'Signed in! Your favorites and stats have been synchronized.');
       } else {
-        Alert.alert('Erreur', result.error);
+        Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+      Alert.alert('Error', 'An unexpected error occurred');
     }
     setLoading(false);
   };
 
   const handleRegister = async () => {
     if (!email || !password || !displayName) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
@@ -121,7 +121,7 @@ export default function YouScreen({ navigation }) {
       const result = await authService.register(email, password, displayName);
       
       if (result.success) {
-        // Synchroniser les favoris et statistiques locaux vers le cloud
+        // Sync local favorites and stats to cloud
         await syncFavoritesToCloud();
         await statsService.syncStatsToCloud();
         
@@ -129,29 +129,29 @@ export default function YouScreen({ navigation }) {
         setEmail('');
         setPassword('');
         setDisplayName('');
-        Alert.alert('Succès', 'Compte créé avec succès ! Vos favoris et statistiques ont été synchronisés.');
+        Alert.alert('Success', 'Account created! Your favorites and stats have been synchronized.');
       } else {
-        Alert.alert('Erreur', result.error);
+        Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue');
+      Alert.alert('Error', 'An unexpected error occurred');
     }
     setLoading(false);
   };
 
   const handleLogout = () => {
     Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      'Sign out',
+      'Are you sure you want to sign out?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Déconnexion',
+          text: 'Sign out',
           style: 'destructive',
           onPress: async () => {
             setLoading(true);
             
-            // Sauvegarder les favoris et statistiques en local avant la déconnexion
+            // Save favorites and stats locally before signing out
             await syncFavoritesToLocal();
             await statsService.syncStatsToLocal();
             
@@ -159,7 +159,7 @@ export default function YouScreen({ navigation }) {
             setLoading(false);
             
             if (!result.success) {
-              Alert.alert('Erreur', result.error);
+              Alert.alert('Error', result.error);
             }
           },
         },
@@ -192,7 +192,7 @@ export default function YouScreen({ navigation }) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#1f4cff" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -208,10 +208,10 @@ export default function YouScreen({ navigation }) {
         />
         
         <ScrollView style={styles.tabletContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.tabletTitle}>Votre profil</Text>
+          <Text style={styles.tabletTitle}>Your profile</Text>
           
           {/* Profile Section */}
-          <SettingsSection title="Profil">
+          <SettingsSection title="Profile">
             {isConnected ? (
               <View style={styles.profileConnected}>
                 <View style={styles.profileInfo}>
@@ -219,17 +219,17 @@ export default function YouScreen({ navigation }) {
                     <Ionicons name="person" size={32} color="white" />
                   </View>
                   <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{user?.displayName || 'Utilisateur'}</Text>
+                    <Text style={styles.userName}>{user?.displayName || 'User'}</Text>
                     <Text style={styles.userEmail}>{user?.email}</Text>
                   </View>
                 </View>
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                  <Text style={styles.logoutText}>Déconnexion</Text>
+                  <Text style={styles.logoutText}>Sign out</Text>
                 </TouchableOpacity>
               </View>
             ) : showLogin ? (
               <View style={styles.loginForm}>
-                <Text style={styles.formTitle}>Se connecter</Text>
+                <Text style={styles.formTitle}>Sign in</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
@@ -242,7 +242,7 @@ export default function YouScreen({ navigation }) {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Mot de passe"
+                  placeholder="Password"
                   placeholderTextColor="#666"
                   value={password}
                   onChangeText={handlePasswordChange}
@@ -255,7 +255,7 @@ export default function YouScreen({ navigation }) {
                     onPress={resetForms}
                     disabled={loading}
                   >
-                    <Text style={styles.cancelText}>Annuler</Text>
+                    <Text style={styles.cancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.loginButton, loading && styles.disabledButton]} 
@@ -265,7 +265,7 @@ export default function YouScreen({ navigation }) {
                     {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={styles.loginButtonText}>Se connecter</Text>
+                      <Text style={styles.loginButtonText}>Sign in</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -277,15 +277,15 @@ export default function YouScreen({ navigation }) {
                   }}
                   disabled={loading}
                 >
-                  <Text style={styles.switchFormText}>Pas encore de compte ? S'inscrire</Text>
+                  <Text style={styles.switchFormText}>No account yet? Sign up</Text>
                 </TouchableOpacity>
               </View>
             ) : showRegister ? (
               <View style={styles.loginForm}>
-                <Text style={styles.formTitle}>Créer un compte</Text>
+                <Text style={styles.formTitle}>Create an account</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Nom d'affichage"
+                  placeholder="Display name"
                   placeholderTextColor="#666"
                   value={displayName}
                   onChangeText={handleDisplayNameChange}
@@ -303,7 +303,7 @@ export default function YouScreen({ navigation }) {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Mot de passe (min. 6 caractères)"
+                  placeholder="Password (min. 6 characters)"
                   placeholderTextColor="#666"
                   value={password}
                   onChangeText={handlePasswordChange}
@@ -316,7 +316,7 @@ export default function YouScreen({ navigation }) {
                     onPress={resetForms}
                     disabled={loading}
                   >
-                    <Text style={styles.cancelText}>Annuler</Text>
+                    <Text style={styles.cancelText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.loginButton, loading && styles.disabledButton]} 
@@ -326,7 +326,7 @@ export default function YouScreen({ navigation }) {
                     {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={styles.loginButtonText}>S'inscrire</Text>
+                      <Text style={styles.loginButtonText}>Sign up</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -338,14 +338,14 @@ export default function YouScreen({ navigation }) {
                   }}
                   disabled={loading}
                 >
-                  <Text style={styles.switchFormText}>Déjà un compte ? Se connecter</Text>
+                  <Text style={styles.switchFormText}>Already have an account? Sign in</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <SettingItem
                 icon="log-in"
-                title="Se connecter"
-                subtitle="Sauvegardez vos favoris et paramètres"
+                title="Sign in"
+                subtitle="Save your favorites and settings"
                 onPress={() => setShowLogin(true)}
                 rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
               />
@@ -354,17 +354,28 @@ export default function YouScreen({ navigation }) {
 
           {/* CrossParty supprimé */}
 
+          {/* Library */}
+          <SettingsSection title="Library">
+            <SettingItem
+              icon="musical-notes"
+              title="Playlists"
+              subtitle="Manage your playlists"
+              onPress={() => navigation.navigate('Playlists')}
+              rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
+            />
+          </SettingsSection>
+
           {/* Other */}
-          <SettingsSection title="À propos">
+          <SettingsSection title="About">
             <SettingItem
               icon="help-circle"
-              title="Aide et support"
-              onPress={() => Alert.alert('Aide', 'Fonctionnalité en développement')}
+              title="Help & support"
+              onPress={() => Alert.alert('Help', 'Feature in development')}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
             <SettingItem
               icon="information-circle"
-              title="À propos de Hedgehop"
+              title="About Hedgehop"
               onPress={() => Alert.alert('Hedgehop', 'Version 1.0.0\nMusic Player App')}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
@@ -383,10 +394,10 @@ export default function YouScreen({ navigation }) {
       />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Vous</Text>
+        <Text style={styles.title}>You</Text>
         
         {/* Profile Section - Phone */}
-        <SettingsSection title="Profil">
+        <SettingsSection title="Profile">
           {isConnected ? (
             <View style={styles.profileConnected}>
               <View style={styles.profileInfo}>
@@ -394,17 +405,17 @@ export default function YouScreen({ navigation }) {
                   <Ionicons name="person" size={28} color="white" />
                 </View>
                 <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user?.displayName || 'Utilisateur'}</Text>
+                  <Text style={styles.userName}>{user?.displayName || 'User'}</Text>
                   <Text style={styles.userEmail}>{user?.email}</Text>
                 </View>
               </View>
               <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Déconnexion</Text>
+                <Text style={styles.logoutText}>Sign out</Text>
               </TouchableOpacity>
             </View>
           ) : showLogin ? (
             <View style={styles.loginForm}>
-              <Text style={styles.formTitle}>Se connecter</Text>
+              <Text style={styles.formTitle}>Sign in</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -417,7 +428,7 @@ export default function YouScreen({ navigation }) {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Mot de passe"
+                placeholder="Password"
                 placeholderTextColor="#666"
                 value={password}
                 onChangeText={setPassword}
@@ -430,7 +441,7 @@ export default function YouScreen({ navigation }) {
                   onPress={resetForms}
                   disabled={loading}
                 >
-                  <Text style={styles.cancelText}>Annuler</Text>
+                  <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.loginButton, loading && styles.disabledButton]} 
@@ -440,7 +451,7 @@ export default function YouScreen({ navigation }) {
                   {loading ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.loginButtonText}>Se connecter</Text>
+                    <Text style={styles.loginButtonText}>Sign in</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -452,15 +463,15 @@ export default function YouScreen({ navigation }) {
                 }}
                 disabled={loading}
               >
-                <Text style={styles.switchFormText}>Pas encore de compte ? S'inscrire</Text>
+                <Text style={styles.switchFormText}>No account yet? Sign up</Text>
               </TouchableOpacity>
             </View>
           ) : showRegister ? (
             <View style={styles.loginForm}>
-              <Text style={styles.formTitle}>Créer un compte</Text>
+              <Text style={styles.formTitle}>Create an account</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Nom d'affichage"
+                placeholder="Display name"
                 placeholderTextColor="#666"
                 value={displayName}
                 onChangeText={setDisplayName}
@@ -478,7 +489,7 @@ export default function YouScreen({ navigation }) {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Mot de passe (min. 6 caractères)"
+                placeholder="Password (min. 6 characters)"
                 placeholderTextColor="#666"
                 value={password}
                 onChangeText={setPassword}
@@ -491,7 +502,7 @@ export default function YouScreen({ navigation }) {
                   onPress={resetForms}
                   disabled={loading}
                 >
-                  <Text style={styles.cancelText}>Annuler</Text>
+                  <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.loginButton, loading && styles.disabledButton]} 
@@ -501,7 +512,7 @@ export default function YouScreen({ navigation }) {
                   {loading ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.loginButtonText}>S'inscrire</Text>
+                    <Text style={styles.loginButtonText}>Sign up</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -513,18 +524,18 @@ export default function YouScreen({ navigation }) {
                 }}
                 disabled={loading}
               >
-                <Text style={styles.switchFormText}>Déjà un compte ? Se connecter</Text>
+                <Text style={styles.switchFormText}>Already have an account? Sign in</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.authButtons}>
               <TouchableOpacity style={styles.authButton} onPress={() => setShowLogin(true)}>
                 <Ionicons name="log-in" size={20} color="#1f4cff" />
-                <Text style={styles.authButtonText}>Se connecter</Text>
+                <Text style={styles.authButtonText}>Sign in</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.authButton} onPress={() => setShowRegister(true)}>
                 <Ionicons name="person-add" size={20} color="#1f4cff" />
-                <Text style={styles.authButtonText}>S'inscrire</Text>
+                <Text style={styles.authButtonText}>Sign up</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -532,17 +543,28 @@ export default function YouScreen({ navigation }) {
 
         {/* CrossParty supprimé */}
 
+        {/* Library - Phone */}
+        <SettingsSection title="Library">
+          <SettingItem
+            icon="musical-notes"
+            title="Playlists"
+            subtitle="Manage your playlists"
+            onPress={() => navigation.navigate('Playlists')}
+            rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
+          />
+        </SettingsSection>
+
         {/* Other - Phone */}
-        <SettingsSection title="À propos">
+        <SettingsSection title="About">
           <SettingItem
             icon="help-circle"
-            title="Aide et support"
-            onPress={() => Alert.alert('Aide', 'Fonctionnalité en développement')}
+            title="Help & support"
+            onPress={() => Alert.alert('Help', 'Feature in development')}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />
           <SettingItem
             icon="information-circle"
-            title="À propos"
+            title="About"
             onPress={() => Alert.alert('Hedgehop', 'Version 1.0.0\nMusic Player App')}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />

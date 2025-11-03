@@ -13,6 +13,8 @@ import {
   UIManager,
   LayoutAnimation,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +23,7 @@ import { playTrack, setGlobalTracks } from '../src/api/player';
 import { getFavorites, toggleFavorite, favEmitter } from '../src/api/favorites';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import authService from '../src/services/auth';
+import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +40,11 @@ export default function FavoritesScreen() {
   const [loading, setLoading] = useState(true);
   const [debugInfo, setDebugInfo] = useState('Initialisation...');
   const [renderKey, setRenderKey] = useState(0); // Pour forcer le re-render
+  // Playlist modal state
+  const [plistModalVisible, setPlistModalVisible] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [newPlName, setNewPlName] = useState('');
+  const [selectedTrack, setSelectedTrack] = useState(null);
   
   const { isTablet } = useDeviceType();
   console.log('🚀 Mode tablette:', isTablet);
@@ -116,6 +124,16 @@ export default function FavoritesScreen() {
     return () => sub.remove();
   }, []);
 
+  // Charger les playlists quand le modal s'ouvre
+  useEffect(() => {
+    if (plistModalVisible) {
+      (async () => {
+        const pls = await getPlaylists();
+        setPlaylists(pls);
+      })();
+    }
+  }, [plistModalVisible]);
+
   // --- Rechargement à chaque focus sur la page ---
   useFocusEffect(
     React.useCallback(() => {
@@ -140,6 +158,27 @@ export default function FavoritesScreen() {
 
   const handleFavorite = async (track) => {
     await toggleFavorite(track);
+  };
+
+  // --- Ajouter à une playlist ---
+  const openAddToPlaylist = (track) => {
+    setSelectedTrack(track);
+    setNewPlName('');
+    setPlistModalVisible(true);
+  };
+
+  const handleAddToExisting = async (playlistId) => {
+    if (!selectedTrack) return;
+    await addTrack(playlistId, selectedTrack);
+    setPlistModalVisible(false);
+  };
+
+  const handleCreateAndAdd = async () => {
+    if (!selectedTrack) return;
+  const name = newPlName.trim() || 'New playlist';
+    const pl = await createPlaylist(name);
+    await addTrack(pl.id, selectedTrack);
+    setPlistModalVisible(false);
   };
 
   const isFav = (track) =>
@@ -199,9 +238,9 @@ export default function FavoritesScreen() {
             </Animated.View>
 
             <View style={styles.albumTextBlock}>
-              <Text style={styles.albumTitle}>Favoris</Text>
+              <Text style={styles.albumTitle}>Favorites</Text>
               <Text style={styles.trackCount}>
-                {favorites.length} {favorites.length === 1 ? 'piste' : 'pistes'}
+                {favorites.length} {favorites.length === 1 ? 'track' : 'tracks'}
               </Text>
 
               <View style={styles.actionRow}>
@@ -210,7 +249,7 @@ export default function FavoritesScreen() {
                   onPress={handlePlayAll}
                 >
                   <Ionicons name="play" size={18} color="black" style={{ marginRight: 8 }} />
-                  <Text style={[styles.actionText, { color: 'black' }]}>Tout lire</Text>
+                  <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>
                 </TouchableOpacity>
                 
                   <TouchableOpacity
@@ -226,7 +265,7 @@ export default function FavoritesScreen() {
                     }}
                   >
                     <Ionicons name="refresh" size={18} color="white" style={{ marginRight: 8 }} />
-                    <Text style={[styles.actionText, { color: 'white' }]}>Actualiser</Text>
+                    <Text style={[styles.actionText, { color: 'white' }]}>Refresh</Text>
                   </TouchableOpacity>
               </View>
             </View>
@@ -240,7 +279,7 @@ export default function FavoritesScreen() {
             style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}
           >
             <Text style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>
-              Aucun favori pour le moment 💔
+              No favorites yet 💔
             </Text>
           </Animated.View>
         ) : isTablet ? (
@@ -257,16 +296,16 @@ export default function FavoritesScreen() {
                 ))}
               </Animated.View>
               
-              <Text style={styles.tabletTitle}>Mes Favoris</Text>
+              <Text style={styles.tabletTitle}>My Favorites</Text>
               <Text style={styles.tabletSubtitle}>
-                {favorites.length} {favorites.length === 1 ? 'piste' : 'pistes'}
+                {favorites.length} {favorites.length === 1 ? 'track' : 'tracks'}
               </Text>
               
               {/* Boutons d'action */}
               <View style={styles.tabletButtonsContainer}>
                 <TouchableOpacity style={styles.playAllButton} onPress={handlePlayAll}>
                   <Ionicons name="play" size={18} color="black" style={{ marginRight: 8 }} />
-                  <Text style={styles.playAllText}>Tout lire</Text>
+                  <Text style={styles.playAllText}>Play All</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
@@ -277,7 +316,7 @@ export default function FavoritesScreen() {
                   }}
                 >
                   <Ionicons name="refresh" size={18} color="white" style={{ marginRight: 8 }} />
-                  <Text style={[styles.tabletActionText, { color: 'white' }]}>Actualiser</Text>
+                  <Text style={[styles.tabletActionText, { color: 'white' }]}>Refresh</Text>
                 </TouchableOpacity>
               </View>
               
@@ -286,12 +325,12 @@ export default function FavoritesScreen() {
                 <View style={styles.statItem}>
                   <Ionicons name="musical-notes" size={16} color="#aaa" />
                   <Text style={styles.statText}>
-                    {favorites.filter(t => t.url).length} disponibles
+                    {favorites.filter(t => t.url).length} available
                   </Text>
                 </View>
                 <View style={styles.statItem}>
                   <Ionicons name="heart" size={16} color="red" />
-                  <Text style={styles.statText}>Vos coups de cœur</Text>
+                  <Text style={styles.statText}>Your favorites</Text>
                 </View>
               </View>
             </View>
@@ -333,13 +372,20 @@ export default function FavoritesScreen() {
                     <View style={styles.trackDetails}>
                       <Text style={[styles.trackTitle, !playable && styles.disabledText]}>
                         {track.title}
-                        {!playable && <Text style={styles.unavailableTag}> (Indisponible)</Text>}
+                        {!playable && <Text style={styles.unavailableTag}> (Unavailable)</Text>}
                       </Text>
                       <Text style={[styles.trackAlbum, !playable && styles.disabledText]}>
                         {track.album}
                       </Text>
                     </View>
-
+                    {/* ➕ Ajouter à une playlist */}
+                    <TouchableOpacity 
+                      style={styles.addButton}
+                      onPress={() => openAddToPlaylist(track)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.addButtonText}>＋</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity 
                       style={styles.favoriteButton}
                       onPress={() => handleFavorite(track)}
@@ -383,7 +429,10 @@ export default function FavoritesScreen() {
                         {track.album}
                       </Text>
                     </View>
-
+                    {/* ➕ Ajouter à une playlist */}
+                    <TouchableOpacity style={styles.addButton} onPress={() => openAddToPlaylist(track)}>
+                      <Text style={styles.addButtonText}>＋</Text>
+                    </TouchableOpacity>
                     {/* ❤️ Bouton Favori */}
                     <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
                       <Ionicons
@@ -398,6 +447,61 @@ export default function FavoritesScreen() {
             })}
           </Animated.View>
         )}
+
+        {/* Modal d'ajout à une playlist */}
+        <Modal
+          visible={plistModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPlistModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add to playlist</Text>
+
+              {/* Liste des playlists existantes */}
+              <ScrollView style={{ maxHeight: 220 }}>
+                {playlists.length === 0 ? (
+                  <Text style={{ color: '#999', textAlign: 'center', marginVertical: 8 }}>
+                    No playlists yet
+                  </Text>
+                ) : (
+                  playlists.map((pl) => (
+                    <TouchableOpacity
+                      key={pl.id}
+                      style={styles.modalPlaylistItem}
+                      onPress={() => handleAddToExisting(pl.id)}
+                    >
+                      <Ionicons name="list" size={18} color="#fff" style={{ marginRight: 8 }} />
+                      <Text style={{ color: '#fff', flex: 1 }}>{pl.name}</Text>
+                      <Text style={{ color: '#888' }}>{pl.tracks?.length || 0}</Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+
+              {/* Create a new playlist */}
+              <View style={styles.modalDivider} />
+              <View style={styles.modalRow}>
+                <TextInput
+                  value={newPlName}
+                  onChangeText={setNewPlName}
+                  placeholder="Playlist name"
+                  placeholderTextColor="#777"
+                  style={styles.modalInput}
+                />
+                <TouchableOpacity style={styles.modalCreateButton} onPress={handleCreateAndAdd}>
+                  <Text style={styles.modalCreateButtonText}>Create and add</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Close */}
+              <TouchableOpacity style={styles.modalClose} onPress={() => setPlistModalVisible(false)}>
+                <Text style={{ color: '#bbb' }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -474,6 +578,8 @@ const styles = StyleSheet.create({
     marginTop: 2 
   },
   heartButton: { paddingHorizontal: 6, marginLeft: 4 },
+  addButton: { paddingHorizontal: 8, paddingVertical: 4, marginRight: 6 },
+  addButtonText: { color: 'white', fontSize: 20, lineHeight: 20 },
 
   // === STYLES TABLETTE ===
   // === STYLES TABLETTE (comme AlbumScreen) ===
@@ -746,5 +852,71 @@ const styles = StyleSheet.create({
   },
   tabletHeartButton: {
     padding: 8,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 500,
+    backgroundColor: '#111',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  modalPlaylistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginBottom: 8,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 10,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#fff',
+  },
+  modalCreateButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  modalCreateButtonText: {
+    color: '#000',
+    fontWeight: '700',
+  },
+  modalClose: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
 });

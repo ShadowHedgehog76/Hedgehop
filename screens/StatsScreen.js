@@ -18,16 +18,16 @@ export default function StatsScreen({ navigation }) {
 
   const handleResetStats = () => {
     Alert.alert(
-      'Réinitialiser les statistiques',
-      'Êtes-vous sûr de vouloir effacer toutes vos statistiques d\'écoute ?',
+      'Reset statistics',
+      'Are you sure you want to clear all your listening statistics?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Réinitialiser',
+          text: 'Reset',
           style: 'destructive',
           onPress: async () => {
             await resetStats();
-            Alert.alert('✅', 'Statistiques réinitialisées');
+            Alert.alert('✅', 'Statistics reset');
           },
         },
       ]
@@ -38,8 +38,8 @@ export default function StatsScreen({ navigation }) {
     const exported = await exportStats();
     if (exported) {
       Alert.alert(
-        '📊 Statistiques Exportées',
-        `Données exportées avec succès !\n\nTotal écoutes: ${exported.playCount}\nTemps total: ${Math.floor(exported.totalListeningTime / 60)}h${exported.totalListeningTime % 60}m`
+        '📊 Statistics exported',
+        `Data exported successfully!\n\nTotal plays: ${exported.playCount}\nTotal time: ${Math.floor(exported.totalListeningTime / 60)}h${exported.totalListeningTime % 60}m`
       );
     }
   };
@@ -48,7 +48,7 @@ export default function StatsScreen({ navigation }) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Ionicons name="musical-notes" size={48} color="#667eea" />
-        <Text style={styles.loadingText}>Chargement des statistiques...</Text>
+          <Text style={styles.loadingText}>Loading statistics...</Text>
       </View>
     );
   }
@@ -57,7 +57,7 @@ export default function StatsScreen({ navigation }) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Ionicons name="stats-chart" size={48} color="#94a3b8" />
-        <Text style={styles.emptyText}>Aucune statistique disponible</Text>
+          <Text style={styles.emptyText}>No statistics available</Text>
       </View>
     );
   }
@@ -105,7 +105,7 @@ export default function StatsScreen({ navigation }) {
 
   const RecentActivity = () => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>📈 Activité Récente</Text>
+      <Text style={styles.sectionTitle}>📈 Recent Activity</Text>
       <View style={styles.activityList}>
         {formattedStats.recentActivity && formattedStats.recentActivity.length > 0 ? (
           formattedStats.recentActivity.slice(0, 8).map((activity, index) => (
@@ -119,7 +119,7 @@ export default function StatsScreen({ navigation }) {
         ) : (
           <View style={styles.activityItem}>
             <Ionicons name="musical-note" size={20} color="#94a3b8" />
-            <Text style={styles.activityText}>Aucune activité récente</Text>
+            <Text style={styles.activityText}>No recent activity</Text>
           </View>
         )}
       </View>
@@ -137,7 +137,7 @@ export default function StatsScreen({ navigation }) {
             </View>
             <View style={styles.topItemInfo}>
               <Text style={styles.topItemTitle}>{track.title}</Text>
-              <Text style={styles.topItemPlays}>{track.plays} écoutes</Text>
+              <Text style={styles.topItemPlays}>{track.plays} plays</Text>
             </View>
             <Ionicons name="musical-note" size={20} color="#667eea" />
           </View>
@@ -148,8 +148,8 @@ export default function StatsScreen({ navigation }) {
             <Text style={styles.rankText}>-</Text>
           </View>
           <View style={styles.topItemInfo}>
-            <Text style={styles.topItemTitle}>Aucune track écoutée</Text>
-            <Text style={styles.topItemPlays}>Commencez à écouter !</Text>
+            <Text style={styles.topItemTitle}>No tracks played</Text>
+            <Text style={styles.topItemPlays}>Start listening!</Text>
           </View>
           <Ionicons name="musical-note" size={20} color="#94a3b8" />
         </View>
@@ -164,7 +164,7 @@ export default function StatsScreen({ navigation }) {
         colors={['#1f1f1f', '#2a2a2a', '#1a1a1a']}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>Statistiques d'Écoute</Text>
+  <Text style={styles.headerTitle}>Listening Statistics</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={loadStats} style={styles.headerButton}>
             <Ionicons name="refresh" size={20} color="#fff" />
@@ -182,16 +182,16 @@ export default function StatsScreen({ navigation }) {
           isTablet && styles.tabletStatsGrid
         ]}>
           <StatCard
-            title="Temps Total"
+            title="Total Time"
             value={formatTime(formattedStats.totalListeningTime)}
             icon="time"
             color="#22c55e"
-            subtitle="Cumulé"
+            subtitle="Cumulative"
             isTablet={isTablet}
           />
           
           <StatCard
-            title="Écoutes"
+            title="Plays"
             value={formattedStats.playCount.toString()}
             icon="play"
             color="#3b82f6"
@@ -200,32 +200,32 @@ export default function StatsScreen({ navigation }) {
           />
           
           <StatCard
-            title="Série"
-            value={`${formattedStats.streakDays} jour${formattedStats.streakDays > 1 ? 's' : ''}`}
+            title="Streak"
+            value={`${formattedStats.streakDays} day${formattedStats.streakDays > 1 ? 's' : ''}`}
             icon="flame"
             color="#f59e0b"
-            subtitle="Consécutifs"
+            subtitle="Consecutive"
             isTablet={isTablet}
           />
           
           <StatCard
-            title="Session Moy."
+            title="Avg. Session"
             value={formatTime(formattedStats.averageSessionTime)}
             icon="stopwatch"
             color="#8b5cf6"
-            subtitle="Par écoute"
+            subtitle="Per session"
             isTablet={isTablet}
           />
         </View>
 
         {/* Favoris */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>❤️ Vos Favoris</Text>
+          <Text style={styles.sectionTitle}>❤️ Your Favorites</Text>
           
           <View style={styles.favoriteItem}>
             <Ionicons name="albums" size={24} color="#e879f9" />
             <View style={styles.favoriteInfo}>
-              <Text style={styles.favoriteLabel}>Album Préféré</Text>
+              <Text style={styles.favoriteLabel}>Favorite Album</Text>
               <Text style={styles.favoriteValue}>{formattedStats.mostPlayedAlbum}</Text>
             </View>
           </View>
@@ -233,7 +233,7 @@ export default function StatsScreen({ navigation }) {
           <View style={styles.favoriteItem}>
             <Ionicons name="musical-note" size={24} color="#06b6d4" />
             <View style={styles.favoriteInfo}>
-              <Text style={styles.favoriteLabel}>Track Préférée</Text>
+              <Text style={styles.favoriteLabel}>Favorite Track</Text>
               <Text style={styles.favoriteValue}>{formattedStats.mostPlayedTrack}</Text>
             </View>
           </View>
@@ -241,7 +241,7 @@ export default function StatsScreen({ navigation }) {
           <View style={styles.favoriteItem}>
             <Ionicons name="library" size={24} color="#f97316" />
             <View style={styles.favoriteInfo}>
-              <Text style={styles.favoriteLabel}>Genre Préféré</Text>
+              <Text style={styles.favoriteLabel}>Favorite Genre</Text>
               <Text style={styles.favoriteValue}>{formattedStats.favoriteGenre}</Text>
             </View>
           </View>
@@ -270,14 +270,14 @@ export default function StatsScreen({ navigation }) {
           
           <TouchableOpacity style={styles.actionButton} onPress={handleExportStats}>
             <Ionicons name="download" size={24} color="#3b82f6" />
-            <Text style={styles.actionText}>Exporter statistiques</Text>
+            <Text style={styles.actionText}>Export statistics</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer info */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            📊 Total de {formattedStats.totalSessions} sessions d'écoute
+            📊 Total of {formattedStats.totalSessions} listening sessions
           </Text>
         </View>
       </ScrollView>

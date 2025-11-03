@@ -17,16 +17,16 @@ export default function TabletLayout({
 }) {
   // CrossParty supprimé
   const tabs = [
-    { id: 'Home', label: 'Accueil', icon: 'home' },
-    { id: 'Favorites', label: 'Favoris', icon: 'heart' },
-    { id: 'News', label: 'Actualités', icon: 'time' },
-    { id: 'Stats', label: 'Statistiques', icon: 'stats-chart' },
-    { id: 'Player', label: 'Lecteur', icon: 'play-circle' },
-    { id: 'You', label: 'Vous', icon: 'person' },
+    { id: 'Home', label: 'Home', icon: 'home' },
+    { id: 'Favorites', label: 'Favorites', icon: 'heart' },
+    { id: 'News', label: 'News', icon: 'time' },
+    { id: 'Stats', label: 'Stats', icon: 'stats-chart' },
+    { id: 'Player', label: 'Player', icon: 'play-circle' },
+    { id: 'You', label: 'You', icon: 'person' },
   ];
 
   if (devModeEnabled) {
-    tabs.push({ id: 'Dev', label: 'Développement', icon: 'code-working' });
+    tabs.push({ id: 'Dev', label: 'Dev', icon: 'code-working' });
   }
 
   const SidebarTab = ({ tab, isActive }) => (
@@ -99,7 +99,7 @@ export default function TabletLayout({
               onPress={onDisableDevMode}
             >
               <Ionicons name="lock-closed" size={20} color="#ef4444" />
-              <Text style={styles.devDisableText}>Désactiver Dev</Text>
+              <Text style={styles.devDisableText}>Disable Dev Mode</Text>
             </TouchableOpacity>
           )}
         </LinearGradient>

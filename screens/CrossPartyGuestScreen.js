@@ -25,7 +25,7 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
         setRoomData(data);
       } else {
         // Le salon a été fermé ou n'existe plus
-        Alert.alert('Salon fermé', 'L\'hôte a fermé le salon', [
+        Alert.alert('Room closed', 'The host closed the room', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       }
@@ -38,12 +38,12 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
 
   const handleLeaveRoom = () => {
     Alert.alert(
-      'Quitter le salon',
-      'Êtes-vous sûr de vouloir quitter ce salon ?',
+      'Leave room',
+      'Are you sure you want to leave this room?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Quitter',
+          text: 'Leave',
           style: 'destructive',
           onPress: async () => {
             if (guestId) {
@@ -51,7 +51,7 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
               if (result.success) {
                 navigation.goBack();
               } else {
-                Alert.alert('Erreur', result.error);
+                Alert.alert('Error', result.error);
               }
             } else {
               navigation.goBack();
@@ -94,16 +94,16 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
           <View style={styles.statusIcon}>
             <Ionicons name="people" size={48} color="#22c55e" />
           </View>
-          <Text style={styles.statusTitle}>Connecté au salon</Text>
+          <Text style={styles.statusTitle}>Connected to room</Text>
           <Text style={styles.statusSubtitle}>Code: {roomCode}</Text>
           <Text style={styles.guestCount}>
-            {guestCount} {guestCount === 1 ? 'personne connectée' : 'personnes connectées'}
+            {guestCount} {guestCount === 1 ? 'guest connected' : 'guests connected'}
           </Text>
         </View>
 
         {roomData?.currentTrack && (
           <View style={styles.nowPlaying}>
-            <Text style={styles.nowPlayingLabel}>En cours de lecture</Text>
+            <Text style={styles.nowPlayingLabel}>Now playing</Text>
             <View style={styles.trackInfo}>
               <Text style={styles.trackTitle}>{roomData.currentTrack.title}</Text>
               <Text style={styles.trackArtist}>{roomData.currentTrack.artist}</Text>
@@ -116,7 +116,7 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
                   color="#1f4cff" 
                 />
                 <Text style={styles.playbackText}>
-                  {roomData.playbackState?.isPlaying ? 'En lecture' : 'En pause'}
+                  {roomData.playbackState?.isPlaying ? 'Playing' : 'Paused'}
                 </Text>
               </View>
             </View>
@@ -126,9 +126,9 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
         {!roomData?.currentTrack && (
           <View style={styles.noMusic}>
             <Ionicons name="musical-notes-outline" size={64} color="#666" />
-            <Text style={styles.noMusicText}>Aucune musique en cours</Text>
+            <Text style={styles.noMusicText}>No music playing</Text>
             <Text style={styles.noMusicSubtext}>
-              L'hôte va bientôt commencer la lecture
+              The host will start playback soon
             </Text>
           </View>
         )}
@@ -137,26 +137,26 @@ export default function CrossPartyGuestScreen({ navigation, route }) {
           <View style={styles.infoItem}>
             <Ionicons name="information-circle" size={20} color="#1f4cff" />
             <Text style={styles.infoText}>
-              Vous êtes connecté en tant qu'invité
+              You are connected as a guest
             </Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="sync" size={20} color="#1f4cff" />
             <Text style={styles.infoText}>
-              La musique est synchronisée avec l'hôte
+              Music is synchronized with the host
             </Text>
           </View>
           <View style={styles.infoItem}>
             <Ionicons name="people" size={20} color="#1f4cff" />
             <Text style={styles.infoText}>
-              Profitez de l'expérience partagée !
+              Enjoy the shared experience!
             </Text>
           </View>
         </View>
 
         <TouchableOpacity style={styles.queueButton}>
           <Ionicons name="list" size={20} color="#fff" />
-          <Text style={styles.queueButtonText}>Voir la file d'attente</Text>
+          <Text style={styles.queueButtonText}>View queue</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -12,6 +12,8 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { playTrack, setGlobalTracks } from '../src/api/player';
 import { toggleFavorite, getFavorites, favEmitter } from '../src/api/favorites';
 import { getPlaylists } from '../src/api/playlists';
+import { createPlaylist, addTrack } from '../src/api/playlists';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 // CrossParty supprimé
 
@@ -32,6 +35,10 @@ export default function AlbumScreen({ route, navigation }) {
   const { album } = route.params;
   const [favorites, setFavorites] = useState([]);
   const [showCross, setShowCross] = useState(false);
+  const [plistModal, setPlistModal] = useState(false);
+  const [playlists, setPlaylists] = useState([]);
+  const [newPlName, setNewPlName] = useState('');
+  const [selectedTrack, setSelectedTrack] = useState(null);
   
   const { isTablet, dimensions, isLandscape } = useDeviceType();
 
@@ -83,6 +90,30 @@ export default function AlbumScreen({ route, navigation }) {
       crossTitle: track.crossTitle || null,
     });
     setFavorites(await getFavorites());
+  };
+
+  // Ajouter à une playlist
+  const openAddToPlaylist = async (track) => {
+    const pls = await getPlaylists();
+    setPlaylists(pls);
+    setSelectedTrack({ ...track, album: album.title, image: album.image });
+    setPlistModal(true);
+  };
+
+  const handleAddToExisting = async (playlistId) => {
+    if (!selectedTrack) return;
+    await addTrack(playlistId, selectedTrack);
+    setPlistModal(false);
+  };
+
+  const handleCreateAndAdd = async () => {
+  const name = (newPlName || 'New playlist').trim();
+    const pl = await createPlaylist(name);
+    if (pl && selectedTrack) {
+      await addTrack(pl.id, selectedTrack);
+    }
+    setNewPlName('');
+    setPlistModal(false);
   };
 
   // Fonction pour gérer la lecture (locale ou CrossParty)
@@ -150,6 +181,9 @@ export default function AlbumScreen({ route, navigation }) {
                   <Text style={styles.tabletCrossCount}>{getCrossArray(track).length}</Text>
                 </View>
               )}
+              <TouchableOpacity onPress={() => openAddToPlaylist(track)} style={styles.tabletFavoriteButton}>
+                <Ionicons name="add-circle" size={20} color="#1f4cff" />
+              </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => handleFavorite(track)}
@@ -314,7 +348,9 @@ export default function AlbumScreen({ route, navigation }) {
             })()}
 
             <Text style={styles.tabletAlbumTitle}>{album.title}</Text>
-            <Text style={styles.tabletTrackCount}>{album.tracks?.length || 0} pistes</Text>
+            <Text style={styles.tabletTrackCount}>
+              {album.tracks?.length || 0} {(album.tracks?.length || 0) === 1 ? 'track' : 'tracks'}
+            </Text>
 
             {/* Boutons d'action */}
             <View style={styles.tabletActionRow}>
@@ -372,6 +408,48 @@ export default function AlbumScreen({ route, navigation }) {
             />
           </View>
         </View>
+        {/* Modal Add to Playlist (tablette) */}
+        <Modal transparent visible={plistModal} animationType="fade" onRequestClose={() => setPlistModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add to playlist</Text>
+              <FlatList
+                data={playlists}
+                keyExtractor={(item) => item.id}
+                style={{ maxHeight: 240 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.plRow} onPress={() => handleAddToExisting(item.id)}>
+                    <Ionicons name="musical-notes" size={18} color="#1f4cff" />
+                    <Text style={styles.plRowText}>{item.name}</Text>
+                    <Text style={styles.plCount}>{item.tracks?.length || 0}</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={() => (
+                  <View style={{ paddingVertical: 12 }}>
+                    <Text style={{ color: '#aaa' }}>No playlists yet</Text>
+                  </View>
+                )}
+              />
+              <View style={styles.separator} />
+              <Text style={[styles.modalTitle, { marginTop: 8 }]}>New playlist</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Playlist name"
+                placeholderTextColor="#666"
+                value={newPlName}
+                onChangeText={setNewPlName}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setPlistModal(false)}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirm} onPress={handleCreateAndAdd}>
+                  <Text style={styles.modalConfirmText}>Create and add</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -489,7 +567,9 @@ export default function AlbumScreen({ route, navigation }) {
 
               <View style={styles.albumTextBlock}>
                 <Text style={styles.albumTitle}>{album.title}</Text>
-                <Text style={styles.trackCount}>{album.tracks?.length || 0} pistes</Text>
+                <Text style={styles.trackCount}>
+                  {album.tracks?.length || 0} {(album.tracks?.length || 0) === 1 ? 'track' : 'tracks'}
+                </Text>
 
                 <View style={styles.actionRow}>
                   <TouchableOpacity
@@ -506,7 +586,7 @@ export default function AlbumScreen({ route, navigation }) {
                       if (playableTracks.length > 0) {
                         handleTrackPlay(playableTracks[0], 0, playableTracks);
                       } else {
-                        console.warn('Aucune piste lisible dans cet album.');
+                        console.warn('No playable track in this album.');
                       }
                     }}
                   >
@@ -557,7 +637,9 @@ export default function AlbumScreen({ route, navigation }) {
                   >
                     {track.title}
                   </Text>
-
+                  <TouchableOpacity style={styles.heartButton} onPress={() => openAddToPlaylist(track)}>
+                    <Ionicons name="add-circle" size={20} color="#1f4cff" />
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
                     <Ionicons
                       name={isFav(track) ? 'heart' : 'heart-outline'}
@@ -633,6 +715,48 @@ export default function AlbumScreen({ route, navigation }) {
           }
         }}
       />
+      {/* Modal Add to Playlist (mobile) */}
+      <Modal transparent visible={plistModal} animationType="fade" onRequestClose={() => setPlistModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Add to playlist</Text>
+            <FlatList
+              data={playlists}
+              keyExtractor={(item) => item.id}
+              style={{ maxHeight: 240 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.plRow} onPress={() => handleAddToExisting(item.id)}>
+                  <Ionicons name="musical-notes" size={18} color="#1f4cff" />
+                  <Text style={styles.plRowText}>{item.name}</Text>
+                  <Text style={styles.plCount}>{item.tracks?.length || 0}</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={() => (
+                <View style={{ paddingVertical: 12 }}>
+                  <Text style={{ color: '#aaa' }}>No playlists yet</Text>
+                </View>
+              )}
+            />
+            <View style={styles.separator} />
+            <Text style={[styles.modalTitle, { marginTop: 8 }]}>New playlist</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Playlist name"
+              placeholderTextColor="#666"
+              value={newPlName}
+              onChangeText={setNewPlName}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setPlistModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={handleCreateAndAdd}>
+                <Text style={styles.modalConfirmText}>Create and add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -740,6 +864,20 @@ const styles = StyleSheet.create({
   trackIcon: { width: 45, height: 45, borderRadius: 10, marginRight: 12 },
   trackTitle: { flex: 1, fontSize: 16, fontWeight: '600' },
   heartButton: { paddingHorizontal: 6, marginLeft: 4 },
+  // Modal shared styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  modalCard: { width: '86%', backgroundColor: '#151515', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  modalTitle: { color: '#fff', fontWeight: '800', fontSize: 16, marginBottom: 10 },
+  input: { backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 12 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
+  modalCancel: { paddingVertical: 10, paddingHorizontal: 12 },
+  modalCancelText: { color: '#aaa', fontWeight: '700' },
+  modalConfirm: { backgroundColor: '#1f4cff', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 },
+  modalConfirmText: { color: '#fff', fontWeight: '800' },
+  separator: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
+  plRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  plRowText: { color: '#fff', fontWeight: '700', flex: 1 },
+  plCount: { color: '#aaa', fontSize: 12 },
   crossGroup: { marginBottom: 30 },
   crossGroupTitle: {
     color: 'white',

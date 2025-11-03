@@ -27,7 +27,7 @@ export default function CrossPartyHostScreen({ navigation, route }) {
         setGuests(data.guests ? Object.values(data.guests) : []);
       } else {
         // Le salon a été supprimé
-        Alert.alert('Salon fermé', 'Le salon a été fermé', [
+        Alert.alert('Room closed', 'The room has been closed', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       }
@@ -40,19 +40,19 @@ export default function CrossPartyHostScreen({ navigation, route }) {
 
   const handleCloseRoom = () => {
     Alert.alert(
-      'Fermer le salon',
-      'Êtes-vous sûr de vouloir fermer ce salon ? Tous les invités seront déconnectés.',
+  'Close room',
+  'Are you sure you want to close this room? All guests will be disconnected.',
       [
-        { text: 'Annuler', style: 'cancel' },
+  { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Fermer',
+          text: 'Close',
           style: 'destructive',
           onPress: async () => {
             const result = await crossPartyService.closeRoom(roomId, roomCode);
             if (result.success) {
               navigation.goBack();
             } else {
-              Alert.alert('Erreur', result.error);
+              Alert.alert('Error', result.error);
             }
           }
         }
@@ -91,7 +91,7 @@ export default function CrossPartyHostScreen({ navigation, route }) {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           
-          <Text style={styles.headerTitle}>Salon CrossParty</Text>
+          <Text style={styles.headerTitle}>CrossParty Room</Text>
           
           <TouchableOpacity 
             style={styles.closeButton}
@@ -102,7 +102,7 @@ export default function CrossPartyHostScreen({ navigation, route }) {
         </View>
 
         <View style={styles.roomCodeContainer}>
-          <Text style={styles.roomCodeLabel}>Code du salon</Text>
+          <Text style={styles.roomCodeLabel}>Room code</Text>
           <View style={styles.roomCodeBox}>
             <Text style={styles.roomCodeText}>{roomCode}</Text>
           </View>
@@ -110,26 +110,26 @@ export default function CrossPartyHostScreen({ navigation, route }) {
             <View style={styles.qrWrapper}>
               <QRCode value={roomCode} size={isTablet ? 220 : 180} backgroundColor="#fff" color="#000" />
             </View>
-            <Text style={styles.qrHint}>Scannez ce QR code pour rejoindre rapidement</Text>
+            <Text style={styles.qrHint}>Scan this QR code to join quickly</Text>
           </View>
           <Text style={styles.roomCodeSubtext}>
-            Partagez ce code avec vos amis pour qu'ils puissent rejoindre
+            Share this code with your friends so they can join
           </Text>
         </View>
 
         <View style={styles.guestsSection}>
           <Text style={styles.sectionTitle}>
-            Invités connectés ({guests.length})
+            Connected guests ({guests.length})
           </Text>
           
           {guests.length === 0 ? (
             <View style={styles.noGuests}>
               <Ionicons name="people-outline" size={48} color="#666" />
               <Text style={styles.noGuestsText}>
-                En attente d'invités...
+                Waiting for guests...
               </Text>
               <Text style={styles.noGuestsSubtext}>
-                Les invités qui rejoignent avec le code apparaîtront ici
+                Guests who join with the code will appear here
               </Text>
             </View>
           ) : (
@@ -145,7 +145,7 @@ export default function CrossPartyHostScreen({ navigation, route }) {
         <View style={styles.controls}>
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="play" size={24} color="#fff" />
-            <Text style={styles.controlText}>Lecture</Text>
+            <Text style={styles.controlText}>Play</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.controlButton}>
@@ -155,7 +155,7 @@ export default function CrossPartyHostScreen({ navigation, route }) {
           
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="play-skip-forward" size={24} color="#fff" />
-            <Text style={styles.controlText}>Suivant</Text>
+            <Text style={styles.controlText}>Next</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -11,7 +11,7 @@ import NewsStack from './screens/NewsStack'; // tout en haut
 import FavoritesScreen from './screens/FavoritesScreen';
 import StatsScreen from './screens/StatsScreen'; // ✅ écran des statistiques
 import PlayerScreen from './screens/PlayerScreen';
-import YouScreen from './screens/YouScreen'; // ✅ écran profil/paramètres
+import YouStack from './screens/YouStack'; // ✅ pile You + Playlists
 import PlayerBar from './src/components/PlayerBar';
 import DevBanner from './src/components/DevBanner'; // ✅ banderole dev
 import AlbumScreenDisabled from './screens/AlbumScreenDisabled'; // ✅ ajouté ici
@@ -96,10 +96,10 @@ function MainLayout({ navigation }) {
         // Pour les écrans CrossParty, utiliser le vrai navigation du Stack
         if (screenName.startsWith('CrossParty')) {
           navigation.navigate(screenName, params);
-        } else {
-          // Pour les autres écrans, utiliser la logique d'onglets
-          setActiveTab(screenName);
+          return;
         }
+        // Sinon, on commute les onglets
+        setActiveTab(screenName);
       }
     };
 
@@ -115,7 +115,7 @@ function MainLayout({ navigation }) {
       case 'Player':
         return <PlayerScreen navigation={tabletNavigation} />;
       case 'You':
-        return <YouScreen navigation={tabletNavigation} />;
+        return <YouStack />;
       case 'Dev':
         return <DevScreen 
           navigation={tabletNavigation} 
@@ -201,7 +201,7 @@ function MainLayout({ navigation }) {
         <Tab.Screen name="Favorites" component={FavoritesScreen} />
         <Tab.Screen name="News" component={NewsStack} />
         <Tab.Screen name="Stats" component={StatsScreen} />
-        <Tab.Screen name="You" component={YouScreen} />
+  <Tab.Screen name="You" component={YouStack} />
         {devModeEnabled && (
           <Tab.Screen name="Dev">
             {(props) => (

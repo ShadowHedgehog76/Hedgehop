@@ -88,8 +88,8 @@ export default function CrossPartyBadge({
 
   const handleRoomClosed = () => {
     Alert.alert(
-      'Salon fermé', 
-      isHost ? 'Vous avez fermé le salon' : 'L\'hôte a fermé le salon',
+      'Room closed', 
+      isHost ? 'You closed the room' : 'The host closed the room',
       [{ text: 'OK', onPress: onClose }]
     );
   };
@@ -169,19 +169,19 @@ export default function CrossPartyBadge({
   const handleCloseRoom = async () => {
     if (isHost) {
       Alert.alert(
-        'Fermer le salon',
-        'Êtes-vous sûr de vouloir fermer ce salon ?',
+        'Close room',
+        'Are you sure you want to close this room?',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Fermer',
+            text: 'Close',
             style: 'destructive',
             onPress: async () => {
               const result = await crossPartyService.closeRoom(roomId, roomCode);
               if (result.success) {
                 onClose();
               } else {
-                Alert.alert('Erreur', result.error);
+                Alert.alert('Error', result.error);
               }
             }
           }
@@ -189,12 +189,12 @@ export default function CrossPartyBadge({
       );
     } else {
       Alert.alert(
-        'Quitter le salon',
-        'Êtes-vous sûr de vouloir quitter ce salon ?',
+        'Leave room',
+        'Are you sure you want to leave this room?',
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Quitter',
+            text: 'Leave',
             style: 'destructive',
             onPress: async () => {
               if (guestId) {
@@ -249,7 +249,7 @@ export default function CrossPartyBadge({
                 <Ionicons name="people" size={24} color="#1f4cff" />
                 <View style={styles.headerInfo}>
                   <Text style={styles.expandedTitle}>
-                    {isHost ? 'Votre salon' : 'Salon'}
+                    {isHost ? 'Your room' : 'Room'}
                   </Text>
                   <Text style={styles.expandedCode}>Code: {roomCode}</Text>
                 </View>
@@ -262,11 +262,11 @@ export default function CrossPartyBadge({
             {/* Status */}
             <View style={styles.statusSection}>
               <Text style={styles.sectionTitle}>
-                {isHost ? 'Invités' : 'Participants'} ({guests.length})
+                {isHost ? 'Guests' : 'Participants'} ({guests.length})
               </Text>
               
               {guests.length === 0 ? (
-                <Text style={styles.noGuests}>En attente d'invités...</Text>
+                <Text style={styles.noGuests}>Waiting for guests...</Text>
               ) : (
                 guests.map((guest, index) => (
                   <View key={guest.id} style={styles.guestItem}>
@@ -280,21 +280,21 @@ export default function CrossPartyBadge({
               )}
             </View>
 
-            {/* QR pour l'hôte */}
+            {/* Host QR */}
             {isHost && (
               <View style={styles.qrSection}>
-                <Text style={styles.sectionTitle}>QR à partager</Text>
+                <Text style={styles.sectionTitle}>Shareable QR</Text>
                 <View style={styles.qrWrapper}>
                   <QRCode value={roomCode || ''} size={180} backgroundColor="#fff" color="#000" />
                 </View>
-                <Text style={styles.qrHint}>Vos amis peuvent scanner ce code pour rejoindre</Text>
+                <Text style={styles.qrHint}>Your friends can scan this code to join</Text>
               </View>
             )}
 
             {/* Current Track */}
             {roomData.currentTrack && (
               <View style={styles.trackSection}>
-                <Text style={styles.sectionTitle}>En cours</Text>
+                <Text style={styles.sectionTitle}>Now playing</Text>
                 <View style={styles.trackInfo}>
                   <Text style={styles.trackTitle}>{roomData.currentTrack.title}</Text>
                   <Text style={styles.trackArtist}>{roomData.currentTrack.artist}</Text>
@@ -302,7 +302,7 @@ export default function CrossPartyBadge({
               </View>
             )}
 
-            {/* Controls - Maintenant accessible à tous */}
+            {/* Controls - now accessible to everyone */}
             <View style={styles.controlsSection}>
               <TouchableOpacity 
                 style={styles.controlButton}
@@ -311,7 +311,7 @@ export default function CrossPartyBadge({
                     await crossPartyService.resumePlayback(roomId);
                     await resumeFromCrossParty();
                   } catch (error) {
-                    console.error('Erreur play CrossParty:', error);
+                    console.error('CrossParty play error:', error);
                   }
                 }}
               >
@@ -325,7 +325,7 @@ export default function CrossPartyBadge({
                     await crossPartyService.pausePlayback(roomId);
                     await pauseFromCrossParty();
                   } catch (error) {
-                    console.error('Erreur pause CrossParty:', error);
+                    console.error('CrossParty pause error:', error);
                   }
                 }}
               >
@@ -338,7 +338,7 @@ export default function CrossPartyBadge({
             <TouchableOpacity style={styles.closeButton} onPress={handleCloseRoom}>
               <Ionicons name={isHost ? "close-circle" : "exit"} size={20} color="#ff3b30" />
               <Text style={styles.closeButtonText}>
-                {isHost ? 'Fermer le salon' : 'Quitter'}
+                {isHost ? 'Close room' : 'Leave'}
               </Text>
             </TouchableOpacity>
           </LinearGradient>

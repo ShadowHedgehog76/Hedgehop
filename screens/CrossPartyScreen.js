@@ -33,19 +33,19 @@ export default function CrossPartyScreen({ navigation }) {
         // Utiliser le contexte au lieu de naviguer vers un écran
         joinRoom(result.roomId, result.roomCode, true);
         navigation.goBack(); // Retourner à l'écran précédent
-        Alert.alert('Salon créé', `Votre salon est prêt ! Code: ${result.roomCode}`);
+        Alert.alert('Room created', `Your room is ready! Code: ${result.roomCode}`);
       } else {
-        Alert.alert('Erreur', result.error);
+        Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de créer le salon');
+      Alert.alert('Error', 'Could not create the room');
     }
     setLoading(false);
   };
 
   const handleJoinRoom = async () => {
     if (!roomCode.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer un code de salon');
+      Alert.alert('Error', 'Please enter a room code');
       return;
     }
 
@@ -56,12 +56,12 @@ export default function CrossPartyScreen({ navigation }) {
         // Utiliser le contexte au lieu de naviguer vers un écran
         joinRoom(result.roomId, roomCode.trim().toUpperCase(), false, result.guestId);
         navigation.goBack(); // Retourner à l'écran précédent
-        Alert.alert('Salon rejoint', `Vous avez rejoint le salon ${roomCode.trim().toUpperCase()}`);
+        Alert.alert('Joined room', `You joined room ${roomCode.trim().toUpperCase()}`);
       } else {
-        Alert.alert('Erreur', result.error);
+        Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de rejoindre le salon');
+      Alert.alert('Error', 'Could not join the room');
     }
     setLoading(false);
   };
@@ -71,13 +71,13 @@ export default function CrossPartyScreen({ navigation }) {
       if (!permission || !permission.granted) {
         const { granted } = await requestPermission();
         if (!granted) {
-          Alert.alert('Permission refusée', 'Autorisez l\'accès à la caméra pour scanner un QR code.');
+          Alert.alert('Permission denied', 'Allow camera access to scan a QR code.');
           return;
         }
       }
       setScanning(true);
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible d\'accéder à la caméra');
+      Alert.alert('Error', "Couldn't access the camera");
     }
   };
 
@@ -88,7 +88,7 @@ export default function CrossPartyScreen({ navigation }) {
       const code = String(data || '').trim().toUpperCase();
       const isValid = /^[A-Z0-9]{6}$/.test(code);
       if (!isValid) {
-        Alert.alert('QR invalide', 'Le QR code ne contient pas un code de salon valide.');
+        Alert.alert('Invalid QR', "The QR code doesn't contain a valid room code.");
         setScanLocked(false);
         return;
       }
@@ -100,12 +100,12 @@ export default function CrossPartyScreen({ navigation }) {
       if (result.success) {
         joinRoom(result.roomId, code, false, result.guestId);
         navigation.goBack();
-        Alert.alert('Salon rejoint', `Vous avez rejoint le salon ${code}`);
+        Alert.alert('Joined room', `You joined room ${code}`);
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de rejoindre le salon');
+        Alert.alert('Error', result.error || 'Could not join the room');
       }
     } catch (err) {
-      Alert.alert('Erreur', 'Échec du scan');
+      Alert.alert('Error', 'Scan failed');
     } finally {
       setLoading(false);
       setTimeout(() => setScanLocked(false), 800); // petite tempo pour éviter les doubles scans
@@ -136,9 +136,9 @@ export default function CrossPartyScreen({ navigation }) {
               <Ionicons name="enter" size={60} color="#1f4cff" />
             </View>
             
-            <Text style={styles.title}>Rejoindre un salon</Text>
+            <Text style={styles.title}>Join a room</Text>
             <Text style={styles.subtitle}>
-              Entrez le code à 6 caractères affiché sur l'appareil hôte
+              Enter the 6-character code shown on the host device
             </Text>
 
             <TextInput
@@ -164,7 +164,7 @@ export default function CrossPartyScreen({ navigation }) {
               ) : (
                 <>
                   <Ionicons name="enter" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Rejoindre</Text>
+                  <Text style={styles.buttonText}>Join</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -175,7 +175,7 @@ export default function CrossPartyScreen({ navigation }) {
               disabled={loading}
             >
               <Ionicons name="qr-code" size={20} color="#1f4cff" />
-              <Text style={styles.scanButtonText}>Scanner le QR</Text>
+              <Text style={styles.scanButtonText}>Scan QR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -194,7 +194,7 @@ export default function CrossPartyScreen({ navigation }) {
               <TouchableOpacity style={styles.scannerClose} onPress={() => setScanning(false)}>
                 <Ionicons name="close" size={28} color="#fff" />
               </TouchableOpacity>
-              <Text style={styles.scannerTitle}>Scannez le QR du salon</Text>
+              <Text style={styles.scannerTitle}>Scan the room QR</Text>
             </View>
             <View style={styles.scanGuide} />
           </View>
@@ -225,7 +225,7 @@ export default function CrossPartyScreen({ navigation }) {
           
           <Text style={styles.title}>CrossParty</Text>
           <Text style={styles.subtitle}>
-            Partagez votre musique en temps réel avec vos amis
+            Share your music in real time with your friends
           </Text>
 
           <View style={styles.optionsContainer}>
@@ -239,8 +239,8 @@ export default function CrossPartyScreen({ navigation }) {
               ) : (
                 <>
                   <Ionicons name="add-circle" size={24} color="#fff" />
-                  <Text style={styles.buttonText}>Créer un salon</Text>
-                  <Text style={styles.buttonSubtext}>Vous serez l'hôte</Text>
+                  <Text style={styles.buttonText}>Create a room</Text>
+                  <Text style={styles.buttonSubtext}>You will be the host</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -251,8 +251,8 @@ export default function CrossPartyScreen({ navigation }) {
               disabled={loading}
             >
               <Ionicons name="enter" size={24} color="#fff" />
-              <Text style={styles.buttonText}>Rejoindre un salon</Text>
-              <Text style={styles.buttonSubtext}>Avec un code</Text>
+              <Text style={styles.buttonText}>Join a room</Text>
+              <Text style={styles.buttonSubtext}>With a code</Text>
             </TouchableOpacity>
           </View>
         </View>
