@@ -66,7 +66,7 @@ export default function TabletLayout({
         >
           {/* Logo/Title */}
           <View style={styles.sidebarHeader}>
-            <Text style={styles.appTitle}>🎵 Hedgehop</Text>
+            <Text style={styles.appTitle}>💫 Hedgehop 💫</Text>
             {devModeEnabled && (
               <View style={styles.devBadge}>
                 <Text style={styles.devBadgeText}>DEV</Text>

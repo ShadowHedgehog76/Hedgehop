@@ -20,6 +20,7 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
   const [playlists, setPlaylists] = useState([]);
+  // Track search has a dedicated screen; no local state needed
   
   const { isTablet, getGridColumns, getCardWidth, dimensions, isLandscape } = useDeviceType();
 
@@ -218,17 +219,27 @@ export default function HomeScreen({ navigation }) {
     >
       <View style={[styles.headerContainer, isTablet ? styles.tabletHeader : styles.phoneHeader]}>
         {!isTablet && <Text style={styles.header}>💫 Hedgehop 💫</Text>}
-        <TouchableOpacity
-          style={styles.reloadButton}
-          onPress={loadData}
-          disabled={loading}
-        >
-          <Ionicons 
-            name="refresh" 
-            size={20} 
-            color={loading ? "#666" : "#fff"} 
-          />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate('SearchTracks')}
+            accessibilityLabel="Open search"
+          >
+            <Ionicons name="search" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={loadData}
+            disabled={loading}
+            accessibilityLabel="Reload data"
+          >
+            <Ionicons 
+              name="refresh" 
+              size={20} 
+              color={loading ? "#666" : "#fff"} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.filterBar}>
@@ -322,6 +333,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   reloadButton: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 25,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  iconButton: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 25,
     width: 40,
@@ -450,4 +471,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 20,
   },
+
 });

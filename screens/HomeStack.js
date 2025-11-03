@@ -4,6 +4,7 @@ import HomeScreen from './HomeScreen';
 import AlbumScreen from './AlbumScreen';
 import AlbumScreenDisabled from './AlbumScreenDisabled';
 import PlaylistDetailScreen from './PlaylistDetailScreen';
+import SearchTracksScreen from './SearchTracksScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,6 +42,16 @@ export default function HomeStack() {
       <Stack.Screen
         name="PlaylistDetail"
         component={PlaylistDetailScreen}
+        options={{
+          animationTypeForReplace: 'push',
+          gestureDirection: 'horizontal',
+        }}
+      />
+
+      {/* 🔎 Track search screen */}
+      <Stack.Screen
+        name="SearchTracks"
+        component={SearchTracksScreen}
         options={{
           animationTypeForReplace: 'push',
           gestureDirection: 'horizontal',
