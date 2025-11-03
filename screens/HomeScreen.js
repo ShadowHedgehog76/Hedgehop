@@ -23,12 +23,17 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
       .then(res => res.json())
       .then(data => setCategories(data))
       .catch(err => console.error('❌ Erreur chargement JSON:', err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const getAlbumStatus = (album) => {
@@ -139,7 +144,20 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 100, paddingTop: 50 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.header}>💫 Hedgehop 💫</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.header}>💫 Hedgehop 💫</Text>
+        <TouchableOpacity
+          style={styles.reloadButton}
+          onPress={loadData}
+          disabled={loading}
+        >
+          <Ionicons 
+            name="refresh" 
+            size={20} 
+            color={loading ? "#666" : "#fff"} 
+          />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.filterBar}>
         {filters.map(f => (
@@ -197,12 +215,29 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
   header: {
     color: 'white',
     fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
+    flex: 1,
+  },
+  reloadButton: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 25,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   filterBar: {
     flexDirection: 'row',
