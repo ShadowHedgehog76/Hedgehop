@@ -10,9 +10,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useStats } from '../src/hooks/useStats';
+import { useDeviceType } from '../src/hooks/useDeviceType';
 
 export default function StatsScreen({ navigation }) {
   const { formattedStats, loading, recordPlay, loadStats, resetStats, exportStats } = useStats();
+  const { isTablet, getGridColumns, isLandscape } = useDeviceType();
 
   const handleResetStats = () => {
     Alert.alert(
@@ -69,18 +71,34 @@ export default function StatsScreen({ navigation }) {
     return `${mins}m`;
   };
 
-  const StatCard = ({ title, value, icon, color, subtitle }) => (
-    <View style={[styles.statCard, { borderColor: color }]}>
+  const StatCard = ({ title, value, icon, color, subtitle, isTablet }) => (
+    <View style={[
+      styles.statCard, 
+      { borderColor: color },
+      isTablet && styles.tabletStatCard
+    ]}>
       <LinearGradient
         colors={[`${color}20`, `${color}10`, '#1a1a1a']}
         style={styles.statCardGradient}
       >
         <View style={styles.statCardHeader}>
-          <Ionicons name={icon} size={24} color={color} />
-          <Text style={styles.statCardTitle}>{title}</Text>
+          <Ionicons name={icon} size={isTablet ? 32 : 24} color={color} />
+          <Text style={[styles.statCardTitle, isTablet && styles.tabletStatCardTitle]}>
+            {title}
+          </Text>
         </View>
-        <Text style={[styles.statCardValue, { color }]}>{value}</Text>
-        {subtitle && <Text style={styles.statCardSubtitle}>{subtitle}</Text>}
+        <Text style={[
+          styles.statCardValue, 
+          { color },
+          isTablet && styles.tabletStatCardValue
+        ]}>
+          {value}
+        </Text>
+        {subtitle && (
+          <Text style={[styles.statCardSubtitle, isTablet && styles.tabletStatCardSubtitle]}>
+            {subtitle}
+          </Text>
+        )}
       </LinearGradient>
     </View>
   );
@@ -159,13 +177,17 @@ export default function StatsScreen({ navigation }) {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Stats principales */}
-        <View style={styles.statsGrid}>
+        <View style={[
+          styles.statsGrid, 
+          isTablet && styles.tabletStatsGrid
+        ]}>
           <StatCard
             title="Temps Total"
             value={formatTime(formattedStats.totalListeningTime)}
             icon="time"
             color="#22c55e"
             subtitle="Cumulé"
+            isTablet={isTablet}
           />
           
           <StatCard
@@ -174,6 +196,7 @@ export default function StatsScreen({ navigation }) {
             icon="play"
             color="#3b82f6"
             subtitle="Total"
+            isTablet={isTablet}
           />
           
           <StatCard
@@ -182,6 +205,7 @@ export default function StatsScreen({ navigation }) {
             icon="flame"
             color="#f59e0b"
             subtitle="Consécutifs"
+            isTablet={isTablet}
           />
           
           <StatCard
@@ -190,6 +214,7 @@ export default function StatsScreen({ navigation }) {
             icon="stopwatch"
             color="#8b5cf6"
             subtitle="Par écoute"
+            isTablet={isTablet}
           />
         </View>
 
@@ -222,8 +247,22 @@ export default function StatsScreen({ navigation }) {
           </View>
         </View>
 
-        <TopTracks />
-        <RecentActivity />
+        {/* Bottom sections - responsive layout */}
+        {isTablet ? (
+          <View style={styles.tabletBottomSections}>
+            <View style={styles.tabletBottomLeft}>
+              <TopTracks />
+            </View>
+            <View style={styles.tabletBottomRight}>
+              <RecentActivity />
+            </View>
+          </View>
+        ) : (
+          <>
+            <TopTracks />
+            <RecentActivity />
+          </>
+        )}
         
         {/* Actions */}
         <View style={styles.section}>
@@ -453,5 +492,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#ffffff',
     marginLeft: 12,
+  },
+
+  // Tablet-specific styles
+  tabletStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  tabletStatCard: {
+    width: '23%',
+    minHeight: 140,
+  },
+  tabletStatCardTitle: {
+    fontSize: 16,
+  },
+  tabletStatCardValue: {
+    fontSize: 28,
+  },
+  tabletStatCardSubtitle: {
+    fontSize: 14,
+  },
+  tabletBottomSections: {
+    flexDirection: 'row',
+    marginTop: 24,
+    justifyContent: 'space-between',
+  },
+  tabletBottomLeft: {
+    flex: 0.48,
+  },
+  tabletBottomRight: {
+    flex: 0.48,
   },
 });

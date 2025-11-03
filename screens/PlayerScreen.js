@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   Animated,
   FlatList,
-  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDeviceType } from '../src/hooks/useDeviceType';
 import {
   playerEmitter,
   getCurrentTrack,
@@ -39,6 +39,7 @@ export default function PlayerScreen({ navigation }) {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [crossList, setCrossList] = useState([]);
 
+  const { isTablet, dimensions, isLandscape } = useDeviceType();
   const scrollXTitle = useRef(new Animated.Value(0)).current;
   const scrollXAlbum = useRef(new Animated.Value(0)).current;
 
@@ -150,6 +151,201 @@ export default function PlayerScreen({ navigation }) {
   const hasQueue = queue && queue.length > 1;
   const crossCount = track.crossmusic ? track.crossmusic.length : 0;
 
+  // Helper function to format time
+  const formatTime = (millis) => {
+    const seconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Tablet queue renderer
+  const renderTabletQueue = () => (
+    <View style={styles.tabletQueueSection}>
+      <Text style={styles.tabletSectionTitle}>Queue ({queue.length} tracks)</Text>
+      <FlatList
+        data={queue}
+        horizontal={true}
+        keyExtractor={(item, i) => `${item.id || item.url || item.title}-${i}`}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        renderItem={({ item, index }) => {
+          const isCurrent = index === currentIndex;
+          const crossCount = item.crossmusic ? item.crossmusic.length : 0;
+
+          return (
+            <TouchableOpacity
+              style={styles.tabletQueueCard}
+              onPress={() => playTrack(item, index)}
+              activeOpacity={0.8}
+            >
+              <Image
+                source={{ uri: item.image || safeImage }}
+                style={styles.tabletQueueImage}
+                resizeMode="cover"
+              />
+              {isCurrent && (
+                <View style={styles.tabletCurrentIndicator}>
+                  <Ionicons name="musical-notes" size={24} color="white" />
+                </View>
+              )}
+              {crossCount > 0 && (
+                <View style={styles.tabletCrossBadge}>
+                  <Text style={styles.tabletCrossCount}>{crossCount}</Text>
+                </View>
+              )}
+              <Text numberOfLines={2} style={styles.tabletQueueTitle}>
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
+      />
+    </View>
+  );
+
+  // Tablet cross music renderer
+  const renderTabletCrossMusic = () => (
+    <View style={styles.tabletQueueSection}>
+      <Text style={styles.tabletSectionTitle}>CrossMusic ({crossList.length})</Text>
+      <FlatList
+        data={crossList}
+        horizontal={true}
+        keyExtractor={(item, i) => item.isOriginal ? 'original' : `${item.title}-${i}`}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.tabletQueueCard}
+            onPress={() => handlePlayCross(item)}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={{ uri: item.image || track.image || safeImage }}
+              style={styles.tabletQueueImage}
+              resizeMode="cover"
+            />
+            <Text 
+              numberOfLines={2} 
+              style={[
+                styles.tabletQueueTitle,
+                item.isOriginal && { color: '#1f4cff', fontWeight: '900' }
+              ]}
+            >
+              {item.title}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+
+  // Tablet layout with side-by-side view
+  if (isTablet) {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: track.image || safeImage }} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.95)']}
+          style={StyleSheet.absoluteFillObject}
+        />
+
+        {/* Header with badge */}
+        <View style={styles.tabletHeader}>
+          {hasQueue && crossCount > 0 && (
+            <View style={styles.crossMusicBadgeTop}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.25)', 'transparent']}
+                style={{
+                  ...StyleSheet.absoluteFillObject,
+                  top: 0,
+                  height: '50%',
+                  borderTopLeftRadius: 14,
+                  borderBottomLeftRadius: 14,
+                  borderTopRightRadius: 26,
+                  borderBottomRightRadius: 26,
+                }}
+              />
+              <Ionicons name="shuffle" size={20} color="#fff" />
+              <Text style={styles.crossBadgeTextTop}>{crossCount}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Tablet main content */}
+        <View style={styles.tabletContent}>
+          {/* Left side - Album artwork */}
+          <View style={styles.tabletArtwork}>
+            <Image 
+              source={{ uri: track.image || safeImage }} 
+              style={styles.tabletAlbumImage}
+            />
+          </View>
+
+          {/* Right side - Controls and info */}
+          <View style={styles.tabletControls}>
+            {/* Track info */}
+            <View style={styles.tabletTrackInfo}>
+              <Text style={[styles.title, styles.tabletTitle]}>
+                {track.crossTitle ? track.crossTitle : track.title}
+              </Text>
+
+              {track.crossTitle && (
+                <View style={styles.crossBadge}>
+                  <Ionicons name="musical-notes" size={20} color="#1f4cff" style={{ marginHorizontal: 4 }} />
+                  <Text style={[styles.crossTitle, { fontSize: 18 }]}>{track.title}</Text>
+                </View>
+              )}
+
+              <Text style={[styles.album, styles.tabletAlbum]}>{track.album}</Text>
+            </View>
+
+            {/* Progress slider */}
+            <View style={styles.tabletProgressContainer}>
+              <Text style={styles.timeText}>{formatTime(position)}</Text>
+              <View style={styles.sliderContainer}>
+                <Slider
+                  style={{ flex: 1, height: 40 }}
+                  minimumValue={0}
+                  maximumValue={duration}
+                  value={position}
+                  minimumTrackTintColor="#1f4cff"
+                  maximumTrackTintColor="#777"
+                  thumbTintColor="#1f4cff"
+                  onSlidingComplete={seekTo}
+                />
+              </View>
+              <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            </View>
+
+            {/* Main controls */}
+            <View style={styles.tabletMainControls}>
+              <TouchableOpacity onPress={playPrevious} style={styles.controlButton}>
+                <Ionicons name="play-skip-back" size={44} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.tabletPlayButton} onPress={togglePlayPause}>
+                <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color="black" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={playNext} style={styles.controlButton}>
+                <Ionicons name="play-skip-forward" size={44} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Bottom section - Queue/CrossMusic */}
+        {(hasQueue || crossList.length > 0) && (
+          <View style={styles.tabletBottomSection}>
+            {hasQueue ? renderTabletQueue() : renderTabletCrossMusic()}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // Phone layout (original)
   return (
     <View style={styles.container}>
       <Image source={{ uri: track.image || safeImage }} style={StyleSheet.absoluteFillObject} />
@@ -169,7 +365,7 @@ export default function PlayerScreen({ navigation }) {
           <LinearGradient
             colors={['rgba(255,255,255,0.25)', 'transparent']}
             style={{
-              ...RNStyleSheet.absoluteFillObject,
+              ...StyleSheet.absoluteFillObject,
               top: 0,
               height: '50%',
               borderTopLeftRadius: 14,
@@ -274,7 +470,7 @@ export default function PlayerScreen({ navigation }) {
                         <LinearGradient
                           colors={['rgba(255,255,255,0.25)', 'transparent']}
                           style={{
-                            ...RNStyleSheet.absoluteFillObject,
+                            ...StyleSheet.absoluteFillObject,
                             top: 0,
                             height: '50%',
                             borderTopLeftRadius: 12,
@@ -349,6 +545,156 @@ const styles = StyleSheet.create({
   titleBlock: { alignItems: 'center', marginBottom: 30 },
   title: { color: '#fff', fontSize: 28, fontWeight: '900' },
   album: { color: '#aaa', fontSize: 15, marginTop: 6 },
+
+  // Tablet-specific styles
+  tabletHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingTop: 30,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    zIndex: 10,
+  },
+  tabletContent: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingHorizontal: 30,
+    paddingVertical: 20,
+    minHeight: 300,
+  },
+  tabletArtwork: {
+    flex: 0.45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingRight: 30,
+  },
+  tabletAlbumImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 20,
+    maxWidth: 400,
+    maxHeight: 400,
+  },
+  tabletControls: {
+    flex: 0.55,
+    justifyContent: 'space-between',
+    paddingLeft: 30,
+    paddingVertical: 20,
+  },
+  tabletTrackInfo: {
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  tabletTitle: {
+    fontSize: 36,
+    textAlign: 'left',
+  },
+  tabletAlbum: {
+    fontSize: 20,
+    textAlign: 'left',
+  },
+  tabletProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: 25,
+  },
+  sliderContainer: {
+    flex: 1,
+    marginHorizontal: 15,
+  },
+  timeText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontWeight: '600',
+    minWidth: 45,
+    textAlign: 'center',
+  },
+  tabletMainControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  controlButton: {
+    marginHorizontal: 20,
+  },
+  tabletPlayButton: {
+    backgroundColor: '#fff',
+    borderRadius: 50,
+    padding: 25,
+    marginHorizontal: 30,
+  },
+  tabletBottomSection: {
+    height: 280,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    marginTop: 10,
+  },
+  tabletQueueSection: {
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    flex: 1,
+  },
+  tabletSectionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    marginLeft: 5,
+  },
+  tabletQueueCard: {
+    width: 140,
+    height: 200,
+    margin: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  tabletQueueImage: {
+    width: '100%',
+    height: 140,
+    resizeMode: 'cover',
+  },
+  tabletQueueTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    padding: 8,
+    lineHeight: 16,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabletCurrentIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  tabletCrossBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#1f4cff',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabletCrossCount: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '900',
+  },
 
   crossBadge: {
     flexDirection: 'row',

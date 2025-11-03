@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useDeviceType } from '../hooks/useDeviceType';
 import {
   playerEmitter,
   getCurrentTrack,
@@ -15,8 +16,9 @@ import {
 
 const { width } = Dimensions.get('window');
 
-export default function PlayerBar() {
+export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToPlayer }) {
   const navigation = useNavigation();
+  const { isTablet } = useDeviceType();
   const [track, setTrack] = useState(getCurrentTrack());
   const [isPlaying, setIsPlaying] = useState(isTrackPlaying());
   const [status, setStatus] = useState(getPlaybackStatus());
@@ -47,11 +49,19 @@ export default function PlayerBar() {
 
   const progress = (status.positionMillis / status.durationMillis) * 100 || 0;
 
+  const handlePress = () => {
+    if (isTabletSidebar && onTabletNavigateToPlayer) {
+      onTabletNavigateToPlayer();
+    } else {
+      navigation.navigate('PlayerScreen');
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.95}
-      onPress={() => navigation.navigate('PlayerScreen')}
-      style={styles.container}
+      onPress={handlePress}
+      style={isTabletSidebar ? styles.sidebarContainer : styles.container}
     >
       {/* --- 🔥 FOND FLOUTÉ + DÉGRADÉ NOIR --- */}
       <Image source={{ uri: track.image }} style={StyleSheet.absoluteFillObject} blurRadius={25} />
@@ -70,39 +80,38 @@ export default function PlayerBar() {
       />
 
       {/* --- CONTENU DU PLAYER --- */}
-      <View style={styles.content}>
-        <Image source={{ uri: track.image }} style={styles.image} />
+      <View style={isTabletSidebar ? styles.sidebarContent : styles.content}>
+        <Image source={{ uri: track.image }} style={isTabletSidebar ? styles.sidebarImage : styles.image} />
 
         <View style={styles.info}>
           <View style={styles.infoRow}>
-            {/* CrossTitle (blanc) */}
-            <Text numberOfLines={1} style={styles.title}>
+            <Text numberOfLines={1} style={isTabletSidebar ? styles.sidebarTitle : styles.title}>
               {track.crossTitle || track.title}
             </Text>
-
-            {/* Si cross, ajoute icône + titre cross en bleu */}
             {track.crossTitle && (
               <View style={styles.crossBadge}>
                 <Ionicons
                   name="musical-notes"
-                  size={14}
+                  size={isTabletSidebar ? 12 : 14}
                   color="#1f4cff"
                   style={{ marginHorizontal: 4 }}
                 />
-                <Text numberOfLines={1} style={styles.crossTitle}>
+                <Text numberOfLines={1} style={isTabletSidebar ? styles.sidebarCrossTitle : styles.crossTitle}>
                   {track.title}
                 </Text>
               </View>
             )}
           </View>
-
-          <Text numberOfLines={1} style={styles.album}>
+          <Text numberOfLines={1} style={isTabletSidebar ? styles.sidebarAlbum : styles.album}>
             {track.album}
           </Text>
         </View>
 
-        <TouchableOpacity onPress={isPlaying ? pauseTrack : resumeTrack} style={styles.playPause}>
-          <Ionicons name={isPlaying ? 'pause' : 'play'} size={24} color="white" />
+        <TouchableOpacity 
+          onPress={isPlaying ? pauseTrack : resumeTrack} 
+          style={isTabletSidebar ? styles.sidebarPlayPause : styles.playPause}
+        >
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={isTabletSidebar ? 20 : 24} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -129,10 +138,26 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
 
+  sidebarContainer: {
+    width: '100%',
+    height: 70,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
+    flex: 1,
+  },
+
+  sidebarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
     flex: 1,
   },
 
@@ -143,8 +168,19 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
+  sidebarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+
   info: { flex: 1 },
   infoRow: { flexDirection: 'row', alignItems: 'center' },
+
+  sidebarInfo: {
+    flex: 1,
+  },
 
   title: {
     color: 'white',
@@ -159,6 +195,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 6,
     flexShrink: 1,
+  },
+
+  sidebarTitle: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    flexShrink: 1,
+    maxWidth: '60%',
+  },
+
+  sidebarCrossTitle: {
+    color: '#1f4cff',
+    fontSize: 11,
+  },
+
+  sidebarAlbum: {
+    color: '#aaa',
+    fontSize: 11,
+  },
+
+  sidebarPlayPause: {
+    backgroundColor: 'rgba(31,76,255,0.2)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   crossTitle: {

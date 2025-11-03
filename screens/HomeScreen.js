@@ -9,19 +9,17 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.45;
-const CARD_HEIGHT = CARD_WIDTH + 70; // pour loger année + barre glossy
+import { useDeviceType } from '../src/hooks/useDeviceType';
 
 export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  
+  const { isTablet, getGridColumns, getCardWidth, dimensions, isLandscape } = useDeviceType();
 
   const loadData = () => {
     setLoading(true);
@@ -81,9 +79,17 @@ export default function HomeScreen({ navigation }) {
     const status = getAlbumStatus(album);
     if (status.status === 'ComingSoon') return null;
 
+    const cardWidth = getCardWidth();
+    const cardHeight = cardWidth + 80; // Maintain aspect ratio
+
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { 
+          width: cardWidth, 
+          height: cardHeight,
+          marginRight: isTablet ? 12 : 14, // Espacement similaire pour cohérence
+          marginBottom: 15 
+        }]}
         activeOpacity={0.85}
         onPress={() => navigation.navigate('Album', { album })}
       >
@@ -93,7 +99,7 @@ export default function HomeScreen({ navigation }) {
             <LinearGradient
               colors={['rgba(255,255,255,0.25)', 'transparent']}
               style={{
-                ...RNStyleSheet.absoluteFillObject,
+                ...StyleSheet.absoluteFillObject,
                 top: 0,
                 height: '50%',
                 borderTopLeftRadius: 12,
@@ -123,7 +129,7 @@ export default function HomeScreen({ navigation }) {
                   colors={['rgba(255,255,255,0.35)', 'rgba(255,255,255,0.05)', 'transparent']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
-                  style={RNStyleSheet.absoluteFillObject}
+                  style={StyleSheet.absoluteFillObject}
                 />
               </View>
             </View>
@@ -135,8 +141,11 @@ export default function HomeScreen({ navigation }) {
   };
 
   const chunkAlbums = (albums) => {
+    const columns = getGridColumns();
     const result = [];
-    for (let i = 0; i < albums.length; i += 2) result.push(albums.slice(i, i + 2));
+    for (let i = 0; i < albums.length; i += columns) {
+      result.push(albums.slice(i, i + columns));
+    }
     return result;
   };
 
@@ -173,8 +182,8 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 100, paddingTop: 50 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>💫 Hedgehop 💫</Text>
+      <View style={[styles.headerContainer, isTablet && { justifyContent: 'flex-end' }]}>
+        {!isTablet && <Text style={styles.header}>💫 Hedgehop 💫</Text>}
         <TouchableOpacity
           style={styles.reloadButton}
           onPress={loadData}
@@ -216,22 +225,21 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.noAlbums}>Aucun album trouvé pour ce filtre.</Text>
       ) : (
         filteredCategories.map((cat, idx) => {
-          const albumPairs = chunkAlbums(cat.albums);
+          // Both tablet and phone use horizontal scroll for better alignment
           return (
             <View key={idx} style={styles.categoryBlock}>
               <Text style={styles.categoryTitle}>{cat.category}</Text>
               <FlatList
                 key={`cat-${idx}`}
-                data={albumPairs}
+                data={cat.albums}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 12 }}
+                contentContainerStyle={{ 
+                  paddingLeft: 12, 
+                  paddingRight: 12 
+                }}
                 renderItem={({ item }) => (
-                  <View style={styles.column}>
-                    {item.map((album, index) => (
-                      <AlbumCard key={index} album={album} />
-                    ))}
-                  </View>
+                  <AlbumCard key={item.id || item.title} album={item} />
                 )}
               />
             </View>
@@ -247,7 +255,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between', // Changé de 'center' pour mieux distribuer
     marginBottom: 10,
     paddingHorizontal: 20,
   },
@@ -294,16 +302,6 @@ const styles = StyleSheet.create({
   column: {
     flexDirection: 'column',
     justifyContent: 'space-between',
-    marginRight: 14,
-  },
-  card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    backgroundColor: '#111',
-    borderRadius: 15,
-    padding: 10,
-    marginBottom: 15,
-    alignItems: 'center',
   },
   imageWrapper: {
     width: '100%',
@@ -311,7 +309,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
   },
-  image: { width: '100%', height: CARD_WIDTH - 20, borderRadius: 12 },
+  card: {
+    backgroundColor: '#111',
+    borderRadius: 15,
+    padding: 10,
+    alignItems: 'center',
+  },
+  image: { width: '100%', aspectRatio: 1, borderRadius: 12 },
   title: {
     color: 'white',
     fontSize: 15,

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import authService from './auth';
 
 class StatsService {
   constructor() {
@@ -21,12 +22,28 @@ class StatsService {
     };
   }
 
-  // Charger les statistiques depuis AsyncStorage
+  // Charger les statistiques depuis Firebase ou AsyncStorage
   async loadStats() {
     try {
+      // Si l'utilisateur est connecté, récupérer depuis Firebase
+      if (authService.isAuthenticated()) {
+        console.log('🔥 Chargement statistiques depuis Firebase...');
+        const firebaseStats = await authService.getStats();
+        if (firebaseStats) {
+          console.log('🔥 Statistiques Firebase récupérées');
+          return firebaseStats;
+        }
+        console.log('🔥 Aucunes statistiques Firebase, retour des stats par défaut');
+        return this.getDefaultStats();
+      }
+      
+      // Sinon, utiliser le stockage local (mode hors ligne)
+      console.log('💾 Chargement statistiques depuis AsyncStorage...');
       const statsString = await AsyncStorage.getItem(this.STATS_KEY);
       if (statsString) {
-        return JSON.parse(statsString);
+        const localStats = JSON.parse(statsString);
+        console.log('💾 Statistiques locales récupérées');
+        return localStats;
       }
       return this.getDefaultStats();
     } catch (error) {
@@ -35,10 +52,22 @@ class StatsService {
     }
   }
 
-  // Sauvegarder les statistiques
+  // Sauvegarder les statistiques dans Firebase ou AsyncStorage
   async saveStats(stats) {
     try {
-      await AsyncStorage.setItem(this.STATS_KEY, JSON.stringify(stats));
+      if (authService.isAuthenticated()) {
+        // Mode connecté : utiliser Firebase
+        console.log('🔥 Sauvegarde statistiques dans Firebase...');
+        const result = await authService.saveStats(stats);
+        if (!result.success) {
+          console.error('Erreur Firebase, sauvegarde locale de secours');
+          await AsyncStorage.setItem(this.STATS_KEY, JSON.stringify(stats));
+        }
+      } else {
+        // Mode hors ligne : utiliser AsyncStorage
+        console.log('💾 Sauvegarde statistiques dans AsyncStorage...');
+        await AsyncStorage.setItem(this.STATS_KEY, JSON.stringify(stats));
+      }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des stats:', error);
     }
@@ -215,6 +244,116 @@ class StatsService {
       console.error('Erreur lors de l\'export des stats:', error);
       return null;
     }
+  }
+
+  // === FONCTIONS DE SYNCHRONISATION ===
+
+  // Synchroniser les statistiques locales vers Firebase lors de la connexion
+  async syncStatsToCloud() {
+    try {
+      if (!authService.isAuthenticated()) return null;
+
+      // Récupérer les statistiques locales
+      const statsString = await AsyncStorage.getItem(this.STATS_KEY);
+      const localStats = statsString ? JSON.parse(statsString) : this.getDefaultStats();
+      
+      console.log('🔄 Synchronisation statistiques vers Firebase...');
+      console.log('🔄 Stats locales:', { 
+        playCount: localStats.playCount,
+        totalListeningTime: localStats.totalListeningTime 
+      });
+      
+      // Récupérer les statistiques du cloud
+      const cloudStats = await authService.getStats() || this.getDefaultStats();
+      
+      console.log('🔄 Stats cloud:', { 
+        playCount: cloudStats.playCount,
+        totalListeningTime: cloudStats.totalListeningTime 
+      });
+      
+      // Fusionner les statistiques (additionner les compteurs)
+      const mergedStats = this.mergeStats(localStats, cloudStats);
+      
+      // Sauvegarder la fusion dans Firebase
+      await authService.saveStats(mergedStats);
+      
+      // Nettoyer le stockage local
+      await AsyncStorage.removeItem(this.STATS_KEY);
+      
+      console.log('🔄 Synchronisation terminée:', { 
+        playCount: mergedStats.playCount,
+        totalListeningTime: mergedStats.totalListeningTime 
+      });
+      
+      return mergedStats;
+    } catch (error) {
+      console.error('Erreur synchronisation statistiques vers cloud:', error);
+      return null;
+    }
+  }
+
+  // Sauvegarder les statistiques du cloud en local lors de la déconnexion
+  async syncStatsToLocal() {
+    try {
+      if (!authService.isAuthenticated()) return;
+
+      const cloudStats = await authService.getStats();
+      if (cloudStats) {
+        await AsyncStorage.setItem(this.STATS_KEY, JSON.stringify(cloudStats));
+        console.log('🔄 Statistiques sauvegardées localement');
+      }
+    } catch (error) {
+      console.error('Erreur synchronisation statistiques vers local:', error);
+    }
+  }
+
+  // Fusionner deux objets de statistiques
+  mergeStats(localStats, cloudStats) {
+    const merged = { ...this.getDefaultStats() };
+    
+    // Additionner les compteurs numériques
+    merged.totalListeningTime = (localStats.totalListeningTime || 0) + (cloudStats.totalListeningTime || 0);
+    merged.playCount = (localStats.playCount || 0) + (cloudStats.playCount || 0);
+    merged.totalSessions = (localStats.totalSessions || 0) + (cloudStats.totalSessions || 0);
+    
+    // Prendre la plus grande série
+    merged.streakDays = Math.max(localStats.streakDays || 0, cloudStats.streakDays || 0);
+    
+    // Fusionner les albums favoris
+    merged.favoriteAlbums = { ...localStats.favoriteAlbums, ...cloudStats.favoriteAlbums };
+    for (const album in localStats.favoriteAlbums) {
+      if (cloudStats.favoriteAlbums?.[album]) {
+        merged.favoriteAlbums[album] = localStats.favoriteAlbums[album] + cloudStats.favoriteAlbums[album];
+      }
+    }
+    
+    // Fusionner les pistes favorites
+    merged.favoriteTracks = { ...localStats.favoriteTracks, ...cloudStats.favoriteTracks };
+    for (const track in localStats.favoriteTracks) {
+      if (cloudStats.favoriteTracks?.[track]) {
+        merged.favoriteTracks[track] = localStats.favoriteTracks[track] + cloudStats.favoriteTracks[track];
+      }
+    }
+    
+    // Fusionner les catégories favorites
+    merged.favoriteCategories = { ...localStats.favoriteCategories, ...cloudStats.favoriteCategories };
+    for (const category in localStats.favoriteCategories) {
+      if (cloudStats.favoriteCategories?.[category]) {
+        merged.favoriteCategories[category] = localStats.favoriteCategories[category] + cloudStats.favoriteCategories[category];
+      }
+    }
+    
+    // Combiner les sessions (garder les 100 plus récentes)
+    const allSessions = [...(localStats.sessions || []), ...(cloudStats.sessions || [])];
+    allSessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    merged.sessions = allSessions.slice(0, 100);
+    
+    // Prendre la date la plus récente
+    const localDate = localStats.lastListeningDate ? new Date(localStats.lastListeningDate) : new Date(0);
+    const cloudDate = cloudStats.lastListeningDate ? new Date(cloudStats.lastListeningDate) : new Date(0);
+    merged.lastListeningDate = localDate > cloudDate ? localStats.lastListeningDate : cloudStats.lastListeningDate;
+    
+    return merged;
   }
 }
 

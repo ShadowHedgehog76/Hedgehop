@@ -9,19 +9,17 @@ import {
   StyleSheet,
   Dimensions,
   FlatList,
-  StyleSheet as RNStyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.45;
-const CARD_HEIGHT = CARD_WIDTH + 40;
+import { useDeviceType } from '../src/hooks/useDeviceType';
 
 export default function NewsScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFullText, setShowFullText] = useState(false);
+  
+  const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
@@ -116,7 +114,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                 <LinearGradient
                   colors={['rgba(255,255,255,0.3)', 'transparent']}
                   style={{
-                    ...RNStyleSheet.absoluteFillObject,
+                    ...StyleSheet.absoluteFillObject,
                     top: 0,
                     height: '55%',
                     borderTopLeftRadius: 20,
@@ -133,20 +131,35 @@ Thank you for your patience and continued support while Hedgehop grows and impro
     </View>
   );
 
+  const numColumns = getGridColumns();
+
   return (
     <FlatList
       style={styles.container}
       data={workingAlbums}
       keyExtractor={(_, i) => i.toString()}
-      numColumns={2}
+      numColumns={numColumns}
+      key={numColumns} // Force re-render when columns change
       ListHeaderComponent={renderHeader}
       ListFooterComponent={renderFooter}
-      contentContainerStyle={{ paddingBottom: 120 }}
+      contentContainerStyle={{ 
+        paddingBottom: 120,
+        paddingHorizontal: isTablet ? 16 : 8
+      }}
+      columnWrapperStyle={numColumns > 1 ? styles.row : null}
       renderItem={({ item }) => {
         const progress = getAlbumProgress(item);
+        const cardWidth = getCardWidth();
+        const cardHeight = cardWidth + 80; // Maintenir le ratio
+        
         return (
           <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { 
+              width: cardWidth, 
+              height: cardHeight,
+              marginBottom: isTablet ? 12 : 16,
+              marginHorizontal: isTablet ? 4 : 6
+            }]}
             activeOpacity={0.85}
             onPress={() => navigation.navigate('AlbumScreen', { album: item })}
           >
@@ -156,7 +169,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                 <LinearGradient
                   colors={['rgba(255,255,255,0.25)', 'transparent']}
                   style={{
-                    ...RNStyleSheet.absoluteFillObject,
+                    ...StyleSheet.absoluteFillObject,
                     top: 0,
                     height: '50%',
                     borderTopLeftRadius: 12,
@@ -181,7 +194,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                   <LinearGradient
                     colors={['rgba(255,255,255,0.5)', 'transparent']}
                     style={{
-                      ...RNStyleSheet.absoluteFillObject,
+                      ...StyleSheet.absoluteFillObject,
                       top: 0,
                       height: '50%',
                       borderTopLeftRadius: 20,
@@ -192,7 +205,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                     colors={['#3b82f6', '#60a5fa']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={RNStyleSheet.absoluteFillObject}
+                    style={StyleSheet.absoluteFillObject}
                   />
                 </View>
               </View>
@@ -239,9 +252,12 @@ const styles = StyleSheet.create({
   timelineButtonText: { color: 'white', fontWeight: '600', fontSize: 13, marginLeft: 4 },
 
   // === Working Albums Grid ===
-  card: { width: CARD_WIDTH, height: CARD_HEIGHT + 30, backgroundColor: '#111', borderRadius: 15, padding: 10, margin: 8, alignItems: 'center' },
+  row: {
+    justifyContent: 'space-around',
+  },
+  card: { backgroundColor: '#111', borderRadius: 15, padding: 10, alignItems: 'center' },
   imageWrapper: { width: '100%', position: 'relative', borderRadius: 12, overflow: 'hidden' },
-  image: { width: '100%', height: CARD_WIDTH - 20, borderRadius: 12 },
+  image: { width: '100%', aspectRatio: 1, borderRadius: 12 },
   badge: { position: 'absolute', top: 8, right: -17, flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingLeft: 10, paddingRight: 24, borderTopLeftRadius: 12, borderBottomLeftRadius: 12, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderWidth: 2, borderColor: 'rgba(0,0,0,0.4)', overflow: 'hidden' },
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '700', marginLeft: 4, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 3 },
   title: { color: 'white', fontSize: 15, fontWeight: '600', textAlign: 'center', marginTop: 8 },

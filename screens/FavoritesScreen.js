@@ -12,12 +12,15 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
-  StyleSheet as RNStyleSheet,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { playTrack, setGlobalTracks } from '../src/api/player';
 import { getFavorites, toggleFavorite, favEmitter } from '../src/api/favorites';
+import { useDeviceType } from '../src/hooks/useDeviceType';
+import authService from '../src/services/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -26,23 +29,103 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 export default function FavoritesScreen() {
+  console.log('🚀 FavoritesScreen DÉMARRÉ');
+  
   const [favorites, setFavorites] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [testMode, setTestMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState('Initialisation...');
+  const [renderKey, setRenderKey] = useState(0); // Pour forcer le re-render
+  
+  const { isTablet } = useDeviceType();
+  console.log('🚀 Mode tablette:', isTablet);
 
   const imageScale = useRef(new Animated.Value(0.8)).current;
   const listOpacity = useRef(new Animated.Value(0)).current;
   const listTranslate = useRef(new Animated.Value(50)).current;
 
-  // --- Chargement & synchro favoris ---
-  useEffect(() => {
-    (async () => {
+  // --- Fonction de chargement des favoris ---
+  const loadFavorites = async () => {
+    try {
+      setLoading(true);
+      setDebugInfo('Chargement en cours...');
+      
+      console.log('🎵 === CHARGEMENT FAVORIS ===');
+      const isAuth = authService.isAuthenticated();
+      console.log('🎵 1. Utilisateur connecté:', isAuth);
+      setDebugInfo(`Auth: ${isAuth ? 'Oui' : 'Non'} - Récupération...`);
+      
       const favs = await getFavorites();
-      setFavorites(favs);
-    })();
+      console.log('🎵 2. Favoris récupérés:', favs?.length || 0);
+      setDebugInfo(`Trouvé ${favs?.length || 0} favoris`);
+      
+      if (favs && Array.isArray(favs)) {
+        setFavorites([...favs]);
+        setDebugInfo(`${favs.length} favoris chargés ✓`);
+        console.log('🎵 3. State mis à jour avec', favs.length, 'favoris');
+        
+        // 🔄 FORCER LE RE-RENDER GRAPHIQUE
+        setTimeout(() => {
+          setRenderKey(prev => prev + 1);
+          console.log('🔄 Re-render forcé pour l\'affichage');
+        }, 100);
+      } else {
+        console.error('🎵 ❌ Résultat invalide:', favs);
+        setFavorites([]);
+        setDebugInfo('❌ Données invalides');
+      }
+    } catch (error) {
+      console.error('🎵 ❌ Erreur:', error);
+      setFavorites([]);
+      setDebugInfo(`❌ Erreur: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const sub = favEmitter.addListener('update', (favs) => setFavorites(favs));
+  // --- Chargement initial ---
+  useEffect(() => {
+    console.log('🎵 🚀 MONTAGE COMPOSANT - Chargement initial');
+    loadFavorites();
+  }, []);
+
+  // --- Re-chargement si l'état d'authentification change ---
+  useEffect(() => {
+    const checkAuth = () => {
+      console.log('🎵 🔄 Vérification auth state:', authService.isAuthenticated());
+      loadFavorites();
+    };
+
+    // Vérifier périodiquement l'état d'auth (au cas où Firebase mettrait du temps)
+    const interval = setInterval(checkAuth, 1000);
+    
+    // Nettoyer l'interval après 10 secondes
+    setTimeout(() => clearInterval(interval), 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // --- Listener pour les mises à jour de favoris ---
+  useEffect(() => {
+    const sub = favEmitter.addListener('update', (favs) => {
+      console.log('🎵 Favoris mis à jour via emitter:', favs.length, 'pistes');
+      setFavorites([...favs]);
+    });
+    
     return () => sub.remove();
   }, []);
+
+  // --- Rechargement à chaque focus sur la page ---
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('🔄 Page des favoris focalisée - rechargement...');
+      loadFavorites();
+      
+      // Force un re-render graphique immédiat
+      setRenderKey(prev => prev + 1);
+    }, [])
+  );
 
   // --- Animations d’entrée ---
   useEffect(() => {
@@ -83,8 +166,12 @@ export default function FavoritesScreen() {
   };
   const mosaicImages = getMosaicGrid();
 
+  console.log('🚀 RENDU FavoritesScreen - isTablet:', isTablet, 'favorites:', favorites.length);
+  
   return (
     <View style={styles.container}>
+
+      
       {/* 🌌 Fond mosaïque + flou */}
       <View style={styles.backgroundWrapper}>
         {mosaicImages.map((img, i) => (
@@ -100,43 +187,185 @@ export default function FavoritesScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
-        {/* === EN-TÊTE === */}
-        <View style={styles.headerSection}>
-          <Animated.View style={{ transform: [{ scale: imageScale }] }}>
-            <View style={styles.mosaicContainer}>
-              {mosaicImages.map((img, i) => (
-                <Image key={i} source={img ? { uri: img } : null} style={styles.mosaicImage} />
-              ))}
-            </View>
-          </Animated.View>
+        {/* === EN-TÊTE (Mobile uniquement) === */}
+        {!isTablet && (
+          <View style={styles.headerSection}>
+            <Animated.View style={{ transform: [{ scale: imageScale }] }}>
+              <View style={styles.mosaicContainer}>
+                {mosaicImages.map((img, i) => (
+                  <Image key={i} source={img ? { uri: img } : null} style={styles.mosaicImage} />
+                ))}
+              </View>
+            </Animated.View>
 
-          <View style={styles.albumTextBlock}>
-            <Text style={styles.albumTitle}>Favoris</Text>
-            <Text style={styles.trackCount}>{favorites.length} pistes</Text>
+            <View style={styles.albumTextBlock}>
+              <Text style={styles.albumTitle}>Favoris</Text>
+              <Text style={styles.trackCount}>
+                {favorites.length} {favorites.length === 1 ? 'piste' : 'pistes'}
+              </Text>
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: 'white' }]}
-                onPress={handlePlayAll}
-              >
-                <Ionicons name="play" size={18} color="black" style={{ marginRight: 6 }} />
-                <Text style={[styles.actionText, { color: 'black' }]}>Play All</Text>
-              </TouchableOpacity>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: 'white' }]}
+                  onPress={handlePlayAll}
+                >
+                  <Ionicons name="play" size={18} color="black" style={{ marginRight: 8 }} />
+                  <Text style={[styles.actionText, { color: 'black' }]}>Tout lire</Text>
+                </TouchableOpacity>
+                
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: 'blue', marginLeft: 10 }]}
+                    onPress={async () => {
+                      console.log('🔄 Rechargement manuel des favoris...');
+                      const newFavs = await getFavorites();
+                      console.log('🔄 Favoris rechargés:', newFavs);
+                      console.log('🔄 Détails premier favori:', JSON.stringify(newFavs[0], null, 2));
+                      // Forcer un re-render complet
+                      setFavorites([]);
+                      setTimeout(() => setFavorites([...newFavs]), 100);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={18} color="white" style={{ marginRight: 8 }} />
+                    <Text style={[styles.actionText, { color: 'white' }]}>Actualiser</Text>
+                  </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* === LISTE DES FAVORIS === */}
-        <Animated.View style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}>
-          {favorites.length === 0 ? (
+        {favorites.length === 0 ? (
+          <Animated.View 
+            key={`favorites-empty-${renderKey}`}
+            style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}
+          >
             <Text style={{ color: '#888', textAlign: 'center', marginTop: 40 }}>
               Aucun favori pour le moment 💔
             </Text>
-          ) : (
-            favorites.map((track, index) => {
+          </Animated.View>
+        ) : isTablet ? (
+          // === INTERFACE TABLETTE (SANS ANIMATION) ===
+          <View 
+            key={`tablet-${renderKey}-${favorites.length}`}
+            style={styles.tabletLayout}
+          >
+            {/* Côté gauche - Mosaïque */}
+            <View style={styles.tabletLeftSide}>
+              <Animated.View style={[styles.mosaicContainer, { transform: [{ scale: imageScale }] }]}>
+                {mosaicImages.map((img, i) => (
+                  <Image key={i} source={img ? { uri: img } : null} style={styles.mosaicImage} />
+                ))}
+              </Animated.View>
+              
+              <Text style={styles.tabletTitle}>Mes Favoris</Text>
+              <Text style={styles.tabletSubtitle}>
+                {favorites.length} {favorites.length === 1 ? 'piste' : 'pistes'}
+              </Text>
+              
+              {/* Boutons d'action */}
+              <View style={styles.tabletButtonsContainer}>
+                <TouchableOpacity style={styles.playAllButton} onPress={handlePlayAll}>
+                  <Ionicons name="play" size={18} color="black" style={{ marginRight: 8 }} />
+                  <Text style={styles.playAllText}>Tout lire</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.tabletActionButton, { backgroundColor: 'blue' }]} 
+                  onPress={() => {
+                    console.log('🔄 Rechargement manuel des favoris...');
+                    loadFavorites();
+                  }}
+                >
+                  <Ionicons name="refresh" size={18} color="white" style={{ marginRight: 8 }} />
+                  <Text style={[styles.tabletActionText, { color: 'white' }]}>Actualiser</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Statistiques supplémentaires */}
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Ionicons name="musical-notes" size={16} color="#aaa" />
+                  <Text style={styles.statText}>
+                    {favorites.filter(t => t.url).length} disponibles
+                  </Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Ionicons name="heart" size={16} color="red" />
+                  <Text style={styles.statText}>Vos coups de cœur</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Côté droit - Liste des pistes */}
+            <ScrollView style={styles.tabletRightSide} showsVerticalScrollIndicator={false}>
+
+              {favorites.map((track, index) => {
+                const playable = !!track.url;
+                return (
+                  <TouchableOpacity
+                    key={track.favId || index}
+                    style={[
+                      styles.tabletTrackItem, 
+                      !playable && styles.disabledTrack,
+                      { backgroundColor: playable ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)' }
+                    ]}
+                    onPress={() => {
+                      if (playable) {
+                        setGlobalTracks(favorites.filter(t => t.url));
+                        playTrack(track);
+                      }
+                    }}
+                    disabled={!playable}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.trackNumber}>
+                      <Text style={[styles.trackNumberText, { color: playable ? '#fff' : '#555' }]}>
+                        {index + 1}
+                      </Text>
+                    </View>
+                    
+                    <Image 
+                      source={{ uri: track.image }} 
+                      style={[styles.tabletTrackImage, !playable && { opacity: 0.5 }]}
+                      resizeMode="cover"
+                    />
+                    
+                    <View style={styles.trackDetails}>
+                      <Text style={[styles.trackTitle, !playable && styles.disabledText]}>
+                        {track.title}
+                        {!playable && <Text style={styles.unavailableTag}> (Indisponible)</Text>}
+                      </Text>
+                      <Text style={[styles.trackAlbum, !playable && styles.disabledText]}>
+                        {track.album}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity 
+                      style={styles.favoriteButton}
+                      onPress={() => handleFavorite(track)}
+                      activeOpacity={0.6}
+                    >
+                      <Ionicons
+                        name="heart"
+                        size={22}
+                        color="red"
+                      />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : (
+          // === AFFICHAGE MOBILE (original) ===
+          <Animated.View 
+            key={`mobile-${renderKey}-${favorites.length}`}
+            style={{ transform: [{ translateY: listTranslate }], opacity: listOpacity }}
+          >
+            {favorites.map((track, index) => {
               const playable = !!track.url;
               return (
-                <View key={index} style={styles.trackWrapper}>
+                <View key={track.favId || index} style={styles.trackWrapper}>
                   <TouchableOpacity
                     onPress={() => {
                       setGlobalTracks([]);
@@ -147,13 +376,10 @@ export default function FavoritesScreen() {
                   >
                     <Image source={{ uri: track.image }} style={styles.trackIcon} />
                     <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.trackTitle, { color: playable ? 'white' : '#777' }]}
-                        numberOfLines={1}
-                      >
+                      <Text style={{ color: 'white', fontSize: 16 }}>
                         {track.title}
                       </Text>
-                      <Text style={styles.trackSubtitle} numberOfLines={1}>
+                      <Text style={{ color: '#aaa', fontSize: 14, marginTop: 2 }}>
                         {track.album}
                       </Text>
                     </View>
@@ -169,9 +395,9 @@ export default function FavoritesScreen() {
                   </TouchableOpacity>
                 </View>
               );
-            })
-          )}
-        </Animated.View>
+            })}
+          </Animated.View>
+        )}
       </ScrollView>
     </View>
   );
@@ -182,18 +408,18 @@ const styles = StyleSheet.create({
 
   // === FOND MOSAÏQUE ===
   backgroundWrapper: {
-    ...RNStyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   mosaicTile: { width: '50%', height: '50%' },
-  darkOverlay: { ...RNStyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
+  darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
 
   // === HEADER ===
   headerSection: { alignItems: 'center', marginTop: 110, marginBottom: 30 },
   mosaicContainer: {
-    width: width * 0.6,
-    height: width * 0.6,
+    width: Math.min(width * 0.6, 300), // Taille max pour tablette
+    height: Math.min(width * 0.6, 300),
     flexDirection: 'row',
     flexWrap: 'wrap',
     borderRadius: 20,
@@ -207,25 +433,318 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 30,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    justifyContent: 'center',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     marginHorizontal: 6,
+    minHeight: 44,
+    minWidth: 120,
   },
   actionText: { fontWeight: '600', fontSize: 14 },
 
   // === LISTE ===
-  trackWrapper: { marginHorizontal: 20, marginBottom: 10 },
+  trackWrapper: { 
+    paddingHorizontal: 20, // Padding au lieu de margin pour que les pastilles respirent
+    marginBottom: 12,
+  },
   trackPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: width > 600 ? 18 : 16,
+    paddingHorizontal: width > 600 ? 24 : 20,
     borderRadius: 50,
     backgroundColor: 'rgba(255,255,255,0.08)',
+    minHeight: width > 600 ? 80 : 60, // Hauteur minimale plus importante
+    flex: 1, // Maintenant avec du padding sur le wrapper, ça va respirer
   },
-  trackIcon: { width: 45, height: 45, borderRadius: 10, marginRight: 12 },
-  trackTitle: { fontSize: 16, fontWeight: '600' },
-  trackSubtitle: { fontSize: 12, color: '#aaa', marginTop: 2 },
+  trackIcon: { 
+    width: width > 600 ? 60 : 45, // Plus grand sur tablette
+    height: width > 600 ? 60 : 45, 
+    borderRadius: 12, 
+    marginRight: width > 600 ? 20 : 12 // Plus d'espacement sur tablette
+  },
+  trackTitle: { 
+    fontSize: width > 600 ? 18 : 16, // Plus grand sur tablette
+    fontWeight: '600' 
+  },
+  trackSubtitle: { 
+    fontSize: width > 600 ? 14 : 12, // Plus grand sur tablette
+    color: '#aaa', 
+    marginTop: 2 
+  },
   heartButton: { paddingHorizontal: 6, marginLeft: 4 },
+
+  // === STYLES TABLETTE ===
+  // === STYLES TABLETTE (comme AlbumScreen) ===
+  tabletLayout: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingTop: 120,
+    paddingHorizontal: 20,
+  },
+  tabletLeftSide: {
+    flex: 0.35,
+    alignItems: 'center',
+    paddingRight: 20,
+  },
+  tabletRightSide: {
+    flex: 0.65,
+    paddingLeft: 20,
+    paddingRight: 20,
+  },
+  tabletTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 30,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  tabletSubtitle: {
+    fontSize: 16,
+    color: '#aaa',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  playAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    minHeight: 44,
+    minWidth: 120,
+  },
+  playAllText: {
+    color: 'black',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tabletButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 10,
+    marginBottom: 20,
+    flexWrap: 'wrap',
+  },
+  tabletActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    minHeight: 44,
+    minWidth: 120,
+  },
+  tabletActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  statsContainer: {
+    marginTop: 10,
+    gap: 8,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statText: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+  listHeader: {
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  listHeaderText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  listHeaderLine: {
+    height: 2,
+    backgroundColor: 'white',
+    borderRadius: 1,
+    width: 60,
+  },
+  tabletTrackItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginVertical: 6,
+    marginHorizontal: 0,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    minHeight: 70,
+  },
+  disabledTrack: {
+    opacity: 0.5,
+  },
+  trackNumber: {
+    width: 30,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  trackNumberText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tabletTrackImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  trackDetails: {
+    flex: 1,
+  },
+  trackTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  trackAlbum: {
+    color: '#aaa',
+    fontSize: 15,
+  },
+  disabledText: {
+    color: '#666',
+  },
+  favoriteButton: {
+    padding: 8,
+  },
+  unavailableTag: {
+    color: '#ff6b6b',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  listFooter: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
+  listFooterText: {
+    color: '#aaa',
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  tabletLeftSide: {
+    flex: 0.35,
+    alignItems: 'center',
+    paddingRight: 20,
+  },
+  tabletMosaicContainer: {
+    width: 280,
+    height: 280,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  tabletMosaicImage: {
+    width: '50%',
+    height: '50%',
+  },
+  tabletRightSide: {
+    flex: 0.65,
+    paddingLeft: 20,
+  },
+  tabletHeader: {
+    marginBottom: 30,
+    paddingTop: 20, // Espace supplémentaire en haut de l'en-tête
+  },
+  tabletTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  tabletTrackCount: {
+    fontSize: 16,
+    color: '#aaa',
+    marginBottom: 16,
+  },
+  tabletActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tabletActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  tabletActionText: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  tabletTrackWrapper: {
+    marginBottom: 8,
+  },
+  tabletTrack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  tabletTrackDisabled: {
+    opacity: 0.5,
+  },
+  tabletTrackLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  tabletTrackIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  tabletPlayIcon: {
+    marginRight: 12,
+  },
+  tabletTrackInfo: {
+    flex: 1,
+  },
+  tabletTrackTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tabletTrackTitleDisabled: {
+    color: '#666',
+  },
+  tabletTrackArtist: {
+    color: '#aaa',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  tabletTrackRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tabletHeartButton: {
+    padding: 8,
+  },
 });
