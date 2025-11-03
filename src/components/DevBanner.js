@@ -8,14 +8,16 @@ export default function DevBanner() {
   
   return (
     <View style={[styles.container, { top: insets.top }]}>
-      <LinearGradient
-        colors={['#ef4444', '#dc2626', '#b91c1c']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradient}
-      >
-        <Text style={styles.text}>🛠️ DÉVELOPPEMENT 🛠️</Text>
-      </LinearGradient>
+      <View style={styles.bannerWrapper}>
+        <LinearGradient
+          colors={['#ef4444', '#dc2626', '#b91c1c']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradient}
+        >
+          <Text style={styles.text}>DEV</Text>
+        </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -25,28 +27,40 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
     zIndex: 9999,
     elevation: 10,
+    pointerEvents: 'none', // Permet de cliquer à travers
+  },
+  bannerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 300,
+    height: 300,
+    // Pas d'overflow: 'hidden' pour laisser déborder
   },
   gradient: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    position: 'absolute',
+    top: 0,
+    left: -150,
+    width: 400,
+    height: 50,
+    transform: [{ rotate: '-45deg' }],
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
   text: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
-    letterSpacing: 1.5,
+    letterSpacing: 2,
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
   },
 });
