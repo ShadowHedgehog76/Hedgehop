@@ -182,7 +182,7 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={{ paddingBottom: 100, paddingTop: 50 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.headerContainer, isTablet && { justifyContent: 'flex-end' }]}>
+      <View style={[styles.headerContainer, isTablet ? styles.tabletHeader : styles.phoneHeader]}>
         {!isTablet && <Text style={styles.header}>💫 Hedgehop 💫</Text>}
         <TouchableOpacity
           style={styles.reloadButton}
@@ -255,9 +255,14 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Changé de 'center' pour mieux distribuer
     marginBottom: 10,
     paddingHorizontal: 20,
+  },
+  tabletHeader: {
+    justifyContent: 'space-between',
+  },
+  phoneHeader: {
+    justifyContent: 'space-between',
   },
   header: {
     color: 'white',
@@ -276,6 +281,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
+  
   filterBar: {
     flexDirection: 'row',
     justifyContent: 'center',

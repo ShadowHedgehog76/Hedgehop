@@ -18,12 +18,14 @@ import {
   arrayUnion, 
   arrayRemove 
 } from 'firebase/firestore';
-import { initializeApp, getApps } from 'firebase/app';
+import { getApps } from 'firebase/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firebaseConfig } from '../config/firebaseConfig';
 
-// Initialisation Firebase (évite la double initialisation)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Importer firebaseConfig pour s'assurer que Firebase est initialisé
+import '../config/firebaseConfig';
+
+// Utiliser l'app Firebase déjà initialisée dans firebaseConfig.js
+const app = getApps()[0];
 
 // Initialisation de l'authentification avec persistence AsyncStorage
 let auth;

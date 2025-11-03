@@ -20,6 +20,7 @@ import { playTrack, setGlobalTracks } from '../src/api/player';
 import { toggleFavorite, getFavorites, favEmitter } from '../src/api/favorites';
 import { getPlaylists } from '../src/api/playlists';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+// CrossParty supprimé
 
 const { width } = Dimensions.get('window');
 
@@ -84,6 +85,23 @@ export default function AlbumScreen({ route, navigation }) {
     setFavorites(await getFavorites());
   };
 
+  // Fonction pour gérer la lecture (locale ou CrossParty)
+  const handleTrackPlay = async (track, trackIndex = 0, albumTracks = null) => {
+    const trackData = {
+      ...track,
+      album: album.title,
+      image: track.image || album.image,
+    };
+
+    // Le player.js gère maintenant automatiquement la synchronisation CrossParty
+    if (albumTracks) {
+      setGlobalTracks(albumTracks);
+      playTrack(trackData, trackIndex);
+    } else {
+      playTrack(trackData);
+    }
+  };
+
   // Rendu des tracks pour tablette
   const renderTabletTrackItem = (track) => {
     if (!showCross) {
@@ -99,8 +117,7 @@ export default function AlbumScreen({ route, navigation }) {
                   .filter((t) => t.url)
                   .map((t) => ({ ...t, album: album.title, image: album.image }));
                 const trackIndex = albumTracks.findIndex((t) => t.title === track.title);
-                setGlobalTracks(albumTracks);
-                playTrack(albumTracks[trackIndex] || albumTracks[0], trackIndex);
+                handleTrackPlay(albumTracks[trackIndex] || albumTracks[0], trackIndex, albumTracks);
               }
             }}
             disabled={!playable}
@@ -187,9 +204,7 @@ export default function AlbumScreen({ route, navigation }) {
                       image: x.image ?? album.image,
                     }));
 
-                    setGlobalTracks([]);
-
-                    playTrack({
+                    const crossTrack = {
                       ...item,
                       url: playableUrl,
                       album: album.title,
@@ -197,7 +212,10 @@ export default function AlbumScreen({ route, navigation }) {
                       crossTitle: track.title,
                       parentOriginalTrack: originalTrack,
                       parentCrossList,
-                    });
+                    };
+
+                    setGlobalTracks([]);
+                    handleTrackPlay(crossTrack);
                   }}
                 >
                   <Image source={{ uri: artwork }} style={styles.tabletCrossGridImage} />
@@ -312,8 +330,7 @@ export default function AlbumScreen({ route, navigation }) {
                     }));
 
                   if (playableTracks.length > 0) {
-                    setGlobalTracks(playableTracks);
-                    playTrack(playableTracks[0], 0);
+                    handleTrackPlay(playableTracks[0], 0, playableTracks);
                   }
                 }}
               >
@@ -487,8 +504,7 @@ export default function AlbumScreen({ route, navigation }) {
                         }));
 
                       if (playableTracks.length > 0) {
-                        setGlobalTracks(playableTracks);
-                        playTrack(playableTracks[0], 0);
+                        handleTrackPlay(playableTracks[0], 0, playableTracks);
                       } else {
                         console.warn('Aucune piste lisible dans cet album.');
                       }
@@ -529,7 +545,7 @@ export default function AlbumScreen({ route, navigation }) {
                 <TouchableOpacity
                   onPress={() => {
                     setGlobalTracks([]);
-                    playTrack({ ...track, album: album.title, image: album.image });
+                    handleTrackPlay({ ...track, album: album.title, image: album.image });
                   }}
                   disabled={!playable}
                   style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
@@ -590,9 +606,7 @@ export default function AlbumScreen({ route, navigation }) {
                             image: x.image ?? album.image,
                           }));
 
-                          setGlobalTracks([]);
-
-                          playTrack({
+                          const crossTrack = {
                             ...item,
                             url: playableUrl,
                             album: album.title,
@@ -600,7 +614,10 @@ export default function AlbumScreen({ route, navigation }) {
                             crossTitle: track.title,
                             parentOriginalTrack: originalTrack,
                             parentCrossList,
-                          });
+                          };
+
+                          setGlobalTracks([]);
+                          handleTrackPlay(crossTrack);
                         }}
                       >
                         <Image source={{ uri: artwork }} style={styles.crossGridImage} />

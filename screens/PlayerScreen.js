@@ -25,6 +25,7 @@ import {
   getQueue,
   playNext,
   playPrevious,
+  
 } from '../src/api/player';
 
 const { width } = Dimensions.get('window');
@@ -108,12 +109,18 @@ export default function PlayerScreen({ navigation }) {
   const position = status.positionMillis || 0;
 
   const togglePlayPause = async () => {
+    console.log('🎮 PlayerScreen: togglePlayPause appelé', { 
+      isPlaying, 
+      isTablet, 
+      action: isPlaying ? 'pause' : 'resume' 
+    });
+    
     if (isPlaying) {
       await pauseTrack();
-      setIsPlaying(false);
+      // setIsPlaying sera appelé automatiquement par l'événement 'pause'
     } else {
       await resumeTrack();
-      setIsPlaying(true);
+      // setIsPlaying sera appelé automatiquement par l'événement 'resume'
     }
   };
 

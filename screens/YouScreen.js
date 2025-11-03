@@ -352,7 +352,7 @@ export default function YouScreen({ navigation }) {
             )}
           </SettingsSection>
 
-
+          {/* CrossParty supprimé */}
 
           {/* Other */}
           <SettingsSection title="À propos">
@@ -530,7 +530,7 @@ export default function YouScreen({ navigation }) {
           )}
         </SettingsSection>
 
-
+        {/* CrossParty supprimé */}
 
         {/* Other - Phone */}
         <SettingsSection title="À propos">

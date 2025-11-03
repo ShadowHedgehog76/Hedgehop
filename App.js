@@ -17,9 +17,12 @@ import DevBanner from './src/components/DevBanner'; // ✅ banderole dev
 import AlbumScreenDisabled from './screens/AlbumScreenDisabled'; // ✅ ajouté ici
 import DevScreen from './screens/DevScreen'; // ✅ page dev secrète
 
+// (CrossParty supprimé)
+
 // --- Import des composants tablette ---
 import TabletLayout from './src/components/TabletLayout';
 import { useDeviceType } from './src/hooks/useDeviceType';
+import { stopAllAudio } from './src/api/player';
 
 // --- Import des services ---
 import authService from './src/services/auth';
@@ -38,8 +41,15 @@ function MainLayout({ navigation }) {
 
 
 
-  // Écouter les événements pour désactiver le mode dev
+  // Initialisation audio et écouter les événements pour désactiver le mode dev
   useEffect(() => {
+    // Arrêter toutes les instances audio au démarrage
+    stopAllAudio().then(() => {
+      console.log('🎵 Audio initialisé - toutes les instances précédentes arrêtées');
+    }).catch((error) => {
+      console.warn('⚠️ Erreur initialisation audio:', error);
+    });
+
     const unsubscribe = navigation.addListener('state', (e) => {
       // Cette approche pourrait être améliorée avec un context ou AsyncStorage
     });
@@ -79,26 +89,40 @@ function MainLayout({ navigation }) {
 
   // Rendu du contenu selon l'onglet actif (mode tablette)
   const renderTabletContent = () => {
+    // Cloner l'objet navigation pour ajouter la méthode navigate pour CrossParty
+    const tabletNavigation = {
+      ...navigation,
+      navigate: (screenName, params) => {
+        // Pour les écrans CrossParty, utiliser le vrai navigation du Stack
+        if (screenName.startsWith('CrossParty')) {
+          navigation.navigate(screenName, params);
+        } else {
+          // Pour les autres écrans, utiliser la logique d'onglets
+          setActiveTab(screenName);
+        }
+      }
+    };
+
     switch (activeTab) {
       case 'Home':
-        return <HomeStack navigation={navigation} />;
+        return <HomeStack navigation={tabletNavigation} />;
       case 'Favorites':
-        return <FavoritesScreen navigation={navigation} />;
+        return <FavoritesScreen navigation={tabletNavigation} />;
       case 'News':
-        return <NewsStack navigation={navigation} />;
+        return <NewsStack navigation={tabletNavigation} />;
       case 'Stats':
-        return <StatsScreen navigation={navigation} />;
+        return <StatsScreen navigation={tabletNavigation} />;
       case 'Player':
-        return <PlayerScreen navigation={navigation} />;
+        return <PlayerScreen navigation={tabletNavigation} />;
       case 'You':
-        return <YouScreen navigation={navigation} />;
+        return <YouScreen navigation={tabletNavigation} />;
       case 'Dev':
         return <DevScreen 
-          navigation={navigation} 
+          navigation={tabletNavigation} 
           onDisableDevMode={() => setDevModeEnabled(false)} 
         />;
       default:
-        return <HomeStack navigation={navigation} />;
+        return <HomeStack navigation={tabletNavigation} />;
     }
   };
 
@@ -112,6 +136,7 @@ function MainLayout({ navigation }) {
           devModeEnabled={devModeEnabled}
           onDisableDevMode={() => setDevModeEnabled(false)}
           isLandscape={isLandscape}
+          navigation={navigation}
         >
           {renderTabletContent()}
         </TabletLayout>
@@ -124,7 +149,8 @@ function MainLayout({ navigation }) {
 
   // Mode Téléphone avec Bottom Tabs (existant)
   return (
-    <View style={{ flex: 1 }}>      
+    <View style={{ flex: 1 }}>
+      
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -198,7 +224,7 @@ function MainLayout({ navigation }) {
   );
 }
 
-export default function App() {
+function AppContent() {
   // Écouter les changements d'état d'authentification
   useEffect(() => {
     const unsubscribe = authService.onAuthStateChange((user) => {
@@ -225,8 +251,15 @@ export default function App() {
         {/* ✅ ajouté ici, accessible depuis n'importe quel onglet */}
         <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
         <Stack.Screen name="DevScreen" component={DevScreen} />
+        {/* CrossParty supprimé */}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <AppContent />
   );
 }
 

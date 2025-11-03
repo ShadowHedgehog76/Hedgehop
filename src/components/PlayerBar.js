@@ -12,6 +12,7 @@ import {
   pauseTrack,
   resumeTrack,
   isTrackPlaying,
+  
 } from '../api/player';
 
 const { width } = Dimensions.get('window');
@@ -108,7 +109,18 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
         </View>
 
         <TouchableOpacity 
-          onPress={isPlaying ? pauseTrack : resumeTrack} 
+          onPress={() => {
+            console.log('🎮 PlayerBar: Bouton play/pause pressé', { 
+              isPlaying, 
+              isTabletSidebar,
+              action: isPlaying ? 'pause' : 'resume' 
+            });
+            if (isPlaying) {
+              pauseTrack();
+            } else {
+              resumeTrack();
+            }
+          }} 
           style={isTabletSidebar ? styles.sidebarPlayPause : styles.playPause}
         >
           <Ionicons name={isPlaying ? 'pause' : 'play'} size={isTabletSidebar ? 20 : 24} color="white" />

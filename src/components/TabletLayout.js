@@ -4,14 +4,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import PlayerBar from './PlayerBar';
 
+// CrossParty supprimé
+
 export default function TabletLayout({ 
   activeTab, 
   onTabPress, 
   children, 
   devModeEnabled, 
   onDisableDevMode,
-  isLandscape 
+  isLandscape,
+  navigation 
 }) {
+  // CrossParty supprimé
   const tabs = [
     { id: 'Home', label: 'Accueil', icon: 'home' },
     { id: 'Favorites', label: 'Favoris', icon: 'heart' },
@@ -80,6 +84,8 @@ export default function TabletLayout({
               />
             ))}
           </View>
+
+          {/* CrossParty supprimé */}
 
           {/* PlayerBar intégrée dans la sidebar */}
           <View style={styles.sidebarPlayerBar}>
@@ -189,6 +195,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#333333',
     marginTop: 10,
   },
+  // CrossParty supprimé
   devDisableButton: {
     flexDirection: 'row',
     alignItems: 'center',
