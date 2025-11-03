@@ -511,10 +511,6 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>🛠️ Dev Panel</Text>
         <View style={{ width: 24 }} />
       </View>
 
