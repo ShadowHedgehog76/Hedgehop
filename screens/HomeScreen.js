@@ -25,15 +25,44 @@ export default function HomeScreen({ navigation }) {
 
   const loadData = () => {
     setLoading(true);
+    // Reset les données pour forcer un rechargement complet
+    setCategories([]);
+    setActiveFilter('All');
+    
+    // Ajouter un timestamp pour éviter le cache + headers no-cache
+    const timestamp = Date.now();
+    const url = `https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json?t=${timestamp}`;
+    
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        return res.json();
+      })
+      .then(data => {
+        console.log('✅ JSON rechargé avec succès:', data.length, 'catégories');
+        setCategories(data);
+      })
+      .catch(err => {
+        console.error('❌ Erreur chargement JSON:', err);
+        // En cas d'erreur, garder les anciennes données si elles existent
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    // Chargement initial (sans timestamp pour éviter des requêtes inutiles au démarrage)
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
       .then(res => res.json())
       .then(data => setCategories(data))
       .catch(err => console.error('❌ Erreur chargement JSON:', err))
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
 
   const getAlbumStatus = (album) => {
