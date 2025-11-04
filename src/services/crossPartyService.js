@@ -1,317 +1,306 @@
+// CrossPartyService.js - Service de gestion des rooms de party synchronisée
+import { 
+  ref, 
+  set, 
+  get, 
+  update, 
+  remove, 
+  onValue, 
+  onDisconnect,
+  push
+} from 'firebase/database';
 import { database } from '../config/firebaseConfig';
-import { ref, push, set, get, onValue, off, remove, update } from 'firebase/database';
 
 class CrossPartyService {
   constructor() {
-    this.roomListeners = new Map();
+    this.currentRoomId = null;
+    this.currentUserId = null;
+    this.isHost = false;
+    this.listeners = [];
   }
 
-  // Génère un code de salon à 6 caractères
+  // Génère un code de room aléatoire (6 caractères)
   generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
+    let code = '';
     for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return result;
+    return code;
   }
 
-  // Crée un nouveau salon
-  async createRoom() {
+  // Crée une nouvelle room
+  async createRoom(hostUserId, hostUsername = 'Anonymous') {
     try {
       const roomCode = this.generateRoomCode();
+      const roomId = push(ref(database, 'crossparty/rooms')).key;
       
-      // Vérifier si le code existe déjà
-      const codeRef = ref(database, `crossparty/codes/${roomCode}`);
-      const codeSnapshot = await get(codeRef);
-      
-      if (codeSnapshot.exists()) {
-        // Si le code existe, essayer avec un nouveau code
-        return this.createRoom();
-      }
-
-      // Créer le salon dans la base de données
-      const roomsRef = ref(database, 'crossparty/rooms');
-      const newRoomRef = push(roomsRef);
-      const roomId = newRoomRef.key;
-
       const roomData = {
-        id: roomId,
-        code: roomCode,
-        hostId: 'host', // TODO: Utiliser l'ID utilisateur réel
+        roomId,
+        roomCode,
+        hostId: hostUserId,
+        hostUsername,
         createdAt: Date.now(),
-        isActive: true,
-        currentTrack: null,
-        playbackState: {
-          isPlaying: false,
-          position: 0,
-          timestamp: Date.now()
+        participants: {
+          [hostUserId]: {
+            userId: hostUserId,
+            username: hostUsername,
+            isHost: true,
+            joinedAt: Date.now()
+          }
         },
-        guests: {},
+        currentTrack: null,
+        isPlaying: false,
         queue: []
       };
 
-      // Sauvegarder le salon
-      await set(newRoomRef, roomData);
+      // Créer la room dans Firebase
+      await set(ref(database, `crossparty/rooms/${roomId}`), roomData);
       
-      // Créer la référence du code vers le salon
-      await set(codeRef, { roomId, createdAt: Date.now() });
+      // Créer un mapping code -> roomId pour faciliter la recherche
+      await set(ref(database, `crossparty/codes/${roomCode}`), roomId);
 
-      return {
-        success: true,
-        roomId,
-        roomCode
-      };
-    } catch (error) {
-      console.error('Erreur création salon:', error);
-      return {
-        success: false,
-        error: 'Erreur lors de la création du salon'
-      };
-    }
-  }
-
-  // Rejoint un salon avec un code
-  async joinRoom(roomCode) {
-    try {
-      // Chercher le salon avec ce code
-      const codeRef = ref(database, `crossparty/codes/${roomCode}`);
-      const codeSnapshot = await get(codeRef);
-
-      if (!codeSnapshot.exists()) {
-        return {
-          success: false,
-          error: 'Code de salon invalide'
-        };
-      }
-
-      const { roomId } = codeSnapshot.val();
-
-      // Vérifier que le salon existe et est actif
+      // Configurer la déconnexion automatique
       const roomRef = ref(database, `crossparty/rooms/${roomId}`);
-      const roomSnapshot = await get(roomRef);
+      onDisconnect(roomRef).remove();
 
-      if (!roomSnapshot.exists()) {
-        return {
-          success: false,
-          error: 'Salon introuvable'
-        };
-      }
+      this.currentRoomId = roomId;
+      this.currentUserId = hostUserId;
+      this.isHost = true;
 
-      const roomData = roomSnapshot.val();
-
-      if (!roomData.isActive) {
-        return {
-          success: false,
-          error: 'Ce salon n\'est plus actif'
-        };
-      }
-
-      // Ajouter l'invité au salon
-      const guestId = `guest_${Date.now()}`; // TODO: Utiliser l'ID utilisateur réel
-      const guestRef = ref(database, `crossparty/rooms/${roomId}/guests/${guestId}`);
-      
-      await set(guestRef, {
-        id: guestId,
-        joinedAt: Date.now(),
-        isConnected: true
-      });
-
-      return {
-        success: true,
-        roomId,
-        guestId
-      };
+      return { success: true, roomId, roomCode };
     } catch (error) {
-      console.error('Erreur rejoindre salon:', error);
-      return {
-        success: false,
-        error: 'Erreur lors de la connexion au salon'
-      };
-    }
-  }
-
-  // Écoute les changements d'un salon
-  listenToRoom(roomId, callback) {
-    const roomRef = ref(database, `crossparty/rooms/${roomId}`);
-    
-    const listener = onValue(roomRef, (snapshot) => {
-      if (snapshot.exists()) {
-        callback(snapshot.val());
-      } else {
-        callback(null);
-      }
-    });
-
-    this.roomListeners.set(roomId, listener);
-    return listener;
-  }
-
-  // Arrête d'écouter un salon
-  stopListeningToRoom(roomId) {
-    const listener = this.roomListeners.get(roomId);
-    if (listener) {
-      const roomRef = ref(database, `crossparty/rooms/${roomId}`);
-      off(roomRef, 'value', listener);
-      this.roomListeners.delete(roomId);
-    }
-  }
-
-
-
-  // ===== NOUVEAU SYSTÈME SIMPLIFIÉ =====
-  
-  // Met à jour l'état complet de la room (piste + lecture)
-  async updateRoomState(roomId, newState, userId = 'unknown') {
-    try {
-      console.log('🎵 CrossParty: Mise à jour état complet room', { roomId, userId, newState });
-      
-      const roomRef = ref(database, `crossparty/rooms/${roomId}`);
-      
-      // Préparer les données avec structure complète
-      const timestamp = Date.now();
-      const stateId = `${timestamp}_${Math.random()}`;
-      
-      const updateData = {
-        // Mettre à jour playbackState (structure existante)
-        'playbackState/isPlaying': newState.isPlaying !== undefined ? newState.isPlaying : false,
-        'playbackState/position': newState.position !== undefined ? newState.position : 0,
-        'playbackState/timestamp': timestamp,
-        
-        // Ajouter les nouvelles données nécessaires
-        'playbackState/action': newState.action || 'UNKNOWN',
-        'playbackState/stateId': stateId,
-        'playbackState/lastUpdatedBy': userId,
-        
-        // Mettre à jour currentTrack si fourni
-        ...(newState.currentTrack && { 'currentTrack': newState.currentTrack }),
-        
-        // Mettre à jour au niveau room
-        'lastUpdated': timestamp,
-        'lastUpdatedBy': userId
-      };
-      
-      await update(roomRef, updateData);
-      console.log('✅ CrossParty: État room mis à jour avec succès', { stateId, timestamp });
-      return { success: true, stateId, timestamp };
-    } catch (error) {
-      console.error('❌ CrossParty: Erreur mise à jour room:', error);
+      console.error('Error creating room:', error);
       return { success: false, error: error.message };
     }
   }
 
-  // Commande pour jouer une piste (remplace updateCurrentTrack)
-  async playTrack(roomId, track, userId = 'unknown') {
-    return this.updateRoomState(roomId, {
-      currentTrack: track,
-      isPlaying: true,
-      position: typeof track?.position === 'number' ? track.position : 0,
-      timestamp: track?.timestamp || Date.now(),
-      action: 'PLAY_TRACK'
-    }, userId);
-  }
-
-  // Commande pour pause
-  async pausePlayback(roomId, position = 0, userId = 'unknown') {
-    return this.updateRoomState(roomId, {
-      isPlaying: false,
-      position: position,
-      action: 'PAUSE'
-    }, userId);
-  }
-
-  // Commande pour resume
-  async resumePlayback(roomId, position = 0, userId = 'unknown') {
-    return this.updateRoomState(roomId, {
-      isPlaying: true,
-      position: position,
-      action: 'RESUME'
-    }, userId);
-  }
-
-  // Commande pour arrêter complètement
-  async stopPlayback(roomId, userId = 'unknown') {
-    return this.updateRoomState(roomId, {
-      currentTrack: null,
-      isPlaying: false,
-      position: 0,
-      action: 'STOP'
-    }, userId);
-  }
-
-  // Ajoute une piste à la file d'attente
-  async addToQueue(roomId, track) {
+  // Rejoint une room avec un code
+  async joinRoom(roomCode, userId, username = 'Anonymous') {
     try {
-      const queueRef = ref(database, `crossparty/rooms/${roomId}/queue`);
-      const queueSnapshot = await get(queueRef);
+      // Vérifier si le code existe
+      const codeSnapshot = await get(ref(database, `crossparty/codes/${roomCode.toUpperCase()}`));
       
-      let queue = [];
-      if (queueSnapshot.exists()) {
-        queue = Object.values(queueSnapshot.val());
+      if (!codeSnapshot.exists()) {
+        return { success: false, error: 'Room code not found' };
       }
 
-      queue.push({
-        ...track,
-        addedAt: Date.now(),
-        addedBy: 'user' // TODO: Utiliser l'ID utilisateur réel
+      const roomId = codeSnapshot.val();
+
+      // Vérifier si la room existe encore
+      const roomSnapshot = await get(ref(database, `crossparty/rooms/${roomId}`));
+      
+      if (!roomSnapshot.exists()) {
+        // Nettoyer le code obsolète
+        await remove(ref(database, `crossparty/codes/${roomCode.toUpperCase()}`));
+        return { success: false, error: 'Room no longer exists' };
+      }
+
+      // Ajouter le participant à la room
+      const participantData = {
+        userId,
+        username,
+        isHost: false,
+        joinedAt: Date.now()
+      };
+
+      await set(
+        ref(database, `crossparty/rooms/${roomId}/participants/${userId}`),
+        participantData
+      );
+
+      // Configurer la déconnexion automatique pour ce participant
+      const participantRef = ref(database, `crossparty/rooms/${roomId}/participants/${userId}`);
+      onDisconnect(participantRef).remove();
+
+      this.currentRoomId = roomId;
+      this.currentUserId = userId;
+      this.isHost = false;
+
+      return { success: true, roomId };
+    } catch (error) {
+      console.error('Error joining room:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Quitte la room actuelle
+  async leaveRoom() {
+    if (!this.currentRoomId || !this.currentUserId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    try {
+      if (this.isHost) {
+        // Si c'est l'hôte qui part, supprimer toute la room
+        await remove(ref(database, `crossparty/rooms/${this.currentRoomId}`));
+        
+        // Récupérer le code de la room avant de la supprimer
+        const roomSnapshot = await get(ref(database, `crossparty/rooms/${this.currentRoomId}`));
+        if (roomSnapshot.exists()) {
+          const roomCode = roomSnapshot.val().roomCode;
+          await remove(ref(database, `crossparty/codes/${roomCode}`));
+        }
+      } else {
+        // Sinon, retirer seulement le participant
+        await remove(
+          ref(database, `crossparty/rooms/${this.currentRoomId}/participants/${this.currentUserId}`)
+        );
+      }
+
+      // Nettoyer les listeners
+      this.removeAllListeners();
+
+      this.currentRoomId = null;
+      this.currentUserId = null;
+      this.isHost = false;
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error leaving room:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Kick un participant (réservé à l'hôte)
+  async kickParticipant(participantId) {
+    if (!this.isHost || !this.currentRoomId) {
+      return { success: false, error: 'Only host can kick participants' };
+    }
+
+    if (participantId === this.currentUserId) {
+      return { success: false, error: 'Cannot kick yourself' };
+    }
+
+    try {
+      await remove(
+        ref(database, `crossparty/rooms/${this.currentRoomId}/participants/${participantId}`)
+      );
+      return { success: true };
+    } catch (error) {
+      console.error('Error kicking participant:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Écoute les changements dans la room
+  subscribeToRoom(roomId, callback) {
+    const roomRef = ref(database, `crossparty/rooms/${roomId}`);
+    
+    const unsubscribe = onValue(roomRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback({ exists: true, data: snapshot.val() });
+      } else {
+        // La room n'existe plus (l'hôte est parti)
+        callback({ exists: false, data: null });
+      }
+    }, (error) => {
+      console.error('Error subscribing to room:', error);
+      callback({ exists: false, error: error.message });
+    });
+
+    this.listeners.push(unsubscribe);
+    return unsubscribe;
+  }
+
+  // Écoute les participants de la room
+  subscribeToParticipants(roomId, callback) {
+    const participantsRef = ref(database, `crossparty/rooms/${roomId}/participants`);
+    
+    const unsubscribe = onValue(participantsRef, (snapshot) => {
+      const participants = [];
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          participants.push(childSnapshot.val());
+        });
+      }
+      callback(participants);
+    });
+
+    this.listeners.push(unsubscribe);
+    return unsubscribe;
+  }
+
+  // Met à jour la lecture en cours (réservé à l'hôte)
+  async updateCurrentTrack(trackData) {
+    if (!this.isHost || !this.currentRoomId) {
+      return { success: false, error: 'Only host can update track' };
+    }
+
+    try {
+      await update(ref(database, `crossparty/rooms/${this.currentRoomId}`), {
+        currentTrack: trackData,
+        isPlaying: true,
+        updatedAt: Date.now()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating track:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Met à jour l'état de lecture (réservé à l'hôte)
+  async updatePlaybackState(isPlaying) {
+    if (!this.isHost || !this.currentRoomId) {
+      return { success: false, error: 'Only host can update playback state' };
+    }
+
+    try {
+      await update(ref(database, `crossparty/rooms/${this.currentRoomId}`), {
+        isPlaying,
+        updatedAt: Date.now()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating playback state:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Ajoute une piste à la queue (n'importe quel participant)
+  async addToQueue(trackData) {
+    if (!this.currentRoomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    try {
+      const queueRef = ref(database, `crossparty/rooms/${this.currentRoomId}/queue`);
+      const newTrackRef = push(queueRef);
+      
+      await set(newTrackRef, {
+        ...trackData,
+        addedBy: this.currentUserId,
+        addedAt: Date.now()
       });
 
-      await set(queueRef, queue);
       return { success: true };
     } catch (error) {
-      console.error('Erreur ajout queue:', error);
-      return { success: false, error: 'Erreur d\'ajout à la file' };
+      console.error('Error adding to queue:', error);
+      return { success: false, error: error.message };
     }
   }
 
-  // Met en pause la lecture pour tous les appareils
-  // NOTE: Méthode remplacée par la version avec position & userId plus haut
-  // (pausePlayback(roomId, position, userId))
-  // Cette implémentation simplifiée faisait perdre la position (repartait à 0)
-  // et écrasait la bonne méthode à cause d'un doublon de nom. Elle est supprimée.
-
-  // Reprend la lecture pour tous les appareils
-  // NOTE: Méthode remplacée par la version avec position & userId plus haut
-  // (resumePlayback(roomId, position, userId))
-  // Cette implémentation simplifiée ne propageait pas la position et causait
-  // une reprise à 0. Elle est supprimée.
-
-  // Ferme un salon (hôte uniquement)
-  async closeRoom(roomId, roomCode) {
-    try {
-      // Marquer le salon comme inactif
-      const roomRef = ref(database, `crossparty/rooms/${roomId}`);
-      await update(roomRef, { isActive: false });
-
-      // Supprimer la référence du code
-      const codeRef = ref(database, `crossparty/codes/${roomCode}`);
-      await remove(codeRef);
-
-      // Arrêter d'écouter
-      this.stopListeningToRoom(roomId);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Erreur fermeture salon:', error);
-      return { success: false, error: 'Erreur de fermeture' };
-    }
+  // Supprime tous les listeners
+  removeAllListeners() {
+    this.listeners.forEach(unsubscribe => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    });
+    this.listeners = [];
   }
 
-  // Quitte un salon (invité uniquement)
-  async leaveRoom(roomId, guestId) {
-    try {
-      const guestRef = ref(database, `crossparty/rooms/${roomId}/guests/${guestId}`);
-      await remove(guestRef);
-
-      // Arrêter d'écouter
-      this.stopListeningToRoom(roomId);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Erreur quitter salon:', error);
-      return { success: false, error: 'Erreur de déconnexion' };
-    }
+  // Récupère les informations de la room actuelle
+  getCurrentRoomInfo() {
+    return {
+      roomId: this.currentRoomId,
+      userId: this.currentUserId,
+      isHost: this.isHost
+    };
   }
 }
 
-export default new CrossPartyService();
+// Export d'une instance unique (singleton)
+const crossPartyService = new CrossPartyService();
+export default crossPartyService;

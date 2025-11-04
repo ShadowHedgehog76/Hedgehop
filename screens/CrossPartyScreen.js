@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// CrossPartyScreen.js - Écran pour créer ou rejoindre une room CrossParty
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,40 +8,71 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Modal,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useDeviceType } from '../src/hooks/useDeviceType';
 import crossPartyService from '../src/services/crossPartyService';
-import { useCrossParty } from '../src/contexts/CrossPartyContext';
+import authService from '../src/services/auth';
 
 export default function CrossPartyScreen({ navigation }) {
-  const [showJoinRoom, setShowJoinRoom] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState('');
   const [scanning, setScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
-  const [scanLocked, setScanLocked] = useState(false);
-  const { isTablet } = useDeviceType();
-  const { joinRoom } = useCrossParty();
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur est déjà dans une room
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    if (roomInfo.roomId) {
+      // Rediriger directement vers la room active
+      navigation.replace('PartyRoom', { roomId: roomInfo.roomId });
+      return;
+    }
+
+    // Récupérer l'utilisateur actuel
+    const unsubscribe = authService.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const handleCreateRoom = async () => {
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to create a room');
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await crossPartyService.createRoom();
+      const userId = user.uid;
+      const username = user.displayName || user.email || 'Anonymous';
+      
+      const result = await crossPartyService.createRoom(userId, username);
+
       if (result.success) {
-        // Utiliser le contexte au lieu de naviguer vers un écran
-        joinRoom(result.roomId, result.roomCode, true);
-        navigation.goBack(); // Retourner à l'écran précédent
-        Alert.alert('Room created', `Your room is ready! Code: ${result.roomCode}`);
+        setGeneratedCode(result.roomCode);
+        setShowCodeModal(true);
+        
+        // Naviguer vers la room après 2 secondes
+        setTimeout(() => {
+          setShowCodeModal(false);
+          navigation.navigate('PartyRoom', { roomId: result.roomId });
+        }, 2000);
       } else {
-        Alert.alert('Error', result.error);
+        Alert.alert('Error', result.error || 'Failed to create room');
       }
     } catch (error) {
-      Alert.alert('Error', 'Could not create the room');
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleJoinRoom = async () => {
@@ -49,370 +81,393 @@ export default function CrossPartyScreen({ navigation }) {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Error', 'You must be logged in to join a room');
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await crossPartyService.joinRoom(roomCode.trim().toUpperCase());
+      const userId = user.uid;
+      const username = user.displayName || user.email || 'Anonymous';
+      
+      const result = await crossPartyService.joinRoom(roomCode.toUpperCase(), userId, username);
+
       if (result.success) {
-        // Utiliser le contexte au lieu de naviguer vers un écran
-        joinRoom(result.roomId, roomCode.trim().toUpperCase(), false, result.guestId);
-        navigation.goBack(); // Retourner à l'écran précédent
-        Alert.alert('Joined room', `You joined room ${roomCode.trim().toUpperCase()}`);
+        navigation.navigate('PartyRoom', { roomId: result.roomId });
       } else {
-        Alert.alert('Error', result.error);
+        Alert.alert('Error', result.error || 'Failed to join room');
       }
     } catch (error) {
-      Alert.alert('Error', 'Could not join the room');
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleShareCode = async () => {
+    try {
+      await Share.share({
+        message: `Join my Hedgehop party with code: ${generatedCode}`,
+        title: 'Hedgehop Party Code',
+      });
+    } catch (error) {
+      console.error('Error sharing code:', error);
+    }
   };
 
   const handleAskPermissionAndScan = async () => {
-    try {
-      if (!permission || !permission.granted) {
-        const { granted } = await requestPermission();
-        if (!granted) {
-          Alert.alert('Permission denied', 'Allow camera access to scan a QR code.');
-          return;
-        }
-      }
-      setScanning(true);
-    } catch (e) {
-      Alert.alert('Error', "Couldn't access the camera");
+    if (!permission || !permission.granted) {
+      const res = await requestPermission();
+      if (!res.granted) return;
     }
+    setScanning(true);
   };
 
-  const onBarCodeScanned = async ({ data }) => {
-    if (scanLocked) return;
-    setScanLocked(true);
-    try {
-      const code = String(data || '').trim().toUpperCase();
-      const isValid = /^[A-Z0-9]{6}$/.test(code);
-      if (!isValid) {
-        Alert.alert('Invalid QR', "The QR code doesn't contain a valid room code.");
-        setScanLocked(false);
-        return;
-      }
-      setScanning(false);
-      setRoomCode(code);
-      // Enchaîner la connexion
-      setLoading(true);
-      const result = await crossPartyService.joinRoom(code);
-      if (result.success) {
-        joinRoom(result.roomId, code, false, result.guestId);
-        navigation.goBack();
-        Alert.alert('Joined room', `You joined room ${code}`);
-      } else {
-        Alert.alert('Error', result.error || 'Could not join the room');
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Scan failed');
-    } finally {
-      setLoading(false);
-      setTimeout(() => setScanLocked(false), 800); // petite tempo pour éviter les doubles scans
-    }
+  const onBarCodeScanned = ({ data }) => {
+    setScanning(false);
+    if (data) setRoomCode(data);
   };
 
-  if (showJoinRoom) {
-    return (
-      <View style={styles.container}>
-        <LinearGradient
-          colors={['#1a1a1a', '#2a2a2a', '#1a1a1a']}
-          style={StyleSheet.absoluteFillObject}
-        />
-        
-        <View style={styles.content}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => {
-              setShowJoinRoom(false);
-              setRoomCode('');
-            }}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
+  return (
+    <LinearGradient
+      colors={['#0a0a0a', '#1a1a2e', '#16213e']}
+      style={styles.container}
+    >
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.reset({ index: 0, routes: [{ name: 'YouMain' }] })}
+        >
+          <Ionicons name="arrow-back" size={28} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>CrossParty</Text>
+        <View style={styles.backButton} />
+      </View>
 
-          <View style={styles.centerContent}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="enter" size={60} color="#1f4cff" />
-            </View>
-            
-            <Text style={styles.title}>Join a room</Text>
-            <Text style={styles.subtitle}>
-              Enter the 6-character code shown on the host device
-            </Text>
-
-            <TextInput
-              style={styles.codeInput}
-              placeholder="CODE"
-              placeholderTextColor="#666"
-              value={roomCode}
-              onChangeText={setRoomCode}
-              maxLength={6}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              textAlign="center"
-              editable={!loading}
-            />
-
-            <TouchableOpacity
-              style={[styles.joinButton, loading && styles.disabledButton]}
-              onPress={handleJoinRoom}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="enter" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Join</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.scanButton, loading && styles.disabledButton]}
-              onPress={handleAskPermissionAndScan}
-              disabled={loading}
-            >
-              <Ionicons name="qr-code" size={20} color="#1f4cff" />
-              <Text style={styles.scanButtonText}>Scan QR</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="people" size={80} color="#1f4cff" />
         </View>
 
+        <Text style={styles.title}>Listen Together</Text>
+        <Text style={styles.subtitle}>
+          Create a room or join friends with a code
+        </Text>
+
+        {/* Créer une room */}
+        <TouchableOpacity
+          style={[styles.createButton, loading && styles.buttonDisabled]}
+          onPress={handleCreateRoom}
+          disabled={loading}
+        >
+          <LinearGradient
+            colors={['#1f4cff', '#0a32cc']}
+            style={styles.buttonGradient}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="add-circle" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Create a Room</Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={styles.dividerContainer}>
+          <View style={styles.divider} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.divider} />
+        </View>
+
+        {/* Rejoindre une room */}
+        <View style={styles.joinContainer}>
+          <Text style={styles.joinLabel}>Enter Room Code</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="XXXXXX"
+            placeholderTextColor="#666"
+            value={roomCode}
+            onChangeText={setRoomCode}
+            maxLength={6}
+            autoCapitalize="characters"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={[styles.joinButton, loading && styles.buttonDisabled]}
+            onPress={handleJoinRoom}
+            disabled={loading || !roomCode.trim()}
+          >
+            <Text style={styles.joinButtonText}>Join Room</Text>
+            <Ionicons name="arrow-forward" size={20} color="#1f4cff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.joinButton, { marginTop: 10, backgroundColor: '#1f4cff' }]}
+            onPress={handleAskPermissionAndScan}
+          >
+            <Ionicons name="qr-code" size={20} color="#fff" />
+            <Text style={[styles.joinButtonText, { color: '#fff' }]}>Scan QR Code</Text>
+          </TouchableOpacity>
+        </View>
         {scanning && (
-          <View style={styles.scannerOverlay}>
+          <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#000C', zIndex: 10, justifyContent: 'center', alignItems: 'center' }}>
             <CameraView
-              style={StyleSheet.absoluteFillObject}
+              style={{ width: 300, height: 300, borderRadius: 16, overflow: 'hidden' }}
               facing="back"
-              barcodeScannerSettings={{
-                barcodeTypes: ['qr'],
-              }}
-              onBarcodeScanned={({ data }) => onBarCodeScanned({ data })}
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+              onBarcodeScanned={onBarCodeScanned}
             />
-            <View style={styles.scannerTopBar}>
-              <TouchableOpacity style={styles.scannerClose} onPress={() => setScanning(false)}>
-                <Ionicons name="close" size={28} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.scannerTitle}>Scan the room QR</Text>
-            </View>
-            <View style={styles.scanGuide} />
+            <TouchableOpacity onPress={() => setScanning(false)} style={{ marginTop: 20 }}>
+              <Text style={{ color: '#fff', fontSize: 18 }}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={{ color: '#fff', fontSize: 14, marginTop: 10 }}>Scan a room QR code</Text>
+          </View>
+        )}
+
+        {/* Info */}
+        {!user && (
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle" size={20} color="#ffa500" />
+            <Text style={styles.infoText}>
+              You need to be logged in to use CrossParty
+            </Text>
           </View>
         )}
       </View>
-    );
-  }
 
-  return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#1a1a1a', '#2a2a2a', '#1a1a1a']}
-        style={StyleSheet.absoluteFillObject}
-      />
-      
-      <View style={styles.content}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <View style={styles.centerContent}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="people" size={80} color="#1f4cff" />
-          </View>
-          
-          <Text style={styles.title}>CrossParty</Text>
-          <Text style={styles.subtitle}>
-            Share your music in real time with your friends
-          </Text>
-
-          <View style={styles.optionsContainer}>
-            <TouchableOpacity
-              style={[styles.optionButton, loading && styles.disabledButton]}
-              onPress={handleCreateRoom}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="add-circle" size={24} color="#fff" />
-                  <Text style={styles.buttonText}>Create a room</Text>
-                  <Text style={styles.buttonSubtext}>You will be the host</Text>
-                </>
-              )}
-            </TouchableOpacity>
+      {/* Modal de code généré */}
+      <Modal
+        visible={showCodeModal}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconContainer}>
+              <Ionicons name="checkmark-circle" size={60} color="#00ff00" />
+            </View>
+            <Text style={styles.modalTitle}>Room Created!</Text>
+            <Text style={styles.modalSubtitle}>Share this code with friends:</Text>
+            
+            <View style={styles.codeContainer}>
+              <Text style={styles.codeText}>{generatedCode}</Text>
+            </View>
 
             <TouchableOpacity
-              style={styles.optionButton}
-              onPress={() => setShowJoinRoom(true)}
-              disabled={loading}
+              style={styles.shareButton}
+              onPress={handleShareCode}
             >
-              <Ionicons name="enter" size={24} color="#fff" />
-              <Text style={styles.buttonText}>Join a room</Text>
-              <Text style={styles.buttonSubtext}>With a code</Text>
+              <Ionicons name="share-social" size={20} color="#fff" />
+              <Text style={styles.shareButtonText}>Share Code</Text>
             </TouchableOpacity>
+
+            <Text style={styles.modalFooter}>Redirecting to room...</Text>
           </View>
         </View>
-      </View>
-    </View>
+      </Modal>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
-  content: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 50,
+    paddingBottom: 20,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
   },
-  centerContent: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  content: {
     flex: 1,
-    alignItems: 'center',
+    paddingHorizontal: 30,
     justifyContent: 'center',
-    paddingBottom: 100,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(31,76,255,0.1)',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 30,
-    borderWidth: 2,
-    borderColor: 'rgba(31,76,255,0.3)',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 10,
     textAlign: 'center',
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: '#aaa',
+    color: '#999',
     textAlign: 'center',
     marginBottom: 40,
-    paddingHorizontal: 20,
-    lineHeight: 22,
   },
-  optionsContainer: {
-    width: '100%',
-    gap: 20,
+  createButton: {
+    marginBottom: 30,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  optionButton: {
-    backgroundColor: 'rgba(31,76,255,0.15)',
-    borderRadius: 16,
-    padding: 24,
+  buttonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(31,76,255,0.3)',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 10,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  buttonSubtext: {
-    color: '#aaa',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  codeInput: {
-    width: '80%',
-    height: 60,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(31,76,255,0.3)',
-    color: '#fff',
-    fontSize: 24,
     fontWeight: 'bold',
-    letterSpacing: 4,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 30,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#333',
+  },
+  dividerText: {
+    color: '#666',
+    marginHorizontal: 15,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  joinContainer: {
+    backgroundColor: 'rgba(31, 76, 255, 0.1)',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(31, 76, 255, 0.3)',
+  },
+  joinLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+    letterSpacing: 3,
   },
   joinButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1f4cff',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 12,
     gap: 8,
   },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(31,76,255,0.4)',
-    backgroundColor: 'rgba(31,76,255,0.08)'
-  },
-  scanButtonText: {
+  joinButtonText: {
     color: '#1f4cff',
     fontSize: 16,
-    fontWeight: '700',
-    marginLeft: 8,
+    fontWeight: 'bold',
   },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  scannerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.9)'
-  },
-  scannerTopBar: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    right: 20,
+  infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 165, 0, 0.1)',
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 30,
+    gap: 10,
   },
-  scannerClose: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  infoText: {
+    color: '#ffa500',
+    fontSize: 14,
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)'
   },
-  scannerTitle: {
+  modalContent: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    width: '85%',
+    borderWidth: 1,
+    borderColor: '#1f4cff',
+  },
+  modalIconContainer: {
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#999',
+    marginBottom: 20,
+  },
+  codeContainer: {
+    backgroundColor: 'rgba(31, 76, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#1f4cff',
+  },
+  codeText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 5,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1f4cff',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 8,
+    marginBottom: 15,
+  },
+  shareButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  scanGuide: {
-    position: 'absolute',
-    top: '25%',
-    left: '10%',
-    right: '10%',
-    bottom: '25%',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.8)',
-    borderRadius: 16,
+  modalFooter: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });

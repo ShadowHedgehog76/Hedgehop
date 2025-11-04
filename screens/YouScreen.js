@@ -352,8 +352,6 @@ export default function YouScreen({ navigation }) {
             )}
           </SettingsSection>
 
-          {/* CrossParty supprimé */}
-
           {/* Library */}
           <SettingsSection title="Library">
             <SettingItem
@@ -361,6 +359,21 @@ export default function YouScreen({ navigation }) {
               title="Playlists"
               subtitle="Manage your playlists"
               onPress={() => navigation.navigate('Playlists')}
+              rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
+            />
+            <SettingItem
+              icon="people"
+              title="CrossParty"
+              subtitle="Listen together with friends"
+              onPress={() => {
+                const crossPartyService = require('../src/services/crossPartyService').default;
+                const info = crossPartyService.getCurrentRoomInfo();
+                if (info.roomId) {
+                  navigation.navigate('PartyRoom', { roomId: info.roomId });
+                } else {
+                  navigation.navigate('CrossParty');
+                }
+              }}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
           </SettingsSection>
@@ -550,6 +563,13 @@ export default function YouScreen({ navigation }) {
             title="Playlists"
             subtitle="Manage your playlists"
             onPress={() => navigation.navigate('Playlists')}
+            rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
+          />
+          <SettingItem
+            icon="people"
+            title="CrossParty"
+            subtitle="Listen together with friends"
+            onPress={() => navigation.navigate('CrossParty')}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />
         </SettingsSection>

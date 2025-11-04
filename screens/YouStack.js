@@ -5,6 +5,8 @@ import PlaylistsScreen from './PlaylistsScreen';
 import PlaylistDetailScreen from './PlaylistDetailScreen';
 import HelpSupportScreen from './HelpSupportScreen';
 import DonationScreen from './DonationScreen';
+import CrossPartyScreen from './CrossPartyScreen';
+import PartyRoomScreen from './PartyRoomScreen';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +24,8 @@ export default function YouStack() {
       <Stack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="Donation" component={DonationScreen} />
+      <Stack.Screen name="CrossParty" component={CrossPartyScreen} />
+      <Stack.Screen name="PartyRoom" component={PartyRoomScreen} />
     </Stack.Navigator>
   );
 }

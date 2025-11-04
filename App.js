@@ -27,6 +27,7 @@ import { stopAllAudio } from './src/api/player';
 // --- Import des services ---
 import authService from './src/services/auth';
 import { loadFavorites } from './src/api/favorites';
+import { AlertProvider } from './src/components/CustomAlert';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -259,7 +260,9 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppContent />
+    <AlertProvider>
+      <AppContent />
+    </AlertProvider>
   );
 }
 
