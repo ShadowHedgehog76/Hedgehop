@@ -370,7 +370,7 @@ export default function YouScreen({ navigation }) {
             <SettingItem
               icon="help-circle"
               title="Help & support"
-              onPress={() => Alert.alert('Help', 'Feature in development')}
+              onPress={() => navigation.navigate('HelpSupport')}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
             <SettingItem
@@ -559,7 +559,7 @@ export default function YouScreen({ navigation }) {
           <SettingItem
             icon="help-circle"
             title="Help & support"
-            onPress={() => Alert.alert('Help', 'Feature in development')}
+            onPress={() => navigation.navigate('HelpSupport')}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />
           <SettingItem
