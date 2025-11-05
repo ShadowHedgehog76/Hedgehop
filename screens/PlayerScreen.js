@@ -70,8 +70,22 @@ export default function PlayerScreen({ navigation }) {
       setIsInRoom(data.roomId !== null);
     });
 
+    // S'abonner aux changements du statut host personnel (si transfer)
+    let unsubscribeHostStatus;
+    if (roomInfo.roomId && roomInfo.userId) {
+      unsubscribeHostStatus = crossPartyService.subscribeToMyHostStatus(
+        roomInfo.roomId,
+        roomInfo.userId,
+        (data) => {
+          console.log(`🎮 PlayerScreen: My host status changed:`, data.isHost);
+          setIsHost(data.isHost);
+        }
+      );
+    }
+
     return () => {
       if (typeof unsubscribe?.remove === 'function') unsubscribe.remove();
+      if (unsubscribeHostStatus) unsubscribeHostStatus();
     };
   }, []);
 
@@ -462,7 +476,15 @@ export default function PlayerScreen({ navigation }) {
         {/* Bottom section - Queue/CrossMusic */}
         {(hasQueue || crossList.length > 0) && (
           <View style={styles.tabletBottomSection}>
-            {hasQueue ? renderTabletQueue() : renderTabletCrossMusic()}
+            {isInRoom && !isHost ? (
+              // Bloquer Queue ET CrossMusic en CrossParty pour les guests
+              <View style={styles.tabletLockedSection}>
+                <Ionicons name="lock-closed" size={32} color="#999" />
+                <Text style={styles.tabletLockedText}>Queue & CrossMusic disabled in rooms</Text>
+              </View>
+            ) : (
+              hasQueue ? renderTabletQueue() : renderTabletCrossMusic()
+            )}
           </View>
         )}
         {/* Modal Add to Playlist (tablet) */}
@@ -610,7 +632,15 @@ export default function PlayerScreen({ navigation }) {
         </View>
 
         {/* === FILE DE LECTURE OU MODE SOLO === */}
-        {hasQueue ? (
+        {isInRoom && !isHost ? (
+          // Bloquer Queue ET CrossMusic en CrossParty pour les guests
+          <View style={styles.crossSection}>
+            <View style={styles.lockedSection}>
+              <Ionicons name="lock-closed" size={32} color="#999" />
+              <Text style={styles.lockedText}>Queue & CrossMusic disabled in rooms</Text>
+            </View>
+          </View>
+        ) : hasQueue ? (
           <View style={styles.crossSection}>
             <Text style={styles.queueTitle}>File de lecture</Text>
             <FlatList
@@ -972,4 +1002,32 @@ const styles = StyleSheet.create({
     elevation: 6, shadowColor: '#000', shadowOpacity: 0.45, shadowRadius: 50, borderWidth: 3, borderColor: 'rgba(0,0,0,0.6)', overflow: 'hidden',
   },
   crossBadgeText: { color: '#fff', fontSize: 13, fontWeight: '800', marginLeft: 6, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 4 },
+  
+  // Locked sections styles
+  lockedSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  lockedText: {
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  tabletLockedSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  tabletLockedText: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 12,
+    textAlign: 'center',
+  },
 });

@@ -68,8 +68,22 @@ export default function AlbumScreen({ route, navigation }) {
       setIsInRoom(data.roomId !== null);
     });
 
+    // S'abonner aux changements du statut host personnel (si transfer)
+    let unsubscribeHostStatus;
+    if (roomInfo.roomId && roomInfo.userId) {
+      unsubscribeHostStatus = crossPartyService.subscribeToMyHostStatus(
+        roomInfo.roomId,
+        roomInfo.userId,
+        (data) => {
+          console.log(`🎵 AlbumScreen: My host status changed:`, data.isHost);
+          setIsHost(data.isHost);
+        }
+      );
+    }
+
     return () => {
       if (typeof unsubscribe?.remove === 'function') unsubscribe.remove();
+      if (unsubscribeHostStatus) unsubscribeHostStatus();
     };
   }, []);
 
@@ -229,7 +243,7 @@ export default function AlbumScreen({ route, navigation }) {
                 style={styles.tabletTrackIcon} 
               />
               <Ionicons 
-                name={playable ? ((isInRoom && !isHost) ? "queue" : "play-circle") : "time"} 
+                name={playable ? ((isInRoom && !isHost) ? "add-circle" : "play-circle") : "time"} 
                 size={20} 
                 color={playable ? ((isInRoom && !isHost) ? "#ffb700" : "#1f4cff") : "#666"}
                 style={styles.tabletPlayIcon}

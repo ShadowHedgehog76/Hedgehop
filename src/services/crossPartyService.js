@@ -255,12 +255,41 @@ class CrossPartyService {
       
       // Émettre un événement pour notifier les changements
       this.emitter.emit('hostTransferred', { oldHostId: this.currentUserId, newHostId });
+      this.emitter.emit('hostStatusChanged', { isHost: false, roomId: this.currentRoomId });
       
       return { success: true };
     } catch (error) {
       console.error('Error transferring host:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  // S'abonner aux changements du statut host du participant courant
+  subscribeToMyHostStatus(roomId, userId, callback) {
+    if (!roomId || !userId) return () => {};
+    
+    const myParticipantRef = ref(database, `crossparty/rooms/${roomId}/participants/${userId}/isHost`);
+    
+    const unsubscribe = onValue(myParticipantRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const isHostNow = snapshot.val();
+        
+        // Mettre à jour l'état du service
+        const wasHost = this.isHost;
+        this.isHost = isHostNow;
+        
+        // Si le statut a changé, émettre un événement
+        if (wasHost !== isHostNow) {
+          console.log(`🔄 Host status changed: ${wasHost} → ${isHostNow}`);
+          this.emitter.emit('hostStatusChanged', { isHost: isHostNow, roomId });
+        }
+        
+        callback({ isHost: isHostNow });
+      }
+    });
+    
+    this.listeners.push(unsubscribe);
+    return unsubscribe;
   }
 
   // Écoute les changements dans la room
@@ -556,14 +585,36 @@ class CrossPartyService {
     }
   }
 
-  // Supprimer une musique de la queue (host seulement)
-  async removeFromQueue(queueId) {
-    if (!this.isHost || !this.currentRoomId) {
-      return { success: false, error: 'Only host can remove from queue' };
+  // Supprimer une musique de la queue (host seulement, sauf pour ses propres tracks)
+  async removeFromQueue(queueId, userId = null) {
+    if (!this.currentRoomId) {
+      return { success: false, error: 'Not in a room' };
     }
 
     try {
+      // Si pas d'userId fourni, utiliser le userId du service (guest ou host)
+      if (!userId) {
+        userId = this.currentUserId;
+      }
+
+      // Récupérer l'item de queue
       const queueItemRef = ref(database, `crossparty/rooms/${this.currentRoomId}/queue/${queueId}`);
+      const snapshot = await get(queueItemRef);
+
+      if (!snapshot.exists()) {
+        return { success: false, error: 'Queue item not found' };
+      }
+
+      const queueItem = snapshot.val();
+      const itemAddedBy = queueItem.addedBy?.userId;
+
+      // Autoriser si:
+      // 1. C'est le host, OU
+      // 2. C'est un guest qui supprime sa propre chanson
+      if (!this.isHost && itemAddedBy !== userId) {
+        return { success: false, error: 'You can only remove your own tracks from the queue' };
+      }
+
       await remove(queueItemRef);
 
       console.log(`✅ Track removed from queue: ${queueId}`);
