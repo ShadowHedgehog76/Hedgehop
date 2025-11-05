@@ -214,17 +214,10 @@ export const useCrossPartySyncClient = (roomId, isHost) => {
                 const currentPosition = playbackStatus?.positionMillis || 0;
                 const positionDiff = Math.abs(roomPosition - currentPosition);
 
-                // Seuil de tolérance: 5 secondes (5000ms) pour accepter la latence réseau
-                // Ne recale que si le décalage est vraiment significatif pour éviter les micro-coupures
-                console.log(`🎵 [LOAD SYNC] room=${roomPosition}ms, current=${currentPosition}ms, diff=${positionDiff}ms, seuil=5000ms, willSeek=${positionDiff > 5000}`);
-                if (positionDiff > 5000) {
-                  console.log(`🎵 Client: Décalage détecté (${positionDiff}ms), recalage à ${roomPosition}ms`);
-                  await seekTo(roomPosition);
-                } else {
-                  console.log(`🎵 Client: Décalage acceptable (${positionDiff}ms), pas de recalage`);
-                }
+                console.log(`🎵 [LOAD SYNC] room=${roomPosition}ms, current=${currentPosition}ms, diff=${positionDiff}ms`);
+                // Les guests ne se synchronisent pas sur la position, juste sur la piste et le play/pause
               } catch (err) {
-                console.warn('⚠️ Erreur lors du seek:', err);
+                console.warn('⚠️ Erreur lors de la vérification:', err);
               }
             }, 400);
           } else {
@@ -267,15 +260,15 @@ export const useCrossPartySyncClient = (roomId, isHost) => {
           
           // Vérifier si le position a changé significativement (seek)
           const positionDiff = Math.abs((lastState.position || 0) - roomPosition);
-          // Seuil de tolérance: 5 secondes (5000ms) pour accepter la latence réseau
-          console.log(`🎵 [SYNC DEBUG] Position: local=${lastState.position}ms, room=${roomPosition}ms, diff=${positionDiff}ms, seuil=5000ms, willSeek=${positionDiff > 5000}`);
-          if (positionDiff > 5000) {
-            console.log(`🎵 Client: Décalage de ${positionDiff}ms détecté, recalage à ${roomPosition}ms`);
-            seekTo(roomPosition).catch(err => {
-              console.warn('⚠️ Seek failed (sound may not be loaded):', err);
-            });
-            lastStateRef.current.position = roomPosition;
+          console.log(`🎵 [SYNC DEBUG] Position: local=${lastState.position}ms, room=${roomPosition}ms, diff=${positionDiff}ms`);
+          
+          // Les guests se synchronisent seulement si y'a un gros écart (> 12 secondes)
+          if (positionDiff > 12000) {
+            console.log(`⚠️ [LARGE POSITION DISCREPANCY] Seeking from ${lastState.position}ms to ${roomPosition}ms (diff: ${positionDiff}ms)`);
+            seekTo(roomPosition);
           }
+          
+          lastStateRef.current.position = roomPosition;
         }
       } finally {
         isApplyingSyncRef.current = false;

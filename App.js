@@ -110,11 +110,20 @@ function RoomBadge({ roomInfo }) {
       return;
     }
     
-    // Naviguer vers le tab 'You' avec PartyRoom
-    navigation.navigate('You', {
-      screen: 'PartyRoom',
-      params: { roomId: roomInfo.roomId },
-    });
+    console.log('🔔 RoomBadge: Click, naviger vers PartyRoom:', roomInfo.roomId);
+    
+    // Navigation simple et directe
+    try {
+      navigation.navigate('MainLayout', {
+        screen: 'You',
+        params: {
+          screen: 'PartyRoom',
+          params: { roomId: roomInfo.roomId }
+        }
+      });
+    } catch (err) {
+      console.error('❌ RoomBadge: Navigation error:', err);
+    }
   };
 
   return (
@@ -328,7 +337,7 @@ function MainLayout({ navigation }) {
       case 'Player':
         return <PlayerScreen navigation={tabletNavigation} />;
       case 'You':
-        return <YouStack />;
+        return <YouStack navigation={tabletNavigation} />;
       case 'Dev':
         return <DevScreen 
           navigation={tabletNavigation} 

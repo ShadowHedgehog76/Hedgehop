@@ -869,19 +869,12 @@ async function forcePlayTrack(track, startPosition = 0, timestamp = null) {
       return;
     }
 
-    // Calculer la position avec compensation du délai réseau
-    let adjustedPosition = startPosition;
-    if (timestamp && timestamp > 0) {
-      const networkDelay = Date.now() - timestamp;
-      adjustedPosition = Math.max(0, startPosition + networkDelay);
-    }
-
     // Créer la nouvelle piste
     const { sound } = await Audio.Sound.createAsync(
       { uri: track.url },
       { 
         shouldPlay: true, // Démarrer automatiquement
-        positionMillis: adjustedPosition 
+        positionMillis: startPosition
       },
       onPlaybackStatusUpdate
     );

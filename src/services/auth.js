@@ -208,25 +208,25 @@ class AuthService {
   getErrorMessage(errorCode) {
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return 'Cette adresse email est déjà utilisée';
+        return 'This email address is already in use';
       case 'auth/invalid-email':
-        return 'Adresse email invalide';
+        return 'Invalid email address';
       case 'auth/operation-not-allowed':
-        return 'Opération non autorisée';
+        return 'Operation not allowed';
       case 'auth/weak-password':
-        return 'Mot de passe trop faible (minimum 6 caractères)';
+        return 'Password too weak (minimum 6 characters)';
       case 'auth/user-disabled':
-        return 'Ce compte a été désactivé';
+        return 'This account has been disabled';
       case 'auth/user-not-found':
-        return 'Aucun compte trouvé avec cette adresse email';
+        return 'No account found with this email address';
       case 'auth/wrong-password':
-        return 'Mot de passe incorrect';
+        return 'Incorrect password';
       case 'auth/invalid-credential':
-        return 'Identifiants invalides';
+        return 'Invalid credentials';
       case 'auth/network-request-failed':
-        return 'Erreur de connexion réseau';
+        return 'Network connection error';
       default:
-        return 'Une erreur est survenue. Veuillez réessayer.';
+        return 'An error occurred. Please try again.';
     }
   }
 
