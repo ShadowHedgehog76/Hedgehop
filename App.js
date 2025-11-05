@@ -38,11 +38,83 @@ const Tab = createBottomTabNavigator();
 // Composant RoomBadge - affiche un badge quand l'utilisateur est dans une room
 function RoomBadge({ roomInfo }) {
   const navigation = useNavigation();
+  const [isConnected, setIsConnected] = useState(crossPartyService.isInRoom());
   
-  if (!roomInfo?.roomId) return null;
+  // Écouter les changements de connexion à la room
+  useEffect(() => {
+    // Vérifier l'état initial
+    setIsConnected(crossPartyService.isInRoom());
+    
+    // Écouter quand on rejoint/quitte une room
+    const unsubscribeStatus = crossPartyService.subscribeToHostStatusChanges((data) => {
+      console.log('🔔 RoomBadge: Changement de room:', data);
+      setIsConnected(!!data.roomId);
+    });
+    
+    // Si on est dans une room, écouter si elle disparaît ou si on est kicked
+    let unsubscribeRoom = null;
+    let unsubscribeParticipants = null;
+    
+    if (crossPartyService.isInRoom()) {
+      const roomId = roomInfo?.roomId;
+      const currentUserId = crossPartyService.currentUserId;
+      
+      if (roomId && currentUserId) {
+        // Écouter si la room disparaît (host quitte)
+        unsubscribeRoom = crossPartyService.subscribeToRoom(roomId, (result) => {
+          if (!result.exists) {
+            console.log('🔔 RoomBadge: Room supprimée');
+            setIsConnected(false);
+            crossPartyService.currentRoomId = null;
+            crossPartyService.currentUserId = null;
+            crossPartyService.isHost = false;
+          }
+        });
+        
+        // Écouter si on est kicked
+        unsubscribeParticipants = crossPartyService.subscribeToParticipants(roomId, (parts) => {
+          const stillInRoom = parts.some(p => p.userId === currentUserId);
+          if (!stillInRoom) {
+            console.log('🔔 RoomBadge: User kicked de la room');
+            setIsConnected(false);
+            crossPartyService.currentRoomId = null;
+            crossPartyService.currentUserId = null;
+            crossPartyService.isHost = false;
+          }
+        });
+      }
+    }
+    
+    return () => {
+      if (typeof unsubscribeStatus?.remove === 'function') {
+        unsubscribeStatus.remove();
+      }
+      if (typeof unsubscribeRoom?.remove === 'function') {
+        unsubscribeRoom.remove();
+      }
+      if (typeof unsubscribeParticipants?.remove === 'function') {
+        unsubscribeParticipants.remove();
+      }
+    };
+  }, [roomInfo?.roomId]);
+  
+  // N'afficher que si vraiment connecté
+  if (!isConnected || !roomInfo?.roomId) {
+    return null;
+  }
 
   const handlePress = () => {
-    navigation.navigate('PartyRoom', { roomId: roomInfo.roomId });
+    // Double-vérifier avant de naviguer
+    if (!crossPartyService.isInRoom()) {
+      setIsConnected(false);
+      return;
+    }
+    
+    // Naviguer vers le tab 'You' avec PartyRoom
+    navigation.navigate('You', {
+      screen: 'PartyRoom',
+      params: { roomId: roomInfo.roomId },
+    });
   };
 
   return (

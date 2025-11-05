@@ -148,7 +148,7 @@ export default function CrossPartyScreen({ navigation }) {
           <Text style={styles.lockSubtitle}>You must be logged in to use CrossParty</Text>
           <TouchableOpacity 
             style={styles.lockBackBtn} 
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('YouMain')}
           >
             <Ionicons name="chevron-back" size={24} color="#fff" />
             <Text style={styles.lockBackText}>Back</Text>
@@ -159,7 +159,7 @@ export default function CrossPartyScreen({ navigation }) {
       <View style={[styles.header, !isAuthenticated && { opacity: 0.3 }]}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('YouMain')}
         >
           <Ionicons name="arrow-back" size={28} color="#fff" />
         </TouchableOpacity>

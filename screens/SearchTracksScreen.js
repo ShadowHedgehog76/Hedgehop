@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, FlatList } 
 import { Ionicons } from '@expo/vector-icons';
 import { getCatalog } from '../src/api/catalog';
 import { setGlobalTracks, playTrack } from '../src/api/player';
+import crossPartyService from '../src/services/crossPartyService';
 
 function normalizeText(s) {
   if (!s) return '';
@@ -127,12 +128,36 @@ export default function SearchTracksScreen({ navigation }) {
   const handlePlay = (t) => {
     const playable = t.url || t.streamUrl || t.source;
     if (!playable) return;
-    const base = {
-      ...t,
+    
+    // Vérifier si on est un guest dans une CrossParty room
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    const isGuestInCrossParty = roomInfo.roomId && !roomInfo.isHost;
+    
+    const trackData = {
+      id: t.id || t.title,
+      title: t.title,
+      artist: t.artist || 'Unknown Artist',
+      album: t.album || 'Unknown Album',
+      duration: t.duration || 0,
+      uri: playable,
       url: playable,
+      image: t.image,
     };
-    setGlobalTracks([base]);
-    playTrack(base, 0);
+    
+    if (isGuestInCrossParty) {
+      // Guest: ajouter à la queue
+      console.log('➕ Guest ajoute à la queue:', trackData.title);
+      crossPartyService.addToQueue(
+        trackData,
+        roomInfo.userId,
+        'You'
+      );
+    } else {
+      // Host ou pas en room: jouer directement
+      console.log('▶️ Jouant directement:', trackData.title);
+      setGlobalTracks([trackData]);
+      playTrack(trackData, 0);
+    }
   };
 
   return (

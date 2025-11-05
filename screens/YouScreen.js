@@ -16,6 +16,7 @@ import authService from '../src/services/auth';
 import { syncFavoritesToCloud, syncFavoritesToLocal } from '../src/api/favorites';
 import statsService from '../src/services/StatsService';
 import { useAlert } from '../src/components/CustomAlert';
+import crossPartyService from '../src/services/crossPartyService';
 
 // Composants extraits pour éviter les re-rendus
 const SettingsSection = ({ title, children }) => (
@@ -141,7 +142,13 @@ export default function YouScreen({ navigation }) {
   };
 
   const handleLogout = () => {
-    showAlert({ 
+    // empécher la déconnexion si la synchronisation est en cours ou si l'utilisateur est dans une salle CrossParty
+    if (loading || crossPartyService.isInRoom()) {
+      showAlert({ title: 'Error', message: 'You cannot sign out while in a room', type: 'error' });
+      return;
+    }
+    
+    showAlert({
       title: 'Sign out',
       message: 'Are you sure you want to sign out?',
       type: 'warning',

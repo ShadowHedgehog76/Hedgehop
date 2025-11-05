@@ -299,33 +299,45 @@ export default function AlbumScreen({ route, navigation }) {
                   style={styles.tabletCrossGridCard}
                   activeOpacity={0.85}
                   onPress={() => {
-                    const originalTrack = {
-                      ...track,
-                      url: track.url ?? track.streamUrl ?? track.source ?? null,
-                      album: album.title,
-                      image: album.image,
-                      crossmusic: crossArr,
-                    };
+                    // Checker si on est dans une room
+                    // Si oui refuser les crossmusic
+                    // Si on est pas dans une room alors ok
 
-                    const parentCrossList = crossArr.map((x) => ({
-                      ...x,
-                      url: x.url ?? x.streamUrl ?? x.source ?? null,
-                      album: album.title,
-                      image: x.image ?? album.image,
-                    }));
+                    if (!isInRoom) {
+                      const originalTrack = {
+                        ...track,
+                        url: track.url ?? track.streamUrl ?? track.source ?? null,
+                        album: album.title,
+                        image: album.image,
+                        crossmusic: crossArr,
+                      };
 
-                    const crossTrack = {
-                      ...item,
-                      url: playableUrl,
-                      album: album.title,
-                      image: artwork,
-                      crossTitle: track.title,
-                      parentOriginalTrack: originalTrack,
-                      parentCrossList,
-                    };
+                      const parentCrossList = crossArr.map((x) => ({
+                        ...x,
+                        url: x.url ?? x.streamUrl ?? x.source ?? null,
+                        album: album.title,
+                        image: x.image ?? album.image,
+                      }));
 
-                    setGlobalTracks([]);
-                    handleTrackPlay(crossTrack);
+                      const crossTrack = {
+                        ...item,
+                        url: playableUrl,
+                        album: album.title,
+                        image: artwork,
+                        crossTitle: track.title,
+                        parentOriginalTrack: originalTrack,
+                        parentCrossList,
+                      };
+
+                      setGlobalTracks([]);
+                      handleTrackPlay(crossTrack);
+                    } else {
+                      showAlert({ 
+                        title: 'CrossMusic Disabled', 
+                        message: 'CrossMusic is not available in CrossParty rooms.', 
+                        type: 'warning' 
+                      });
+                    }
                   }}
                 >
                   <Image source={{ uri: artwork }} style={styles.tabletCrossGridImage} />
@@ -763,33 +775,45 @@ export default function AlbumScreen({ route, navigation }) {
                         style={styles.crossGridCard}
                         activeOpacity={0.85}
                         onPress={() => {
-                          const originalTrack = {
-                            ...track,
-                            url: track.url ?? track.streamUrl ?? track.source ?? null,
-                            album: album.title,
-                            image: album.image,
-                            crossmusic: crossArr,
-                          };
+                          // Checker si on est dans une room
+                          // Si oui refuser les crossmusic
+                          // Si on est pas dans une room alors ok
 
-                          const parentCrossList = crossArr.map((x) => ({
-                            ...x,
-                            url: x.url ?? x.streamUrl ?? x.source ?? null,
-                            album: album.title,
-                            image: x.image ?? album.image,
-                          }));
+                          if (!isInRoom) {
+                            const originalTrack = {
+                              ...track,
+                              url: track.url ?? track.streamUrl ?? track.source ?? null,
+                              album: album.title,
+                              image: album.image,
+                              crossmusic: crossArr,
+                            };
 
-                          const crossTrack = {
-                            ...item,
-                            url: playableUrl,
-                            album: album.title,
-                            image: artwork,
-                            crossTitle: track.title,
-                            parentOriginalTrack: originalTrack,
-                            parentCrossList,
-                          };
+                            const parentCrossList = crossArr.map((x) => ({
+                              ...x,
+                              url: x.url ?? x.streamUrl ?? x.source ?? null,
+                              album: album.title,
+                              image: x.image ?? album.image,
+                            }));
 
-                          setGlobalTracks([]);
-                          handleTrackPlay(crossTrack);
+                            const crossTrack = {
+                              ...item,
+                              url: playableUrl,
+                              album: album.title,
+                              image: artwork,
+                              crossTitle: track.title,
+                              parentOriginalTrack: originalTrack,
+                              parentCrossList,
+                            };
+
+                            setGlobalTracks([]);
+                            handleTrackPlay(crossTrack);
+                          } else {
+                            showAlert({ 
+                              title: 'CrossMusic Disabled', 
+                              message: 'CrossMusic is not available in CrossParty rooms.', 
+                              type: 'warning' 
+                            });
+                          }
                         }}
                       >
                         <Image source={{ uri: artwork }} style={styles.crossGridImage} />

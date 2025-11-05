@@ -24,6 +24,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Importer firebaseConfig pour s'assurer que Firebase est initialisé
 import '../config/firebaseConfig';
 
+// Importer les fonctions de synchronisation des playlists
+import { syncPlaylistsOnLogin, clearPlaylistsOnLogout } from '../api/playlists';
+
 // Utiliser l'app Firebase déjà initialisée dans firebaseConfig.js
 const app = getApps()[0];
 
@@ -63,6 +66,9 @@ class AuthService {
       // Sauvegarde locale
       await this.saveUserToStorage(user);
       
+      // Synchroniser les playlists après inscription
+      await syncPlaylistsOnLogin();
+      
       return {
         success: true,
         user: {
@@ -90,6 +96,9 @@ class AuthService {
       // Sauvegarde locale
       await this.saveUserToStorage(user);
       
+      // Synchroniser les playlists après login
+      await syncPlaylistsOnLogin();
+      
       return {
         success: true,
         user: {
@@ -111,12 +120,15 @@ class AuthService {
   // Déconnexion
   async logout() {
     try {
+      // Nettoyer les playlists en premier (avant de se déconnecter)
+      await clearPlaylistsOnLogout();
+      
       await signOut(this.auth);
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('user_session'); // Aussi nettoyer la session
       
       // Nettoyer toutes les données locales de l'utilisateur
-      await AsyncStorage.removeItem('hedgehop_playlists'); // Playlists
+      await AsyncStorage.removeItem('hedgehop_playlists'); // Playlists (déjà fait mais on s'assure)
       await AsyncStorage.removeItem('favorites'); // Favoris
       await AsyncStorage.removeItem('@user_stats'); // Statistiques
       await AsyncStorage.removeItem('@listening_history'); // Historique d'écoute
@@ -484,6 +496,10 @@ class AuthService {
               console.log('✅ Firebase a restauré l\'utilisateur:', firebaseUser.email);
               this.currentUser = firebaseUser;
               this.saveUserToStorage(firebaseUser);
+              
+              // Synchroniser les playlists après restauration de la session
+              syncPlaylistsOnLogin().catch(err => console.warn('Erreur sync playlists:', err));
+              
               resolved = true;
               unsubscribe();
               resolve(firebaseUser);
@@ -525,6 +541,10 @@ class AuthService {
               if (firebaseUser) {
                 console.log('✅ Firebase user trouvé:', firebaseUser.email);
                 this.saveUserToStorage(firebaseUser);
+                
+                // Synchroniser les playlists
+                syncPlaylistsOnLogin().catch(err => console.warn('Erreur sync playlists:', err));
+                
                 resolve(firebaseUser);
               } else {
                 console.log('❌ Pas d\'utilisateur connecté');
@@ -549,6 +569,51 @@ class AuthService {
     } catch (error) {
       console.error('Erreur initialisation persistance:', error);
       return null;
+    }
+  }
+
+  // Sauvegarder les playlists de l'utilisateur dans Firestore
+  async savePlaylists(playlists) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) return { success: false, error: 'Utilisateur non connecté' };
+
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, { playlists }, { merge: true });
+      
+      console.log('☁️ Playlists sauvegardées dans Firestore');
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur sauvegarde playlists:', error);
+      return { success: false, error: 'Erreur lors de la sauvegarde des playlists' };
+    }
+  }
+
+  // Récupérer les playlists de l'utilisateur depuis Firestore
+  async getPlaylists() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        console.log('ℹ️ Aucun utilisateur connecté pour récupérer les playlists');
+        return [];
+      }
+
+      console.log('📋 Récupération playlists pour utilisateur:', user.uid);
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const playlists = data.playlists || [];
+        console.log('📋 Playlists trouvées dans Firestore:', playlists.length);
+        return playlists;
+      }
+      
+      console.log('📋 Aucun document utilisateur trouvé');
+      return [];
+    } catch (error) {
+      console.error('Erreur récupération playlists:', error);
+      return [];
     }
   }
 }
