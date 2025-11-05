@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
@@ -16,6 +15,7 @@ import { useDeviceType } from '../src/hooks/useDeviceType';
 import authService from '../src/services/auth';
 import { syncFavoritesToCloud, syncFavoritesToLocal } from '../src/api/favorites';
 import statsService from '../src/services/StatsService';
+import { useAlert } from '../src/components/CustomAlert';
 
 // Composants extraits pour éviter les re-rendus
 const SettingsSection = ({ title, children }) => (
@@ -54,6 +54,7 @@ export default function YouScreen({ navigation }) {
   const [initializing, setInitializing] = useState(true);
 
   const { isTablet } = useDeviceType();
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     // Listen to auth state changes
@@ -79,7 +80,7 @@ export default function YouScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill all fields');
+      showAlert({ title: 'Error', message: 'Please fill all fields', type: 'error' });
       return;
     }
 
@@ -95,24 +96,24 @@ export default function YouScreen({ navigation }) {
         setShowLogin(false);
         setEmail('');
         setPassword('');
-        Alert.alert('Success', 'Signed in! Your favorites and stats have been synchronized.');
+        showAlert({ title: 'Success', message: 'Signed in! Your favorites and stats have been synchronized.', type: 'success' });
       } else {
-        Alert.alert('Error', result.error);
+        showAlert({ title: 'Error', message: result.error, type: 'error' });
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      showAlert({ title: 'Error', message: 'An unexpected error occurred', type: 'error' });
     }
     setLoading(false);
   };
 
   const handleRegister = async () => {
     if (!email || !password || !displayName) {
-      Alert.alert('Error', 'Please fill all fields');
+      showAlert({ title: 'Error', message: 'Please fill all fields', type: 'error' });
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      showAlert({ title: 'Error', message: 'Password must be at least 6 characters', type: 'error' });
       return;
     }
 
@@ -129,21 +130,22 @@ export default function YouScreen({ navigation }) {
         setEmail('');
         setPassword('');
         setDisplayName('');
-        Alert.alert('Success', 'Account created! Your favorites and stats have been synchronized.');
+        showAlert({ title: 'Success', message: 'Account created! Your favorites and stats have been synchronized.', type: 'success' });
       } else {
-        Alert.alert('Error', result.error);
+        showAlert({ title: 'Error', message: result.error, type: 'error' });
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      showAlert({ title: 'Error', message: 'An unexpected error occurred', type: 'error' });
     }
     setLoading(false);
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sign out',
-      'Are you sure you want to sign out?',
-      [
+    showAlert({ 
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      type: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Sign out',
@@ -159,12 +161,12 @@ export default function YouScreen({ navigation }) {
             setLoading(false);
             
             if (!result.success) {
-              Alert.alert('Error', result.error);
+              showAlert({ title: 'Error', message: result.error, type: 'error' });
             }
           },
         },
       ]
-    );
+    });
   };
 
   const resetForms = useCallback(() => {
@@ -389,7 +391,7 @@ export default function YouScreen({ navigation }) {
             <SettingItem
               icon="information-circle"
               title="About Hedgehop"
-              onPress={() => Alert.alert('Hedgehop', 'Version 1.0.0\nMusic Player App')}
+              onPress={() => showAlert({ title: 'Hedgehop', message: 'Version 1.0.0\nMusic Player App', type: 'info' })}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
           </SettingsSection>
@@ -585,7 +587,7 @@ export default function YouScreen({ navigation }) {
           <SettingItem
             icon="information-circle"
             title="About"
-            onPress={() => Alert.alert('Hedgehop', 'Version 1.0.0\nMusic Player App')}
+            onPress={() => showAlert({ title: 'Hedgehop', message: 'Version 1.0.0\nMusic Player App', type: 'info' })}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />
         </SettingsSection>

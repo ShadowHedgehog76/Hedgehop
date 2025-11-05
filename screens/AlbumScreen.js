@@ -14,7 +14,6 @@ import {
   LayoutAnimation,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +24,8 @@ import { getPlaylists } from '../src/api/playlists';
 import { createPlaylist, addTrack } from '../src/api/playlists';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import crossPartyService from '../src/services/crossPartyService';
+import authService from '../src/services/auth';
+import { useAlert } from '../src/components/CustomAlert';
 // CrossParty supprimé
 
 const { width } = Dimensions.get('window');
@@ -43,8 +44,10 @@ export default function AlbumScreen({ route, navigation }) {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [isInRoom, setIsInRoom] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const { isTablet, dimensions, isLandscape } = useDeviceType();
+  const { showAlert } = useAlert();
 
   const imageScale = useRef(new Animated.Value(0.8)).current;
   const listOpacity = useRef(new Animated.Value(0)).current;
@@ -68,6 +71,12 @@ export default function AlbumScreen({ route, navigation }) {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe.remove();
     };
+  }, []);
+
+  // Vérifier l'authentification
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
   }, []);
 
   // Total cross
@@ -142,7 +151,7 @@ export default function AlbumScreen({ route, navigation }) {
   const handleTrackPlay = async (track, trackIndex = 0, albumTracks = null) => {
     // Empêcher les invités de lancer la musique
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can control music.');
+      showAlert({ title: 'Read Only', message: 'Only the host can control music.', type: 'warning' });
       return;
     }
 
@@ -178,13 +187,13 @@ export default function AlbumScreen({ route, navigation }) {
       );
 
       if (result.success) {
-        Alert.alert('✅ Added to Queue', `"${track.title}" has been added!`);
+        showAlert({ title: '✅ Added to Queue', message: `"${track.title}" has been added!`, type: 'success' });
       } else {
-        Alert.alert('Error', result.error || 'Failed to add to queue');
+        showAlert({ title: 'Error', message: result.error || 'Failed to add to queue', type: 'error' });
       }
     } catch (error) {
       console.error('Error adding to queue:', error);
-      Alert.alert('Error', 'Failed to add to queue');
+      showAlert({ title: 'Error', message: 'Failed to add to queue', type: 'error' });
     }
   };
 
@@ -243,18 +252,23 @@ export default function AlbumScreen({ route, navigation }) {
                 </View>
               )}
 
-              <TouchableOpacity onPress={() => openAddToPlaylist(track)} style={styles.tabletFavoriteButton}>
-                <Ionicons name="add-circle" size={20} color="#1f4cff" />
+              <TouchableOpacity 
+                onPress={() => openAddToPlaylist(track)} 
+                style={styles.tabletFavoriteButton}
+                disabled={!isAuthenticated}
+              >
+                <Ionicons name="add-circle" size={20} color={isAuthenticated ? "#1f4cff" : "#555"} />
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => handleFavorite(track)}
                 style={styles.tabletFavoriteButton}
+                disabled={!isAuthenticated}
               >
                 <Ionicons
                   name={isFav(track) ? "heart" : "heart-outline"}
                   size={20}
-                  color={isFav(track) ? "#e91e63" : "#666"}
+                  color={isAuthenticated ? (isFav(track) ? "#e91e63" : "#666") : "#555"}
                 />
               </TouchableOpacity>
             </View>
@@ -705,14 +719,22 @@ export default function AlbumScreen({ route, navigation }) {
                   >
                     {track.title}
                   </Text>
-                  <TouchableOpacity style={styles.heartButton} onPress={() => openAddToPlaylist(track)}>
-                    <Ionicons name="add-circle" size={20} color="#1f4cff" />
+                  <TouchableOpacity 
+                    style={styles.heartButton} 
+                    onPress={() => openAddToPlaylist(track)}
+                    disabled={!isAuthenticated}
+                  >
+                    <Ionicons name="add-circle" size={20} color={isAuthenticated ? "#1f4cff" : "#555"} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.heartButton} onPress={() => handleFavorite(track)}>
+                  <TouchableOpacity 
+                    style={styles.heartButton} 
+                    onPress={() => handleFavorite(track)}
+                    disabled={!isAuthenticated}
+                  >
                     <Ionicons
                       name={isFav(track) ? 'heart' : 'heart-outline'}
                       size={18}
-                      color={isFav(track) ? 'red' : 'white'}
+                      color={isAuthenticated ? (isFav(track) ? 'red' : 'white') : '#555'}
                     />
                   </TouchableOpacity>
                 </TouchableOpacity>

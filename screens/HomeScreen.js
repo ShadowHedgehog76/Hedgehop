@@ -14,12 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import { getPlaylists, playlistEmitter } from '../src/api/playlists';
+import authService from '../src/services/auth';
 
 export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
   const [playlists, setPlaylists] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Track search has a dedicated screen; no local state needed
   
   const { isTablet, getGridColumns, getCardWidth, dimensions, isLandscape } = useDeviceType();
@@ -57,6 +59,12 @@ export default function HomeScreen({ navigation }) {
       .finally(() => setLoading(false));
   };
 
+  // Vérifier l'authentification
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+  }, []);
+
   useEffect(() => {
     // Chargement initial (sans timestamp pour éviter des requêtes inutiles au démarrage)
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
@@ -65,15 +73,17 @@ export default function HomeScreen({ navigation }) {
   .catch(err => console.error('❌ JSON load error:', err))
       .finally(() => setLoading(false));
 
-    // Charger les playlists locales et s'abonner aux changements
-    (async () => {
-      const pls = await getPlaylists();
-      setPlaylists(pls);
-    })();
+    // Charger les playlists locales et s'abonner aux changements (seulement si authentifié)
+    if (isAuthenticated) {
+      (async () => {
+        const pls = await getPlaylists();
+        setPlaylists(pls);
+      })();
 
-    const sub = playlistEmitter.addListener('update', (pls) => setPlaylists(pls));
-    return () => sub.remove();
-  }, []);
+      const sub = playlistEmitter.addListener('update', (pls) => setPlaylists(pls));
+      return () => sub.remove();
+    }
+  }, [isAuthenticated]);
 
   const getAlbumStatus = (album) => {
     const tracks = album.tracks || [];
@@ -293,7 +303,7 @@ export default function HomeScreen({ navigation }) {
       )}
 
       {/* 📂 Catégorie Playlists en bas */}
-      {playlists.length > 0 && (
+      {isAuthenticated && playlists.length > 0 && (
         <View style={[styles.categoryBlock, { marginTop: 10 }]}> 
           <Text style={styles.categoryTitle}>Playlists</Text>
           <FlatList

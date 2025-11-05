@@ -5,44 +5,78 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useStats } from '../src/hooks/useStats';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import { useAlert } from '../src/components/CustomAlert';
+import authService from '../src/services/auth';
+import { useState, useEffect } from 'react';
 
 export default function StatsScreen({ navigation }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
   const { formattedStats, loading, recordPlay, loadStats, resetStats, exportStats } = useStats();
   const { isTablet, getGridColumns, isLandscape } = useDeviceType();
+  const { showAlert } = useAlert();
+
+  // Écouter les changements d'authentification en temps réel
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+
+    const unsubscribe = authService.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
+
+    return () => unsubscribe?.();
+  }, []);
 
   const handleResetStats = () => {
-    Alert.alert(
-      'Reset statistics',
-      'Are you sure you want to clear all your listening statistics?',
-      [
+    showAlert({ 
+      title: 'Reset statistics',
+      message: 'Are you sure you want to clear all your listening statistics?',
+      type: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset',
           style: 'destructive',
           onPress: async () => {
             await resetStats();
-            Alert.alert('✅', 'Statistics reset');
+            showAlert({ title: '✅', message: 'Statistics reset', type: 'success' });
           },
         },
       ]
-    );
+    });
   };
 
   const handleExportStats = async () => {
     const exported = await exportStats();
     if (exported) {
-      Alert.alert(
-        '📊 Statistics exported',
-        `Data exported successfully!\n\nTotal plays: ${exported.playCount}\nTotal time: ${Math.floor(exported.totalListeningTime / 60)}h${exported.totalListeningTime % 60}m`
-      );
+      showAlert({ 
+        title: '📊 Statistics exported',
+        message: `Data exported successfully!\n\nTotal plays: ${exported.playCount}\nTotal time: ${Math.floor(exported.totalListeningTime / 60)}h${exported.totalListeningTime % 60}m`,
+        type: 'success'
+      });
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#1f1f1f', '#2a2a2a', '#1a1a1a']}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.lockOverlay}>
+          <Ionicons name="lock-closed" size={64} color="white" />
+          <Text style={styles.lockTitle}>Sign in required</Text>
+          <Text style={styles.lockSubtitle}>You must be logged in to view your statistics</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -159,11 +193,14 @@ export default function StatsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Gradient background */}
       <LinearGradient
         colors={['#1f1f1f', '#2a2a2a', '#1a1a1a']}
-        style={styles.header}
-      >
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Header */}
+      <View style={styles.header}>
   <Text style={styles.headerTitle}>Listening Statistics</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={loadStats} style={styles.headerButton}>
@@ -173,7 +210,7 @@ export default function StatsScreen({ navigation }) {
             <Ionicons name="trash" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Stats principales */}
@@ -454,6 +491,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
   },
+  emptySubText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   testButton: {
     backgroundColor: '#667eea',
     paddingHorizontal: 20,
@@ -523,5 +566,30 @@ const styles = StyleSheet.create({
   },
   tabletBottomRight: {
     flex: 0.48,
+  },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  lockSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });

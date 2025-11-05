@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, TextInput, Animated, Easing, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, TextInput, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { getPlaylists, removeTrack, deletePlaylist, renamePlaylist } from '../src/api/playlists';
@@ -10,6 +10,8 @@ import { database } from '../src/config/firebaseConfig';
 import { ref as dbRef, set as dbSet, onValue as dbOnValue, remove as dbRemove } from 'firebase/database';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import crossPartyService from '../src/services/crossPartyService';
+import authService from '../src/services/auth';
+import { useAlert } from '../src/components/CustomAlert';
 
 // Placeholder fiable
 const safeImage = 'https://via.placeholder.com/96x96/222/EEEEEE.png?text=%E2%99%AA';
@@ -24,13 +26,21 @@ export default function PlaylistDetailScreen({ route, navigation }) {
   const [shareId, setShareId] = useState('');
   const [uploading, setUploading] = useState(false);
   const [transferStatus, setTransferStatus] = useState('idle'); // idle | uploading | waiting | transferred | error
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const unsubscribeRef = useRef(null);
   const { isTablet } = useDeviceType();
   const haloAnim = useRef(new Animated.Value(0)).current;
+  const { showAlert } = useAlert();
 
   // Vérifier si on est un guest en crossparty
   const roomInfo = crossPartyService.getCurrentRoomInfo();
   const isGuestInCrossParty = roomInfo.roomId && !roomInfo.isHost;
+
+  // Vérifier l'authentification
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+  }, []);
 
   const load = async () => {
     const lists = await getPlaylists();
@@ -149,9 +159,8 @@ export default function PlaylistDetailScreen({ route, navigation }) {
     if (!tracks.length) return;
     
     // Vérifier si on est un guest en crossparty
-    const roomInfo = crossPartyService.getCurrentRoomInfo();
-    if (roomInfo.roomId && !roomInfo.isHost) {
-      Alert.alert('Access Denied', 'Only the host can change the music');
+    if (isGuestInCrossParty) {
+      showAlert({ title: 'Access Denied', message: 'Only the host can change the music', type: 'warning' });
       return;
     }
     
@@ -161,9 +170,8 @@ export default function PlaylistDetailScreen({ route, navigation }) {
 
   const handlePlayItem = (item, index) => {
     // Vérifier si on est un guest en crossparty
-    const roomInfo = crossPartyService.getCurrentRoomInfo();
-    if (roomInfo.roomId && !roomInfo.isHost) {
-      Alert.alert('Access Denied', 'Only the host can change the music');
+    if (isGuestInCrossParty) {
+      showAlert({ title: 'Access Denied', message: 'Only the host can change the music', type: 'warning' });
       return;
     }
     
@@ -176,7 +184,7 @@ export default function PlaylistDetailScreen({ route, navigation }) {
     
     // Vérifier si on est un guest
     if (isGuestInCrossParty) {
-      Alert.alert('Access Denied', 'Only the host can delete playlists');
+      showAlert({ title: 'Access Denied', message: 'Only the host can delete playlists', type: 'warning' });
       return;
     }
     
@@ -189,7 +197,7 @@ export default function PlaylistDetailScreen({ route, navigation }) {
     
     // Vérifier si on est un guest
     if (isGuestInCrossParty) {
-      Alert.alert('Access Denied', 'Only the host can modify playlists');
+      showAlert({ title: 'Access Denied', message: 'Only the host can modify playlists', type: 'warning' });
       return;
     }
     
@@ -203,7 +211,7 @@ export default function PlaylistDetailScreen({ route, navigation }) {
     
     // Vérifier si on est un guest
     if (isGuestInCrossParty) {
-      Alert.alert('Access Denied', 'Only the host can modify playlists');
+      showAlert({ title: 'Access Denied', message: 'Only the host can modify playlists', type: 'warning' });
       return;
     }
     
@@ -231,8 +239,17 @@ export default function PlaylistDetailScreen({ route, navigation }) {
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a1a', '#2a2a2a', '#1a1a1a']} style={StyleSheet.absoluteFillObject} />
 
+      {/* Volet de verrouillage si pas authentifié */}
+      {!isAuthenticated && (
+        <View style={styles.lockOverlay}>
+          <Ionicons name="lock-closed" size={64} color="white" />
+          <Text style={styles.lockTitle}>Sign in required</Text>
+          <Text style={styles.lockSubtitle}>You must be logged in to access playlists</Text>
+        </View>
+      )}
+
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isAuthenticated && { opacity: 0.3 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -470,6 +487,31 @@ const styles = StyleSheet.create({
   transferContainer: { paddingVertical: 10 },
   transferRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   transferCol: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  lockSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   transferLeft: { marginRight: 16 },
   transferRight: { flex: 1, paddingHorizontal: 4, marginTop: 10 },
   transferIntro: { color: '#aaa', fontSize: 13, lineHeight: 18 },

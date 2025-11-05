@@ -37,6 +37,8 @@ export const useCrossPartySyncHost = (roomId, isHost) => {
         playbackStatus?.positionMillis || 0
       );
 
+      console.log(`🎵 [HOST SYNC] ${trackData.title}, playing=${isPlaying}, position=${playbackStatus?.positionMillis || 0}ms`);
+
       if (!result.success) {
         console.warn('Failed to sync playback:', result.error);
       }
@@ -155,6 +157,8 @@ export const useCrossPartySyncClient = (roomId, isHost) => {
       const roomIsPlaying = result.data.isPlaying || false;
       const roomPosition = result.data.currentTrack?.currentPosition || 0;
 
+      console.log(`🔍 [FIREBASE UPDATE] track=${roomTrack.title}, isPlaying=${roomIsPlaying}, position=${roomPosition}ms`);
+
       // Éviter les mises à jour infinies
       if (isApplyingSyncRef.current) {
         return;
@@ -199,25 +203,37 @@ export const useCrossPartySyncClient = (roomId, isHost) => {
               console.error('❌ Erreur lors du lancement de la piste:', err);
             });
             lastStateRef.current = { track: roomTrack, isPlaying: true, position: roomPosition };
+            console.log(`🎵 [NEW TRACK LOADED] lastStateRef.isPlaying initialisé à: true`);
             
             // Attendre que le son se charge pour synchroniser la position
+            // Réduire le délai à 400ms au lieu de 800ms pour éviter les coupures
             if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
             syncTimeoutRef.current = setTimeout(async () => {
               try {
-                if (roomPosition > 500) {
-                  console.log(`🎵 Client: Seeking to ${roomPosition}ms`);
+                const playbackStatus = getPlaybackStatus();
+                const currentPosition = playbackStatus?.positionMillis || 0;
+                const positionDiff = Math.abs(roomPosition - currentPosition);
+
+                // Seuil de tolérance: 5 secondes (5000ms) pour accepter la latence réseau
+                // Ne recale que si le décalage est vraiment significatif pour éviter les micro-coupures
+                console.log(`🎵 [LOAD SYNC] room=${roomPosition}ms, current=${currentPosition}ms, diff=${positionDiff}ms, seuil=5000ms, willSeek=${positionDiff > 5000}`);
+                if (positionDiff > 5000) {
+                  console.log(`🎵 Client: Décalage détecté (${positionDiff}ms), recalage à ${roomPosition}ms`);
                   await seekTo(roomPosition);
+                } else {
+                  console.log(`🎵 Client: Décalage acceptable (${positionDiff}ms), pas de recalage`);
                 }
               } catch (err) {
                 console.warn('⚠️ Erreur lors du seek:', err);
               }
-            }, 800);
+            }, 400);
           } else {
             // Le host est en pause, ne pas lancer la piste, la charger seulement
             console.log(`🎵 Client: Host est en pause, chargement sans lecture`);
             // Dans ce cas, on change le track dans le state local mais sans le jouer
             // Le guest sera en pause sur cette piste et pourra la jouer manuellement ou attendre que le host la lance
             lastStateRef.current = { track: roomTrack, isPlaying: false, position: roomPosition };
+            console.log(`🎵 [NEW TRACK PAUSED] lastStateRef.isPlaying initialisé à: false`);
             // Optionnel: charger la piste en arrière-plan si disponible
             // Pour maintenant on attend juste que l'état change
           }
@@ -230,23 +246,31 @@ export const useCrossPartySyncClient = (roomId, isHost) => {
             lastStateRef.current = { track: roomTrack, isPlaying: isTrackPlaying(), position: roomPosition };
           }
 
+          console.log(`🔄 [STATE COMPARISON] lastState.isPlaying=${lastState.isPlaying}, roomIsPlaying=${roomIsPlaying}, willChange=${lastState.isPlaying !== roomIsPlaying}`);
+
           // Vérifier l'état de lecture
           if (lastState.isPlaying !== roomIsPlaying) {
-            console.log(`🎵 Client: État play/pause changé: ${roomIsPlaying ? 'PLAY' : 'PAUSE'}`);
+            console.log(`🔄 État play/pause changé: ${lastState.isPlaying} → ${roomIsPlaying}`);
             
             if (roomIsPlaying && !lastState.isPlaying) {
+              console.log(`🎵 [PLAY ACTION] Résumé: lastState=${lastState.isPlaying}, room=${roomIsPlaying}`);
               resumeTrack().catch(err => console.warn('⚠️ Resume failed:', err));
             } else if (!roomIsPlaying && lastState.isPlaying) {
+              console.log(`⏸️ [PAUSE ACTION] Pause: lastState=${lastState.isPlaying}, room=${roomIsPlaying}`);
               pauseTrack().catch(err => console.warn('⚠️ Pause failed:', err));
             }
             
             lastStateRef.current.isPlaying = roomIsPlaying;
+          } else {
+            console.log(`🔄 [NO STATE CHANGE] lastState=${lastState.isPlaying}, room=${roomIsPlaying}`);
           }
           
           // Vérifier si le position a changé significativement (seek)
           const positionDiff = Math.abs((lastState.position || 0) - roomPosition);
-          if (positionDiff > 3000) { // Si plus de 3 secondes de différence
-            console.log(`🎵 Client: Seek detected, aligning position to ${roomPosition}ms`);
+          // Seuil de tolérance: 5 secondes (5000ms) pour accepter la latence réseau
+          console.log(`🎵 [SYNC DEBUG] Position: local=${lastState.position}ms, room=${roomPosition}ms, diff=${positionDiff}ms, seuil=5000ms, willSeek=${positionDiff > 5000}`);
+          if (positionDiff > 5000) {
+            console.log(`🎵 Client: Décalage de ${positionDiff}ms détecté, recalage à ${roomPosition}ms`);
             seekTo(roomPosition).catch(err => {
               console.warn('⚠️ Seek failed (sound may not be loaded):', err);
             });

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Alert,
   ActivityIndicator,
   Image,
 } from 'react-native';
@@ -18,6 +17,7 @@ import crossPartyService from '../src/services/crossPartyService';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import { useAutoPlayQueue } from '../src/hooks/useAutoPlayQueue';
 import { playTrack } from '../src/api/player';
+import { useAlert } from '../src/components/CustomAlert';
 
 export default function PartyRoomScreen({ route, navigation }) {
   const { roomId } = route.params;
@@ -30,6 +30,7 @@ export default function PartyRoomScreen({ route, navigation }) {
   const [queue, setQueue] = useState([]);
   const [showQueue, setShowQueue] = useState(false);
   const { isTablet } = useDeviceType();
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     // Get current room info
@@ -131,7 +132,7 @@ export default function PartyRoomScreen({ route, navigation }) {
   const handleRemoveFromQueue = async (queueId, trackTitle) => {
     const result = await crossPartyService.removeFromQueue(queueId);
     if (!result.success) {
-      Alert.alert('Error', result.error || 'Failed to remove from queue');
+      showAlert({ title: 'Error', message: result.error || 'Failed to remove from queue', type: 'error' });
     }
   };
 
@@ -140,7 +141,7 @@ export default function PartyRoomScreen({ route, navigation }) {
     if (result.success) {
       setIsHost(false);
     } else {
-      Alert.alert('Error', result.error || 'Failed to transfer host');
+      showAlert({ title: 'Error', message: result.error || 'Failed to transfer host', type: 'error' });
     }
   };
 
@@ -155,7 +156,7 @@ export default function PartyRoomScreen({ route, navigation }) {
       setSyncStatus('✓ Synced!');
       setTimeout(() => setSyncStatus(''), 2000);
     } else {
-      Alert.alert('Error', 'Failed to sync music');
+      showAlert({ title: 'Error', message: 'Failed to sync music', type: 'error' });
       setSyncStatus('');
     }
   };

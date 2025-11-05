@@ -30,12 +30,14 @@ const app = getApps()[0];
 // Initialisation de l'authentification avec persistence AsyncStorage
 let auth;
 try {
-  auth = getAuth(app);
-} catch (error) {
-  // Si getAuth échoue, initialiser avec persistence
+  // Toujours utiliser initializeAuth avec persistence pour React Native
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
+} catch (error) {
+  // Si déjà initialisé, utiliser getAuth
+  console.log('Auth déjà initialisé, utilisation de getAuth()');
+  auth = getAuth(app);
 }
 
 const db = getFirestore(app);
@@ -111,7 +113,19 @@ class AuthService {
     try {
       await signOut(this.auth);
       await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('user_session'); // Aussi nettoyer la session
+      
+      // Nettoyer toutes les données locales de l'utilisateur
+      await AsyncStorage.removeItem('hedgehop_playlists'); // Playlists
+      await AsyncStorage.removeItem('favorites'); // Favoris
+      await AsyncStorage.removeItem('@user_stats'); // Statistiques
+      await AsyncStorage.removeItem('@listening_history'); // Historique d'écoute
+      
       this.currentUser = null;
+      
+      // Notifier tous les listeners
+      this.listeners.forEach(listener => listener(null));
+      
       return { success: true };
     } catch (error) {
       console.error('Erreur déconnexion:', error);
@@ -146,6 +160,17 @@ class AuthService {
         lastLogin: new Date().toISOString()
       };
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+      
+      // Aussi sauvegarder la session pour la persistance
+      const sessionData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        timestamp: new Date().toISOString()
+      };
+      await AsyncStorage.setItem('user_session', JSON.stringify(sessionData));
+      console.log('💾 Session sauvegardée pour:', user.email);
     } catch (error) {
       console.error('Erreur sauvegarde locale:', error);
     }
@@ -436,6 +461,93 @@ class AuthService {
       return null;
     } catch (error) {
       console.error('Erreur récupération statistiques:', error);
+      return null;
+    }
+  }
+
+  // Initialiser la persistance au démarrage
+  async initializePersistence() {
+    try {
+      // Vérifier s'il y a une session sauvegardée localement
+      const savedUser = await AsyncStorage.getItem('user_session');
+      
+      if (savedUser) {
+        const userSession = JSON.parse(savedUser);
+        console.log('📱 Session trouvée localement pour:', userSession.email);
+        
+        // Attendre que Firebase recupère la session
+        return new Promise((resolve) => {
+          let resolved = false;
+          
+          const unsubscribe = onAuthStateChanged(this.auth, (firebaseUser) => {
+            if (!resolved && firebaseUser) {
+              console.log('✅ Firebase a restauré l\'utilisateur:', firebaseUser.email);
+              this.currentUser = firebaseUser;
+              this.saveUserToStorage(firebaseUser);
+              resolved = true;
+              unsubscribe();
+              resolve(firebaseUser);
+            }
+          });
+          
+          // Timeout de 10 secondes pour laisser le temps à Firebase
+          const timeoutId = setTimeout(() => {
+            if (!resolved) {
+              console.log('⏱️ Timeout attendant Firebase, vérification...');
+              resolved = true;
+              unsubscribe();
+              
+              // Vérifier si Firebase a pu charger le user
+              if (this.auth.currentUser) {
+                console.log('✅ Firebase a chargé le user:', this.auth.currentUser.email);
+                this.currentUser = this.auth.currentUser;
+                resolve(this.auth.currentUser);
+              } else {
+                console.log('❌ Aucun utilisateur trouvé');
+                AsyncStorage.removeItem('user_session');
+                resolve(null);
+              }
+            }
+          }, 10000);
+        });
+      } else {
+        console.log('🆕 Aucune session sauvegardée, vérification Firebase...');
+        
+        // Pas de session sauvegardée, vérifier si Firebase a un user courant
+        return new Promise((resolve) => {
+          let resolved = false;
+          
+          const unsubscribe = onAuthStateChanged(this.auth, (firebaseUser) => {
+            if (!resolved) {
+              resolved = true;
+              this.currentUser = firebaseUser;
+              
+              if (firebaseUser) {
+                console.log('✅ Firebase user trouvé:', firebaseUser.email);
+                this.saveUserToStorage(firebaseUser);
+                resolve(firebaseUser);
+              } else {
+                console.log('❌ Pas d\'utilisateur connecté');
+                resolve(null);
+              }
+              
+              unsubscribe();
+            }
+          });
+          
+          // Timeout de 5 secondes si pas de réponse Firebase
+          const timeoutId = setTimeout(() => {
+            if (!resolved) {
+              console.log('⏱️ Timeout Firebase');
+              resolved = true;
+              unsubscribe();
+              resolve(null);
+            }
+          }, 5000);
+        });
+      }
+    } catch (error) {
+      console.error('Erreur initialisation persistance:', error);
       return null;
     }
   }

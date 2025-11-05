@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../src/config/firebaseConfig';
 import { ref as dbRef, query as dbQuery, orderByChild, limitToLast, onValue } from 'firebase/database';
+import { useAlert } from '../src/components/CustomAlert';
 
 const DONATION_URL = 'https://buymeacoffee.com/nnuoa15xct'; // TODO: replace with your actual donation link
 const SUPPORT_EMAIL = 'kaelig.camesella@gmail.com'; // TODO: replace or remove if not needed
 
 export default function HelpSupportScreen({ navigation }) {
+  const { showAlert } = useAlert();
   const openDonation = async () => {
     // Open an in-app WebView screen to show the donation page
     navigation.navigate('Donation');
@@ -71,7 +73,7 @@ export default function HelpSupportScreen({ navigation }) {
       if (!supported) throw new Error('Cannot open email app');
       await Linking.openURL(mailto);
     } catch (e) {
-      Alert.alert('Error', 'Unable to open your email app.');
+      showAlert({ title: 'Error', message: 'Unable to open your email app.', type: 'error' });
     }
   };
 

@@ -24,6 +24,8 @@ import { getFavorites, toggleFavorite, favEmitter } from '../src/api/favorites';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import authService from '../src/services/auth';
 import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
+import crossPartyService from '../src/services/crossPartyService';
+import { useAlert } from '../src/components/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -45,8 +47,12 @@ export default function FavoritesScreen() {
   const [playlists, setPlaylists] = useState([]);
   const [newPlName, setNewPlName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
+  // Cross-party state
+  const [isInCrossPartyRoom, setIsInCrossPartyRoom] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const { isTablet } = useDeviceType();
+  const { showAlert } = useAlert();
   console.log('🚀 Mode tablette:', isTablet);
 
   const imageScale = useRef(new Animated.Value(0.8)).current;
@@ -145,7 +151,38 @@ export default function FavoritesScreen() {
     }, [])
   );
 
-  // --- Animations d’entrée ---
+  // --- Détecter si l'utilisateur est dans une room cross-party ---
+  useEffect(() => {
+    const checkCrossPartyStatus = () => {
+      const roomInfo = crossPartyService.getCurrentRoomInfo();
+      setIsInCrossPartyRoom(!!roomInfo?.roomId);
+    };
+
+    // Vérifier au chargement
+    checkCrossPartyStatus();
+
+    // Écouter les changements de room
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((status) => {
+      checkCrossPartyStatus();
+    });
+
+    return () => unsubscribe?.();
+  }, []);
+
+  // --- Vérifier l'authentification ---
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+
+    // Écouter les changements d'authentification en temps réel
+    const unsubscribe = authService.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
+
+    return () => unsubscribe?.();
+  }, []);
+
+  // --- Animations d'entrée ---
   useEffect(() => {
     Animated.sequence([
       Animated.spring(imageScale, { toValue: 1, useNativeDriver: true }),
@@ -157,11 +194,27 @@ export default function FavoritesScreen() {
   }, []);
 
   const handleFavorite = async (track) => {
+    if (!isAuthenticated) {
+      showAlert({
+        title: '❌ Non connecté',
+        message: 'Vous devez être connecté pour ajouter des favoris',
+        type: 'info',
+      });
+      return;
+    }
     await toggleFavorite(track);
   };
 
   // --- Ajouter à une playlist ---
   const openAddToPlaylist = (track) => {
+    if (!isAuthenticated) {
+      showAlert({
+        title: '❌ Non connecté',
+        message: 'Vous devez être connecté pour ajouter des pistes aux playlists',
+        type: 'info',
+      });
+      return;
+    }
     setSelectedTrack(track);
     setNewPlName('');
     setPlistModalVisible(true);
@@ -197,6 +250,73 @@ export default function FavoritesScreen() {
     playTrack(playable[0], 0);
   };
 
+  // --- Lecture d'une piste individuelle (avec gestion cross-party) ---
+  const handleTrackPlay = async (track, trackIndex = 0) => {
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    const inRoom = !!roomInfo?.roomId;
+
+    if (inRoom) {
+      // En room → ajouter à la queue
+      await handleAddToQueue(track);
+    } else {
+      // Pas en room → lancer la piste
+      setGlobalTracks(favorites.filter((t) => t.url));
+      playTrack(track, trackIndex);
+    }
+  };
+
+  // --- Ajouter une piste à la queue cross-party ---
+  const handleAddToQueue = async (track) => {
+    if (!isInCrossPartyRoom) {
+      showAlert({
+        title: '❌ Pas dans une room',
+        message: 'Vous devez être dans une room cross-party pour ajouter des pistes à la queue',
+        type: 'info',
+      });
+      return;
+    }
+
+    try {
+      const trackData = {
+        id: track.id || track.trackId,
+        title: track.title || track.name,
+        artist: track.artist || track.artistName,
+        album: track.album || track.albumName,
+        duration: track.duration || 0,
+        uri: track.uri || track.url,
+        url: track.uri || track.url,
+        image: track.image || track.albumArt,
+      };
+
+      const roomInfo = crossPartyService.getCurrentRoomInfo();
+      const result = await crossPartyService.addToQueue(
+        trackData,
+        roomInfo.userId,
+        roomInfo.isHost ? 'Host' : 'You'
+      );
+      if (result.success) {
+        showAlert({
+          title: '✅ Ajoutée à la queue',
+          message: `${track.title} a été ajoutée à la queue`,
+          type: 'success',
+        });
+      } else {
+        showAlert({
+          title: '❌ Erreur',
+          message: result.error || 'Impossible d\'ajouter à la queue',
+          type: 'error',
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+      showAlert({
+        title: '❌ Erreur',
+        message: error.message || 'Une erreur est survenue',
+        type: 'error',
+      });
+    }
+  };
+
   // --- Générer la mosaïque du fond ---
   const getMosaicGrid = () => {
     const imgs = favorites.slice(0, 4).map((f) => f.image);
@@ -209,10 +329,18 @@ export default function FavoritesScreen() {
   
   return (
     <View style={styles.container}>
+      {/* Volet de verrouillage si pas authentifié */}
+      {!isAuthenticated && (
+        <View style={styles.lockOverlay}>
+          <Ionicons name="lock-closed" size={64} color="white" />
+          <Text style={styles.lockTitle}>Sign in required</Text>
+          <Text style={styles.lockSubtitle}>You must be logged in to view your favorites</Text>
+        </View>
+      )}
 
       
       {/* 🌌 Fond mosaïque + flou */}
-      <View style={styles.backgroundWrapper}>
+      <View style={[styles.backgroundWrapper, !isAuthenticated && styles.blurred]}>
         {mosaicImages.map((img, i) => (
           <Image
             key={i}
@@ -350,8 +478,7 @@ export default function FavoritesScreen() {
                     ]}
                     onPress={() => {
                       if (playable) {
-                        setGlobalTracks(favorites.filter(t => t.url));
-                        playTrack(track);
+                        handleTrackPlay(track, index);
                       }
                     }}
                     disabled={!playable}
@@ -414,8 +541,9 @@ export default function FavoritesScreen() {
                 <View key={track.favId || index} style={styles.trackWrapper}>
                   <TouchableOpacity
                     onPress={() => {
-                      setGlobalTracks([]);
-                      playTrack(track)
+                      if (playable) {
+                        handleTrackPlay(track, index);
+                      }
                     }}
                     disabled={!playable}
                     style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}
@@ -519,7 +647,9 @@ const styles = StyleSheet.create({
   mosaicTile: { width: '50%', height: '50%' },
   darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
 
-  // === HEADER ===
+  // === ROOM BADGE ===
+  // Supprimé - maintenant dans App.js
+  
   headerSection: { alignItems: 'center', marginTop: 110, marginBottom: 30 },
   mosaicContainer: {
     width: Math.min(width * 0.6, 300), // Taille max pour tablette
@@ -912,6 +1042,34 @@ const styles = StyleSheet.create({
   modalCreateButtonText: {
     color: '#000',
     fontWeight: '700',
+  },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  lockSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  blurred: {
+    opacity: 0.3,
   },
   modalClose: {
     alignSelf: 'center',

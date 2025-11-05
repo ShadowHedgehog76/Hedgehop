@@ -10,12 +10,12 @@ import {
   FlatList,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import { useAlert } from '../src/components/CustomAlert';
 import {
   playerEmitter,
   getCurrentTrack,
@@ -32,6 +32,7 @@ import {
 } from '../src/api/player';
 import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
 import crossPartyService from '../src/services/crossPartyService';
+import authService from '../src/services/auth';
 
 const { width } = Dimensions.get('window');
 const safeImage = 'https://i.imgur.com/ODLC1hY.jpeg';
@@ -46,8 +47,10 @@ export default function PlayerScreen({ navigation }) {
   const [crossList, setCrossList] = useState([]);
   const [isInRoom, setIsInRoom] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const { isTablet, dimensions, isLandscape } = useDeviceType();
+  const { showAlert } = useAlert();
   const scrollXTitle = useRef(new Animated.Value(0)).current;
   const scrollXAlbum = useRef(new Animated.Value(0)).current;
   const [plistModal, setPlistModal] = useState(false);
@@ -70,6 +73,12 @@ export default function PlayerScreen({ navigation }) {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe.remove();
     };
+  }, []);
+
+  // Vérifier l'authentification
+  useEffect(() => {
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
   }, []);
 
   useEffect(() => {
@@ -172,7 +181,7 @@ export default function PlayerScreen({ navigation }) {
   const togglePlayPause = async () => {
     // Les guests ne peuvent pas contrôler la musique dans une room
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can control playback in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can control playback in a party room.', type: 'warning' });
       return;
     }
 
@@ -194,7 +203,7 @@ export default function PlayerScreen({ navigation }) {
   const handlePlayCross = (item) => {
     // Les guests ne peuvent pas changer la musique dans une room
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can change the track in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can change the track in a party room.', type: 'warning' });
       return;
     }
 
@@ -223,7 +232,7 @@ export default function PlayerScreen({ navigation }) {
   const handleSeekTo = (position) => {
     // Les guests ne peuvent pas contrôler la position dans une room
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can seek in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can seek in a party room.', type: 'warning' });
       return;
     }
     seekTo(position);
@@ -232,7 +241,7 @@ export default function PlayerScreen({ navigation }) {
   const handlePlayNext = () => {
     // Les guests ne peuvent pas contrôler la queue dans une room
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can skip tracks in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can skip tracks in a party room.', type: 'warning' });
       return;
     }
     playNext();
@@ -241,7 +250,7 @@ export default function PlayerScreen({ navigation }) {
   const handlePlayPrevious = () => {
     // Les guests ne peuvent pas contrôler la queue dans une room
     if (isInRoom && !isHost) {
-      Alert.alert('Read Only', 'Only the host can skip tracks in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can skip tracks in a party room.', type: 'warning' });
       return;
     }
     playPrevious();
@@ -377,8 +386,12 @@ export default function PlayerScreen({ navigation }) {
               <Text style={styles.crossBadgeTextTop}>{crossCount}</Text>
             </View>
           )}
-          <TouchableOpacity style={styles.addBtn} onPress={openAddToPlaylist}>
-            <Ionicons name="add-circle" size={26} color="#fff" />
+          <TouchableOpacity 
+            style={styles.addBtn} 
+            onPress={openAddToPlaylist}
+            disabled={!isAuthenticated}
+          >
+            <Ionicons name="add-circle" size={26} color={isAuthenticated ? "#fff" : "#555"} />
           </TouchableOpacity>
         </View>
 

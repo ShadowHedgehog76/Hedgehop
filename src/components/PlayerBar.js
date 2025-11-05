@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useDeviceType } from '../hooks/useDeviceType';
+import { useAlert } from './CustomAlert';
 import {
   playerEmitter,
   getCurrentTrack,
@@ -21,6 +22,7 @@ const { width } = Dimensions.get('window');
 export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToPlayer }) {
   const navigation = useNavigation();
   const { isTablet } = useDeviceType();
+  const { showAlert } = useAlert();
   const [track, setTrack] = useState(getCurrentTrack());
   const [isPlaying, setIsPlaying] = useState(isTrackPlaying());
   const [status, setStatus] = useState(getPlaybackStatus());
@@ -117,7 +119,7 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
 
     // Les guests ne peuvent pas contrôler la musique dans une room
     if (currentIsInRoom && !currentIsHost) {
-      Alert.alert('Read Only', 'Only the host can control playback in a party room.');
+      showAlert({ title: 'Read Only', message: 'Only the host can control playback in a party room.', type: 'warning' });
       return;
     }
 

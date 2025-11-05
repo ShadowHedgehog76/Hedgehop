@@ -5,15 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Share,
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAlert } from '../src/components/CustomAlert';
 
 export default function DevScreen({ navigation, onDisableDevMode }) {
   const [activeTab, setActiveTab] = useState('info');
+  const { showAlert } = useAlert();
 
   const devInfo = {
     appVersion: '1.0.0',
@@ -73,21 +74,22 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
   };
 
   const clearCache = () => {
-    Alert.alert(
-      'Clear Cache',
-      'Vider le cache de l\'application ?',
-      [
+    showAlert({
+      title: 'Clear Cache',
+      message: 'Vider le cache de l\'application ?',
+      type: 'warning',
+      buttons: [
         { text: 'Annuler', style: 'cancel' },
         { 
           text: 'Vider', 
           style: 'destructive',
           onPress: () => {
             addLog('INFO - Cache cleared');
-            Alert.alert('✅ Cache vidé', 'Le cache de l\'application a été vidé avec succès.');
+            showAlert({ title: '✅ Cache vidé', message: 'Le cache de l\'application a été vidé avec succès.', type: 'success' });
           }
         },
       ]
-    );
+    });
   };
 
   const showLogs = () => {
@@ -97,9 +99,14 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
 
   const forceReload = () => {
     addLog('INFO - Force reload initiated');
-    Alert.alert('🔄 Rechargement', 'Application rechargée (simulation)', [
-      { text: 'OK', onPress: () => addLog('INFO - App reloaded successfully') }
-    ]);
+    showAlert({ 
+      title: '🔄 Rechargement', 
+      message: 'Application rechargée (simulation)', 
+      type: 'info',
+      buttons: [
+        { text: 'OK', onPress: () => addLog('INFO - App reloaded successfully') }
+      ]
+    });
   };
 
   const disableDevMode = () => {
@@ -351,7 +358,7 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         icon="volume-mute"
         onPress={() => {
           addLog('INFO - Audio cache cleared');
-          Alert.alert('✅ Cache vidé', 'Cache audio nettoyé avec succès');
+          showAlert({ title: '✅ Cache vidé', message: 'Cache audio nettoyé avec succès', type: 'success' });
         }}
         color="#ef4444"
       />
@@ -361,9 +368,14 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         icon="play"
         onPress={() => {
           addLog('INFO - Audio player test initiated');
-          Alert.alert('🎵 Audio Player', 'Test du lecteur audio en cours...', [
-            { text: 'OK', onPress: () => addLog('INFO - Audio player test completed') }
-          ]);
+          showAlert({ 
+            title: '🎵 Audio Player', 
+            message: 'Test du lecteur audio en cours...', 
+            type: 'info',
+            buttons: [
+              { text: 'OK', onPress: () => addLog('INFO - Audio player test completed') }
+            ]
+          });
         }}
         color="#3b82f6"
       />
@@ -374,7 +386,7 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         onPress={() => {
           addLog('INFO - Downloading missing assets...');
           setTimeout(() => addLog('INFO - Assets download completed'), 2000);
-          Alert.alert('📥 Téléchargement', 'Téléchargement des assets en cours...');
+          showAlert({ title: '📥 Téléchargement', message: 'Téléchargement des assets en cours...', type: 'info' });
         }}
         color="#f59e0b"
       />
@@ -385,10 +397,11 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         onPress={() => {
           addLog('INFO - Generating music analytics');
           const playablePercentage = Math.round((musicStats.playable / musicStats.tracks) * 100);
-          Alert.alert(
-            '📊 Analytics Musicales', 
-            `Catégories: ${musicStats.categories}\nAlbums: ${musicStats.albums}\nTracks: ${musicStats.tracks}\nJouables: ${musicStats.playable} (${playablePercentage}%)`
-          );
+          showAlert({ 
+            title: '📊 Analytics Musicales', 
+            message: `Catégories: ${musicStats.categories}\nAlbums: ${musicStats.albums}\nTracks: ${musicStats.tracks}\nJouables: ${musicStats.playable} (${playablePercentage}%)`,
+            type: 'info'
+          });
         }}
         color="#8b5cf6"
       />
@@ -419,10 +432,11 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         title="Reset All Data"
         icon="nuclear"
         onPress={() => {
-          Alert.alert(
-            '⚠️ Réinitialisation',
-            'Êtes-vous sûr de vouloir réinitialiser toutes les données ?',
-            [
+          showAlert({
+            title: '⚠️ Réinitialisation',
+            message: 'Êtes-vous sûr de vouloir réinitialiser toutes les données ?',
+            type: 'warning',
+            buttons: [
               { text: 'Annuler', style: 'cancel' },
               { 
                 text: 'Réinitialiser', 
@@ -431,11 +445,11 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
                   setLogs([]);
                   setMusicStats({ categories: 0, albums: 0, tracks: 0, playable: 0 });
                   addLog('WARNING - All data reset by user');
-                  Alert.alert('✅ Reset', 'Toutes les données ont été réinitialisées');
+                  showAlert({ title: '✅ Reset', message: 'Toutes les données ont été réinitialisées', type: 'success' });
                 }
               }
             ]
-          );
+          });
         }}
         color="#ef4444"
       />
@@ -445,10 +459,11 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
         icon="wifi"
         onPress={() => {
           addLog('INFO - Network inspector accessed');
-          Alert.alert(
-            '🌐 Network Info',
-            `Status: Connected\nType: WiFi\nLatency: ~${Math.floor(Math.random() * 50 + 10)}ms`
-          );
+          showAlert({
+            title: '🌐 Network Info',
+            message: `Status: Connected\nType: WiFi\nLatency: ~${Math.floor(Math.random() * 50 + 10)}ms`,
+            type: 'info'
+          });
         }}
         color="#22c55e"
       />
@@ -460,10 +475,11 @@ export default function DevScreen({ navigation, onDisableDevMode }) {
           addLog('INFO - Performance monitor accessed');
           const memoryUsage = Math.floor(Math.random() * 100 + 50);
           const renderTime = Math.floor(Math.random() * 20 + 5);
-          Alert.alert(
-            '📊 Performance',
-            `Memory: ${memoryUsage}MB\nRender Time: ${renderTime}ms\nFPS: 60`
-          );
+          showAlert({
+            title: '📊 Performance',
+            message: `Memory: ${memoryUsage}MB\nRender Time: ${renderTime}ms\nFPS: 60`,
+            type: 'info'
+          });
         }}
         color="#8b5cf6"
       />

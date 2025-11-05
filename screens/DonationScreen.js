@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
+import { useAlert } from '../src/components/CustomAlert';
 
 const DONATION_URL = 'https://buymeacoffee.com/devlumine';
 
 export default function DonationScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
+  const { showAlert } = useAlert();
 
   const openInBrowser = async () => {
     try {
@@ -14,7 +16,7 @@ export default function DonationScreen({ navigation }) {
       if (!supported) throw new Error('Cannot open URL');
       await Linking.openURL(DONATION_URL);
     } catch (e) {
-      Alert.alert('Error', 'Unable to open your browser.');
+      showAlert({ title: 'Error', message: 'Unable to open your browser.', type: 'error' });
     }
   };
 

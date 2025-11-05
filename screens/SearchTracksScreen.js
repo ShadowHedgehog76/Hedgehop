@@ -209,6 +209,7 @@ export default function SearchTracksScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+
   header: {
     paddingTop: 50,
     paddingBottom: 10,

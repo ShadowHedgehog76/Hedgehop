@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Modal,
   Share,
@@ -16,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import crossPartyService from '../src/services/crossPartyService';
 import authService from '../src/services/auth';
+import { useAlert } from '../src/components/CustomAlert';
 
 export default function CrossPartyScreen({ navigation }) {
   const [roomCode, setRoomCode] = useState('');
@@ -25,6 +25,8 @@ export default function CrossPartyScreen({ navigation }) {
   const [generatedCode, setGeneratedCode] = useState('');
   const [scanning, setScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà dans une room
@@ -34,6 +36,10 @@ export default function CrossPartyScreen({ navigation }) {
       navigation.replace('PartyRoom', { roomId: roomInfo.roomId });
       return;
     }
+
+    // Vérifier l'authentification
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
 
     // Récupérer l'utilisateur actuel
     const unsubscribe = authService.onAuthStateChanged((currentUser) => {
@@ -45,7 +51,7 @@ export default function CrossPartyScreen({ navigation }) {
 
   const handleCreateRoom = async () => {
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to create a room');
+      showAlert({ title: 'Error', message: 'You must be logged in to create a room', type: 'error' });
       return;
     }
 
@@ -66,10 +72,10 @@ export default function CrossPartyScreen({ navigation }) {
           navigation.navigate('PartyRoom', { roomId: result.roomId });
         }, 2000);
       } else {
-        Alert.alert('Error', result.error || 'Failed to create room');
+        showAlert({ title: 'Error', message: result.error || 'Failed to create room', type: 'error' });
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      showAlert({ title: 'Error', message: error.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -77,12 +83,12 @@ export default function CrossPartyScreen({ navigation }) {
 
   const handleJoinRoom = async () => {
     if (!roomCode.trim()) {
-      Alert.alert('Error', 'Please enter a room code');
+      showAlert({ title: 'Error', message: 'Please enter a room code', type: 'error' });
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to join a room');
+      showAlert({ title: 'Error', message: 'You must be logged in to join a room', type: 'error' });
       return;
     }
 
@@ -96,10 +102,10 @@ export default function CrossPartyScreen({ navigation }) {
       if (result.success) {
         navigation.navigate('PartyRoom', { roomId: result.roomId });
       } else {
-        Alert.alert('Error', result.error || 'Failed to join room');
+        showAlert({ title: 'Error', message: result.error || 'Failed to join room', type: 'error' });
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      showAlert({ title: 'Error', message: error.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -134,10 +140,26 @@ export default function CrossPartyScreen({ navigation }) {
       colors={['#0a0a0a', '#1a1a2e', '#16213e']}
       style={styles.container}
     >
-      <View style={styles.header}>
+      {/* Volet de verrouillage si pas authentifié */}
+      {!isAuthenticated && (
+        <View style={styles.lockOverlay}>
+          <Ionicons name="lock-closed" size={64} color="white" />
+          <Text style={styles.lockTitle}>Sign in required</Text>
+          <Text style={styles.lockSubtitle}>You must be logged in to use CrossParty</Text>
+          <TouchableOpacity 
+            style={styles.lockBackBtn} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+            <Text style={styles.lockBackText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={[styles.header, !isAuthenticated && { opacity: 0.3 }]}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.reset({ index: 0, routes: [{ name: 'YouMain' }] })}
+          onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={28} color="#fff" />
         </TouchableOpacity>
@@ -145,7 +167,7 @@ export default function CrossPartyScreen({ navigation }) {
         <View style={styles.backButton} />
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, !isAuthenticated && { opacity: 0.3 }]}>
         <View style={styles.iconContainer}>
           <Ionicons name="people" size={80} color="#1f4cff" />
         </View>
@@ -224,16 +246,6 @@ export default function CrossPartyScreen({ navigation }) {
               <Text style={{ color: '#fff', fontSize: 18 }}>Cancel</Text>
             </TouchableOpacity>
             <Text style={{ color: '#fff', fontSize: 14, marginTop: 10 }}>Scan a room QR code</Text>
-          </View>
-        )}
-
-        {/* Info */}
-        {!user && (
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={20} color="#ffa500" />
-            <Text style={styles.infoText}>
-              You need to be logged in to use CrossParty
-            </Text>
           </View>
         )}
       </View>
@@ -463,7 +475,47 @@ const styles = StyleSheet.create({
   shareButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  lockBackBtn: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  lockBackText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  lockSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   modalFooter: {
     fontSize: 12,

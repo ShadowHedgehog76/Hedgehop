@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { View, StyleSheet, Alert, Text, TouchableOpacity } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // --- Import des écrans principaux ---
 import HomeStack from './screens/HomeStack';
@@ -33,6 +34,80 @@ import crossPartyService from './src/services/crossPartyService';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Composant RoomBadge - affiche un badge quand l'utilisateur est dans une room
+function RoomBadge({ roomInfo }) {
+  const navigation = useNavigation();
+  
+  if (!roomInfo?.roomId) return null;
+
+  const handlePress = () => {
+    navigation.navigate('PartyRoom', { roomId: roomInfo.roomId });
+  };
+
+  return (
+    <TouchableOpacity 
+      style={[styles.roomBadgeContainer, { backgroundColor: '#4A90E2' }]}
+      onPress={handlePress}
+      activeOpacity={0.8}
+    >
+      <LinearGradient
+        colors={['rgba(255,255,255,0.25)', 'transparent']}
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          top: 0,
+          height: '50%',
+          borderTopLeftRadius: 14,
+          borderBottomLeftRadius: 14,
+          borderTopRightRadius: 26,
+          borderBottomRightRadius: 26,
+        }}
+      />
+      <Ionicons name="people" size={16} color="#fff" style={{ marginRight: 6 }} />
+      <Text style={styles.roomBadgeText}>In Room</Text>
+    </TouchableOpacity>
+  );
+}
+
+function RoomBadgeContainer({ roomInfo }) {
+  return <RoomBadge roomInfo={roomInfo} />;
+}
+
+// Composant qui wraps le contenu de navigation avec le badge
+function NavigationContentWrapper() {
+  const [roomInfo, setRoomInfo] = useState({ roomId: null, isHost: false });
+
+  useEffect(() => {
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((data) => {
+      setRoomInfo({ 
+        roomId: data.roomId, 
+        isHost: data.isHost 
+      });
+    });
+
+    const info = crossPartyService.getCurrentRoomInfo();
+    setRoomInfo({ 
+      roomId: info.roomId, 
+      isHost: info.isHost 
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe.remove();
+    };
+  }, []);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainLayout" component={MainLayout} />
+        <Stack.Screen name="PlayerScreen" component={PlayerScreen} />
+        <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
+        <Stack.Screen name="DevScreen" component={DevScreen} />
+      </Stack.Navigator>
+      <RoomBadgeContainer roomInfo={roomInfo} />
+    </View>
+  );
+}
 
 // Composant pour gérer la synchronisation en arrière-plan
 function BackgroundSyncProvider({ children }) {
@@ -291,6 +366,16 @@ function MainLayout({ navigation }) {
 }
 
 function AppContent() {
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialiser la persistance au démarrage
+  useEffect(() => {
+    authService.initializePersistence().then(() => {
+      console.log('🔐 Persistance initialisée');
+      setIsInitialized(true);
+    });
+  }, []);
+
   // Écouter les changements d'état d'authentification
   useEffect(() => {
     const unsubscribe = authService.onAuthStateChange((user) => {
@@ -308,18 +393,19 @@ function AppContent() {
     return () => unsubscribe();
   }, []);
 
+  if (!isInitialized) {
+    // Écran de chargement pendant la restauration de la session
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0f0f0f', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontSize: 16 }}>Initializing...</Text>
+      </View>
+    );
+  }
+
   return (
     <BackgroundSyncProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainLayout" component={MainLayout} />
-          <Stack.Screen name="PlayerScreen" component={PlayerScreen} />
-
-          {/* ✅ ajouté ici, accessible depuis n'importe quel onglet */}
-          <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
-          <Stack.Screen name="DevScreen" component={DevScreen} />
-          {/* CrossParty supprimé */}
-        </Stack.Navigator>
+        <NavigationContentWrapper />
       </NavigationContainer>
     </BackgroundSyncProvider>
   );
@@ -335,4 +421,34 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
+  roomBadgeContainer: {
+    position: 'absolute',
+    top: 150,
+    right: -80,
+    borderTopLeftRadius: 26,
+    borderBottomLeftRadius: 26,
+    borderTopRightRadius: 26,
+    borderBottomRightRadius: 26,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    paddingLeft: 12,
+    paddingRight: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 60,
+    borderWidth: 3,
+    borderColor: 'rgba(0,0,0,0.6)',
+    overflow: 'hidden',
+    zIndex: 999,
+  },
+  roomBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+    marginLeft: 8,
+    textShadowColor: 'rgba(255,255,255,0.35)',
+    textShadowRadius: 4,
+  },
 });

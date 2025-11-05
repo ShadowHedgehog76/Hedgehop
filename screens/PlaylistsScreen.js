@@ -8,13 +8,18 @@ import LZString from 'lz-string';
 import { getCatalog } from '../src/api/catalog';
 import { database } from '../src/config/firebaseConfig';
 import { ref as dbRef, get as dbGet, child as dbChild, remove as dbRemove } from 'firebase/database';
+import crossPartyService from '../src/services/crossPartyService';
+import authService from '../src/services/auth';
+import { useAlert } from '../src/components/CustomAlert';
 
 export default function PlaylistsScreen({ navigation }) {
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const processingRef = useRef(false);
+  const { showAlert } = useAlert();
 
   const load = async () => {
     setLoading(true);
@@ -22,6 +27,12 @@ export default function PlaylistsScreen({ navigation }) {
     setPlaylists(data);
     setLoading(false);
   };
+
+  useEffect(() => {
+    // Vérifier l'authentification
+    const isAuth = authService.isAuthenticated();
+    setIsAuthenticated(isAuth);
+  }, []);
 
   useEffect(() => {
     load();
@@ -247,7 +258,23 @@ export default function PlaylistsScreen({ navigation }) {
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a1a', '#2a2a2a', '#1a1a1a']} style={StyleSheet.absoluteFillObject} />
 
-      <View style={styles.header}>
+      {/* Volet de verrouillage si pas authentifié */}
+      {!isAuthenticated && (
+        <View style={styles.lockOverlay}>
+          <Ionicons name="lock-closed" size={64} color="white" />
+          <Text style={styles.lockTitle}>Sign in required</Text>
+          <Text style={styles.lockSubtitle}>You must be logged in to manage playlists</Text>
+          <TouchableOpacity 
+            style={styles.lockBackBtn} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+            <Text style={styles.lockBackText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={[styles.header, !isAuthenticated && { opacity: 0.3 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -260,16 +287,16 @@ export default function PlaylistsScreen({ navigation }) {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.createBtn} onPress={handleCreate}>
-          <Ionicons name="add" size={20} color="#fff" />
-          <Text style={styles.createText}>New playlist</Text>
+        <TouchableOpacity style={styles.createBtn} onPress={handleCreate} disabled={!isAuthenticated}>
+          <Ionicons name="add" size={20} color={isAuthenticated ? "#fff" : "#555"} />
+          <Text style={[styles.createText, !isAuthenticated && { color: '#555' }]}>New playlist</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
         data={playlists}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={playlists.length === 0 ? styles.emptyList : { padding: 16 }}
+        contentContainerStyle={[playlists.length === 0 ? styles.emptyList : { padding: 16 }, !isAuthenticated && { opacity: 0.3 }]}
         renderItem={renderItem}
         ListEmptyComponent={() => (
           <View style={styles.empty}>
@@ -305,6 +332,7 @@ export default function PlaylistsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  
   header: {
     paddingTop: 50,
     paddingHorizontal: 16,
@@ -357,6 +385,46 @@ const styles = StyleSheet.create({
   },
   emptyList: { flexGrow: 1 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  lockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  lockBackBtn: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  lockBackText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  lockTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  lockSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   emptyText: { color: '#ccc', fontSize: 16, marginTop: 12, fontWeight: '600' },
   emptySub: { color: '#888', fontSize: 12, marginTop: 4, textAlign: 'center' },
   scannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
