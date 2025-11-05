@@ -47,7 +47,7 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
 
     return () => {
       console.log(`🎵 PlayerBar: Cleanup room subscription`);
-      if (typeof unsubscribe === 'function') unsubscribe.remove();
+      if (typeof unsubscribe?.remove === 'function') unsubscribe.remove();
     };
   }, []);
 

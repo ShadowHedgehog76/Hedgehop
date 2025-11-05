@@ -71,7 +71,7 @@ export default function PlayerScreen({ navigation }) {
     });
 
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe.remove();
+      if (typeof unsubscribe?.remove === 'function') unsubscribe.remove();
     };
   }, []);
 
@@ -527,8 +527,12 @@ export default function PlayerScreen({ navigation }) {
         <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="close" size={26} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addBtn} onPress={openAddToPlaylist}>
-          <Ionicons name="add-circle" size={26} color="#fff" />
+        <TouchableOpacity 
+          style={styles.addBtn} 
+          onPress={openAddToPlaylist}
+          disabled={!isAuthenticated}
+        >
+          <Ionicons name="add-circle" size={26} color={isAuthenticated ? "#fff" : "#555"} />
         </TouchableOpacity>
       </View>
 

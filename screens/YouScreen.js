@@ -97,7 +97,6 @@ export default function YouScreen({ navigation }) {
         setShowLogin(false);
         setEmail('');
         setPassword('');
-        showAlert({ title: 'Success', message: 'Signed in! Your favorites and stats have been synchronized.', type: 'success' });
       } else {
         showAlert({ title: 'Error', message: result.error, type: 'error' });
       }

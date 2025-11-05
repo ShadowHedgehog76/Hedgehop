@@ -69,7 +69,7 @@ export default function AlbumScreen({ route, navigation }) {
     });
 
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe.remove();
+      if (typeof unsubscribe?.remove === 'function') unsubscribe.remove();
     };
   }, []);
 

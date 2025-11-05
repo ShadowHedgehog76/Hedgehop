@@ -166,7 +166,7 @@ export default function FavoritesScreen() {
       checkCrossPartyStatus();
     });
 
-    return () => unsubscribe?.();
+    return () => unsubscribe?.remove?.();
   }, []);
 
   // --- Vérifier l'authentification ---
