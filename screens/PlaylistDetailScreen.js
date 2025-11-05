@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, TextInput, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, TextInput, Animated, Easing, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { getPlaylists, removeTrack, deletePlaylist, renamePlaylist } from '../src/api/playlists';
@@ -9,6 +9,7 @@ import LZString from 'lz-string';
 import { database } from '../src/config/firebaseConfig';
 import { ref as dbRef, set as dbSet, onValue as dbOnValue, remove as dbRemove } from 'firebase/database';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import crossPartyService from '../src/services/crossPartyService';
 
 // Placeholder fiable
 const safeImage = 'https://via.placeholder.com/96x96/222/EEEEEE.png?text=%E2%99%AA';
@@ -26,6 +27,10 @@ export default function PlaylistDetailScreen({ route, navigation }) {
   const unsubscribeRef = useRef(null);
   const { isTablet } = useDeviceType();
   const haloAnim = useRef(new Animated.Value(0)).current;
+
+  // Vérifier si on est un guest en crossparty
+  const roomInfo = crossPartyService.getCurrentRoomInfo();
+  const isGuestInCrossParty = roomInfo.roomId && !roomInfo.isHost;
 
   const load = async () => {
     const lists = await getPlaylists();
@@ -142,23 +147,52 @@ export default function PlaylistDetailScreen({ route, navigation }) {
 
   const handlePlayAll = () => {
     if (!tracks.length) return;
+    
+    // Vérifier si on est un guest en crossparty
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    if (roomInfo.roomId && !roomInfo.isHost) {
+      Alert.alert('Access Denied', 'Only the host can change the music');
+      return;
+    }
+    
     setGlobalTracks(tracks);
     playTrack(tracks[0], 0);
   };
 
   const handlePlayItem = (item, index) => {
+    // Vérifier si on est un guest en crossparty
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    if (roomInfo.roomId && !roomInfo.isHost) {
+      Alert.alert('Access Denied', 'Only the host can change the music');
+      return;
+    }
+    
     setGlobalTracks(tracks);
     playTrack(item, index);
   };
 
   const confirmDeletePlaylist = async () => {
     if (!playlist) return;
+    
+    // Vérifier si on est un guest
+    if (isGuestInCrossParty) {
+      Alert.alert('Access Denied', 'Only the host can delete playlists');
+      return;
+    }
+    
     await deletePlaylist(playlist.id);
     navigation.goBack();
   };
 
   const handleRemoveTrack = async (item) => {
     if (!playlist) return;
+    
+    // Vérifier si on est un guest
+    if (isGuestInCrossParty) {
+      Alert.alert('Access Denied', 'Only the host can modify playlists');
+      return;
+    }
+    
     await removeTrack(playlist.id, item);
     await load();
   };
@@ -166,21 +200,30 @@ export default function PlaylistDetailScreen({ route, navigation }) {
   const handleRename = async () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
+    
+    // Vérifier si on est un guest
+    if (isGuestInCrossParty) {
+      Alert.alert('Access Denied', 'Only the host can modify playlists');
+      return;
+    }
+    
     await renamePlaylist(playlist.id, trimmed);
     setRenameOpen(false);
     await load();
   };
 
   const renderItem = ({ item, index }) => (
-    <TouchableOpacity style={styles.row} activeOpacity={0.85} onPress={() => handlePlayItem(item, index)}>
+    <TouchableOpacity style={styles.row} activeOpacity={0.85} onPress={() => handlePlayItem(item, index)} disabled={isGuestInCrossParty}>
       <Image source={{ uri: item.image || safeImage }} style={styles.cover} />
       <View style={{ flex: 1 }}>
         <Text numberOfLines={1} style={styles.rowTitle}>{item.title}</Text>
         <Text numberOfLines={1} style={styles.rowSub}>{item.album || 'Inconnu'}</Text>
       </View>
-      <TouchableOpacity onPress={() => handleRemoveTrack(item)} style={styles.removeBtn}>
-        <Ionicons name="remove" size={18} color="#ff3b30" />
-      </TouchableOpacity>
+      {!isGuestInCrossParty && (
+        <TouchableOpacity onPress={() => handleRemoveTrack(item)} style={styles.removeBtn}>
+          <Ionicons name="remove" size={18} color="#ff3b30" />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 
@@ -198,20 +241,20 @@ export default function PlaylistDetailScreen({ route, navigation }) {
           <TouchableOpacity style={styles.menuBtn} onPress={() => setQrOpen(true)}>
             <Ionicons name="qr-code" size={20} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuBtn} onPress={() => setRenameOpen(true)}>
-            <Ionicons name="pencil" size={20} color="#fff" />
+          <TouchableOpacity style={styles.menuBtn} onPress={() => setRenameOpen(true)} disabled={isGuestInCrossParty}>
+            <Ionicons name="pencil" size={20} color={isGuestInCrossParty ? '#888' : '#fff'} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.playAllBtn} onPress={handlePlayAll} disabled={!tracks.length}>
-          <Ionicons name="play" size={18} color="#000" />
-          <Text style={styles.playAllText}>Play all</Text>
+        <TouchableOpacity style={[styles.playAllBtn, isGuestInCrossParty && { opacity: 0.5 }]} onPress={handlePlayAll} disabled={!tracks.length || isGuestInCrossParty}>
+          <Ionicons name="play" size={18} color={isGuestInCrossParty ? '#999' : '#000'} />
+          <Text style={[styles.playAllText, isGuestInCrossParty && { color: '#999' }]}>Play all</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteBtn} onPress={confirmDeletePlaylist}>
-          <Ionicons name="trash" size={18} color="#ff3b30" />
+        <TouchableOpacity style={[styles.deleteBtn, isGuestInCrossParty && { opacity: 0.5 }]} onPress={confirmDeletePlaylist} disabled={isGuestInCrossParty}>
+          <Ionicons name="trash" size={18} color={isGuestInCrossParty ? '#999' : '#ff3b30'} />
           <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
       </View>

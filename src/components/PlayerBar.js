@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import {
   isTrackPlaying,
   
 } from '../api/player';
+import crossPartyService from '../services/crossPartyService';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,46 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
   const [track, setTrack] = useState(getCurrentTrack());
   const [isPlaying, setIsPlaying] = useState(isTrackPlaying());
   const [status, setStatus] = useState(getPlaybackStatus());
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+
+  // Vérifier et mettre à jour le statut de room
+  useEffect(() => {
+    // Check initial status
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    const inRoom = crossPartyService.isInRoom();
+    console.log(`🎵 PlayerBar: Init room status - inRoom: ${inRoom}, isHost: ${roomInfo.isHost}`);
+    setIsInRoom(inRoom);
+    setIsHost(roomInfo.isHost);
+
+    // S'abonner aux changements de statut host
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((data) => {
+      console.log(`🎵 PlayerBar: Host status changed:`, data);
+      setIsHost(data.isHost);
+      setIsInRoom(data.roomId !== null);
+    });
+
+    return () => {
+      console.log(`🎵 PlayerBar: Cleanup room subscription`);
+      if (typeof unsubscribe === 'function') unsubscribe.remove();
+    };
+  }, []);
+
+  // Vérifier périodiquement l'état de room (au cas où il y ait une désynchronisation)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentRoomInfo = crossPartyService.getCurrentRoomInfo();
+      const currentIsInRoom = crossPartyService.isInRoom();
+      
+      if (currentIsInRoom !== isInRoom || currentRoomInfo.isHost !== isHost) {
+        console.log(`🎵 PlayerBar: État désynchronisé détecté - mise à jour (was inRoom:${isInRoom}, now:${currentIsInRoom})`);
+        setIsInRoom(currentIsInRoom);
+        setIsHost(currentRoomInfo.isHost);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isInRoom, isHost]);
 
   useEffect(() => {
     const playSub = playerEmitter.addListener('play', ({ track }) => {
@@ -55,6 +96,35 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
       onTabletNavigateToPlayer();
     } else {
       navigation.navigate('PlayerScreen');
+    }
+  };
+
+  const handlePlayPauseClick = () => {
+    // Vérifier l'état actuel (en cas de stale state)
+    const currentRoomInfo = crossPartyService.getCurrentRoomInfo();
+    const currentIsInRoom = crossPartyService.isInRoom();
+    const currentIsHost = currentRoomInfo.isHost;
+
+    console.log('🎮 PlayerBar: Bouton play/pause pressé', { 
+      isPlaying,
+      isInRoom,
+      isHost,
+      currentIsInRoom,
+      currentIsHost,
+      isTabletSidebar,
+      action: isPlaying ? 'pause' : 'resume' 
+    });
+
+    // Les guests ne peuvent pas contrôler la musique dans une room
+    if (currentIsInRoom && !currentIsHost) {
+      Alert.alert('Read Only', 'Only the host can control playback in a party room.');
+      return;
+    }
+
+    if (isPlaying) {
+      pauseTrack();
+    } else {
+      resumeTrack();
     }
   };
 
@@ -109,21 +179,11 @@ export default function PlayerBar({ isTabletSidebar = false, onTabletNavigateToP
         </View>
 
         <TouchableOpacity 
-          onPress={() => {
-            console.log('🎮 PlayerBar: Bouton play/pause pressé', { 
-              isPlaying, 
-              isTabletSidebar,
-              action: isPlaying ? 'pause' : 'resume' 
-            });
-            if (isPlaying) {
-              pauseTrack();
-            } else {
-              resumeTrack();
-            }
-          }} 
+          onPress={handlePlayPauseClick}
+          disabled={isInRoom && !isHost}
           style={isTabletSidebar ? styles.sidebarPlayPause : styles.playPause}
         >
-          <Ionicons name={isPlaying ? 'pause' : 'play'} size={isTabletSidebar ? 20 : 24} color="white" />
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={isTabletSidebar ? 20 : 24} color={isInRoom && !isHost ? '#666' : 'white'} />
         </TouchableOpacity>
       </View>
 

@@ -360,6 +360,9 @@ async function onPlaybackStatusUpdate(status) {
   if (status.didJustFinish && !status.isLooping) {
     console.log('⏭️ Fin de la piste → suivante...');
     
+    // Émettre l'événement finish pour les hooks qui écoutent
+    playerEmitter.emit('finish');
+    
     // Enregistrer l'écoute complète avant de passer à la suivante
     if (currentPlayingTrack && trackStartTime) {
       await recordPlay(currentPlayingTrack, trackStartTime);

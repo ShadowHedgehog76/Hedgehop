@@ -10,6 +10,7 @@ import {
   FlatList,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -30,6 +31,7 @@ import {
   
 } from '../src/api/player';
 import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
+import crossPartyService from '../src/services/crossPartyService';
 
 const { width } = Dimensions.get('window');
 const safeImage = 'https://i.imgur.com/ODLC1hY.jpeg';
@@ -42,6 +44,8 @@ export default function PlayerScreen({ navigation }) {
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [crossList, setCrossList] = useState([]);
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [isHost, setIsHost] = useState(false);
 
   const { isTablet, dimensions, isLandscape } = useDeviceType();
   const scrollXTitle = useRef(new Animated.Value(0)).current;
@@ -49,6 +53,24 @@ export default function PlayerScreen({ navigation }) {
   const [plistModal, setPlistModal] = useState(false);
   const [playlists, setPlaylists] = useState([]);
   const [newPlName, setNewPlName] = useState('');
+
+  // Vérifier et mettre à jour le statut de room
+  useEffect(() => {
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    setIsInRoom(crossPartyService.isInRoom());
+    setIsHost(roomInfo.isHost);
+
+    // S'abonner aux changements de statut host
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((data) => {
+      console.log(`🎮 PlayerScreen: Host status changed:`, data);
+      setIsHost(data.isHost);
+      setIsInRoom(data.roomId !== null);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const q = getQueue ? getQueue() : [];
@@ -148,6 +170,12 @@ export default function PlayerScreen({ navigation }) {
   const position = status.positionMillis || 0;
 
   const togglePlayPause = async () => {
+    // Les guests ne peuvent pas contrôler la musique dans une room
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can control playback in a party room.');
+      return;
+    }
+
     console.log('🎮 PlayerScreen: togglePlayPause appelé', { 
       isPlaying, 
       isTablet, 
@@ -164,6 +192,12 @@ export default function PlayerScreen({ navigation }) {
   };
 
   const handlePlayCross = (item) => {
+    // Les guests ne peuvent pas changer la musique dans une room
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can change the track in a party room.');
+      return;
+    }
+
     if (item.isOriginal) {
       const original = item.original;
       if (!original) return;
@@ -184,6 +218,33 @@ export default function PlayerScreen({ navigation }) {
       parentCrossList: track.parentCrossList || track.crossmusic || [],
       parentOriginalTrack: track.parentOriginalTrack || track,
     });
+  };
+
+  const handleSeekTo = (position) => {
+    // Les guests ne peuvent pas contrôler la position dans une room
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can seek in a party room.');
+      return;
+    }
+    seekTo(position);
+  };
+
+  const handlePlayNext = () => {
+    // Les guests ne peuvent pas contrôler la queue dans une room
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can skip tracks in a party room.');
+      return;
+    }
+    playNext();
+  };
+
+  const handlePlayPrevious = () => {
+    // Les guests ne peuvent pas contrôler la queue dans une room
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can skip tracks in a party room.');
+      return;
+    }
+    playPrevious();
   };
 
   if (!track) {
@@ -361,7 +422,8 @@ export default function PlayerScreen({ navigation }) {
                   minimumTrackTintColor="#1f4cff"
                   maximumTrackTintColor="#777"
                   thumbTintColor="#1f4cff"
-                  onSlidingComplete={seekTo}
+                  onSlidingComplete={handleSeekTo}
+                  disabled={isInRoom && !isHost}
                 />
               </View>
               <Text style={styles.timeText}>{formatTime(duration)}</Text>
@@ -369,16 +431,16 @@ export default function PlayerScreen({ navigation }) {
 
             {/* Main controls */}
             <View style={styles.tabletMainControls}>
-              <TouchableOpacity onPress={playPrevious} style={styles.controlButton}>
-                <Ionicons name="play-skip-back" size={44} color="white" />
+              <TouchableOpacity onPress={handlePlayPrevious} style={styles.controlButton} disabled={isInRoom && !isHost}>
+                <Ionicons name="play-skip-back" size={44} color={isInRoom && !isHost ? '#666' : 'white'} />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.tabletPlayButton} onPress={togglePlayPause}>
                 <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color="black" />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={playNext} style={styles.controlButton}>
-                <Ionicons name="play-skip-forward" size={44} color="white" />
+              <TouchableOpacity onPress={handlePlayNext} style={styles.controlButton} disabled={isInRoom && !isHost}>
+                <Ionicons name="play-skip-forward" size={44} color={isInRoom && !isHost ? '#666' : 'white'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -510,22 +572,23 @@ export default function PlayerScreen({ navigation }) {
             minimumTrackTintColor="#1f4cff"
             maximumTrackTintColor="#777"
             thumbTintColor="#1f4cff"
-            onSlidingComplete={seekTo}
+            onSlidingComplete={handleSeekTo}
+            disabled={isInRoom && !isHost}
           />
         </View>
 
         {/* CONTROLS */}
         <View style={styles.controls}>
-          <TouchableOpacity onPress={playPrevious}>
-            <Ionicons name="play-skip-back" size={36} color="white" />
+          <TouchableOpacity onPress={handlePlayPrevious} disabled={isInRoom && !isHost}>
+            <Ionicons name="play-skip-back" size={36} color={isInRoom && !isHost ? '#666' : 'white'} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
             <Ionicons name={isPlaying ? 'pause' : 'play'} size={40} color="black" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={playNext}>
-            <Ionicons name="play-skip-forward" size={36} color="white" />
+          <TouchableOpacity onPress={handlePlayNext} disabled={isInRoom && !isHost}>
+            <Ionicons name="play-skip-forward" size={36} color={isInRoom && !isHost ? '#666' : 'white'} />
           </TouchableOpacity>
         </View>
 

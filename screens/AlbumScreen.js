@@ -14,6 +14,7 @@ import {
   LayoutAnimation,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,7 @@ import { toggleFavorite, getFavorites, favEmitter } from '../src/api/favorites';
 import { getPlaylists } from '../src/api/playlists';
 import { createPlaylist, addTrack } from '../src/api/playlists';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import crossPartyService from '../src/services/crossPartyService';
 // CrossParty supprimé
 
 const { width } = Dimensions.get('window');
@@ -39,6 +41,8 @@ export default function AlbumScreen({ route, navigation }) {
   const [playlists, setPlaylists] = useState([]);
   const [newPlName, setNewPlName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   
   const { isTablet, dimensions, isLandscape } = useDeviceType();
 
@@ -47,6 +51,24 @@ export default function AlbumScreen({ route, navigation }) {
   const listTranslate = useRef(new Animated.Value(50)).current;
 
   const getCrossArray = (t) => t?.crossmusic ?? t?.crossMusic ?? t?.cross ?? [];
+
+  // Vérifier et mettre à jour le statut de room
+  useEffect(() => {
+    const roomInfo = crossPartyService.getCurrentRoomInfo();
+    setIsInRoom(crossPartyService.isInRoom());
+    setIsHost(roomInfo.isHost);
+
+    // S'abonner aux changements de statut host
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((data) => {
+      console.log(`🎵 AlbumScreen: Host status changed:`, data);
+      setIsHost(data.isHost);
+      setIsInRoom(data.roomId !== null);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe.remove();
+    };
+  }, []);
 
   // Total cross
   const totalCrossCount = useMemo(() => {
@@ -118,6 +140,12 @@ export default function AlbumScreen({ route, navigation }) {
 
   // Fonction pour gérer la lecture (locale ou CrossParty)
   const handleTrackPlay = async (track, trackIndex = 0, albumTracks = null) => {
+    // Empêcher les invités de lancer la musique
+    if (isInRoom && !isHost) {
+      Alert.alert('Read Only', 'Only the host can control music.');
+      return;
+    }
+
     const trackData = {
       ...track,
       album: album.title,
@@ -133,6 +161,33 @@ export default function AlbumScreen({ route, navigation }) {
     }
   };
 
+  // Fonction pour ajouter une musique à la queue
+  const handleAddToQueue = async (track) => {
+    try {
+      const trackData = {
+        ...track,
+        album: album.title,
+        image: track.image || album.image,
+      };
+
+      const roomInfo = crossPartyService.getCurrentRoomInfo();
+      const result = await crossPartyService.addToQueue(
+        trackData,
+        roomInfo.userId,
+        isHost ? 'Host' : 'You' // Montrer "Host" si c'est l'host, "You" sinon
+      );
+
+      if (result.success) {
+        Alert.alert('✅ Added to Queue', `"${track.title}" has been added!`);
+      } else {
+        Alert.alert('Error', result.error || 'Failed to add to queue');
+      }
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+      Alert.alert('Error', 'Failed to add to queue');
+    }
+  };
+
   // Rendu des tracks pour tablette
   const renderTabletTrackItem = (track) => {
     if (!showCross) {
@@ -144,11 +199,17 @@ export default function AlbumScreen({ route, navigation }) {
             style={[styles.tabletTrack, !playable && styles.tabletTrackDisabled]}
             onPress={() => {
               if (playable) {
-                const albumTracks = album.tracks
-                  .filter((t) => t.url)
-                  .map((t) => ({ ...t, album: album.title, image: album.image }));
-                const trackIndex = albumTracks.findIndex((t) => t.title === track.title);
-                handleTrackPlay(albumTracks[trackIndex] || albumTracks[0], trackIndex, albumTracks);
+                // Si guest en room: ajouter à la queue au lieu de jouer
+                if (isInRoom && !isHost) {
+                  handleAddToQueue(track);
+                } else {
+                  // Sinon (host ou pas en room): jouer la musique
+                  const albumTracks = album.tracks
+                    .filter((t) => t.url)
+                    .map((t) => ({ ...t, album: album.title, image: album.image }));
+                  const trackIndex = albumTracks.findIndex((t) => t.title === track.title);
+                  handleTrackPlay(albumTracks[trackIndex] || albumTracks[0], trackIndex, albumTracks);
+                }
               }
             }}
             disabled={!playable}
@@ -159,9 +220,9 @@ export default function AlbumScreen({ route, navigation }) {
                 style={styles.tabletTrackIcon} 
               />
               <Ionicons 
-                name={playable ? "play-circle" : "time"} 
+                name={playable ? ((isInRoom && !isHost) ? "queue" : "play-circle") : "time"} 
                 size={20} 
-                color={playable ? "#1f4cff" : "#666"}
+                color={playable ? ((isInRoom && !isHost) ? "#ffb700" : "#1f4cff") : "#666"}
                 style={styles.tabletPlayIcon}
               />
               <View style={styles.tabletTrackInfo}>
@@ -181,6 +242,7 @@ export default function AlbumScreen({ route, navigation }) {
                   <Text style={styles.tabletCrossCount}>{getCrossArray(track).length}</Text>
                 </View>
               )}
+
               <TouchableOpacity onPress={() => openAddToPlaylist(track)} style={styles.tabletFavoriteButton}>
                 <Ionicons name="add-circle" size={20} color="#1f4cff" />
               </TouchableOpacity>
@@ -625,7 +687,13 @@ export default function AlbumScreen({ route, navigation }) {
                 <TouchableOpacity
                   onPress={() => {
                     setGlobalTracks([]);
-                    handleTrackPlay({ ...track, album: album.title, image: album.image });
+                    // Si guest en room: ajouter à la queue au lieu de jouer
+                    if (isInRoom && !isHost) {
+                      handleAddToQueue({ ...track, album: album.title, image: album.image });
+                    } else {
+                      // Sinon (host ou pas en room): jouer la musique
+                      handleTrackPlay({ ...track, album: album.title, image: album.image });
+                    }
                   }}
                   disabled={!playable}
                   style={[styles.trackPill, { opacity: playable ? 1 : 0.5 }]}

@@ -92,6 +92,10 @@ export default function HelpSupportScreen({ navigation }) {
           If you have questions or feedback, feel free to contact us or support the project.
         </Text>
 
+        <Text style={styles.paragraph}>
+          Donations help us keep the project alive and improve it over time. Your support allows us to dedicate more resources to development, fix bugs, and add new features. Every contribution, no matter how small, makes a difference. Thank you for considering a donation!
+        </Text>
+
         <TouchableOpacity style={styles.primaryButton} onPress={openDonation}>
           <Ionicons name="heart" size={18} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.primaryText}>Make a donation</Text>

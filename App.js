@@ -24,13 +24,78 @@ import TabletLayout from './src/components/TabletLayout';
 import { useDeviceType } from './src/hooks/useDeviceType';
 import { stopAllAudio } from './src/api/player';
 
-// --- Import des services ---
+// --- Import des services et hooks ---
 import authService from './src/services/auth';
 import { loadFavorites } from './src/api/favorites';
 import { AlertProvider } from './src/components/CustomAlert';
+import { useCrossPartySyncHost, useCrossPartySyncClient } from './src/hooks/useCrossPartySync';
+import crossPartyService from './src/services/crossPartyService';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Composant pour gérer la synchronisation en arrière-plan
+function BackgroundSyncProvider({ children }) {
+  const [roomInfo, setRoomInfo] = useState({ roomId: null, isHost: false });
+
+  // Mettre à jour roomInfo et relancer les hooks si la room change
+  useEffect(() => {
+    const unsubscribe = crossPartyService.subscribeToHostStatusChanges((data) => {
+      console.log('🔄 BackgroundSyncProvider: Mise à jour room:', data);
+      setRoomInfo({ 
+        roomId: data.roomId, 
+        isHost: data.isHost 
+      });
+    });
+
+    // Initialisation
+    const info = crossPartyService.getCurrentRoomInfo();
+    setRoomInfo({ 
+      roomId: info.roomId, 
+      isHost: info.isHost 
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe.remove();
+    };
+  }, []);
+
+  // Surveiller la disparition de la room même si on n'est pas sur PartyRoomScreen
+  // Cela garantit que les guests sont notifiés quand le host ferme la room
+  useEffect(() => {
+    if (!roomInfo.roomId || roomInfo.isHost) {
+      // On ne surveille que si c'est un guest (isHost = false)
+      return;
+    }
+
+    console.log('👁️ BackgroundSyncProvider: Surveillance de la room pour les guests');
+    
+    const unsubscribeRoom = crossPartyService.subscribeToRoom(roomInfo.roomId, (result) => {
+      // Si la room n'existe plus, le guest a été déconnecté
+      if (!result.exists) {
+        console.log('🔴 BackgroundSyncProvider: La room a fermé, déconnexion du guest');
+        // Forcer la déconnexion complète
+        crossPartyService.currentRoomId = null;
+        crossPartyService.currentUserId = null;
+        crossPartyService.isHost = false;
+        // Émettre l'événement pour forcer la mise à jour
+        crossPartyService.emitter.emit('hostStatusChanged', { isHost: false, roomId: null });
+        // Mettre à jour le state local
+        setRoomInfo({ roomId: null, isHost: false });
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribeRoom === 'function') unsubscribeRoom();
+    };
+  }, [roomInfo.roomId, roomInfo.isHost]);
+
+  // Activer les hooks de synchronisation si dans une room
+  useCrossPartySyncHost(roomInfo.roomId, roomInfo.isHost);
+  useCrossPartySyncClient(roomInfo.roomId, roomInfo.isHost);
+
+  return children;
+}
 
 function MainLayout({ navigation }) {
   const [homeClickCount, setHomeClickCount] = useState(0);
@@ -68,15 +133,15 @@ function MainLayout({ navigation }) {
     }
     clickTimeoutRef.current = setTimeout(() => {
       setHomeClickCount(0);
-    }, 3000);
+    }, 500);
 
-    // Vérifier si on a atteint 15 clics
-    if (newCount === 15) {
+    // Vérifier si on a atteint 10 clics
+    if (newCount === 10) {
       setHomeClickCount(0);
       setDevModeEnabled(true);
-    } else if (newCount >= 10) {
-      // Feedback visuel quand on approche des 15 clics
-      console.log(`🔥 ${15 - newCount} clics restants pour le dev mode...`);
+    } else if (newCount >= 5) {
+      // Feedback visuel quand on approche des 10 clics
+      console.log(`🔥 ${10 - newCount} clics restants pour le dev mode...`);
     }
   };
 
@@ -244,17 +309,19 @@ function AppContent() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="MainLayout" component={MainLayout} />
-        <Stack.Screen name="PlayerScreen" component={PlayerScreen} />
+    <BackgroundSyncProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="MainLayout" component={MainLayout} />
+          <Stack.Screen name="PlayerScreen" component={PlayerScreen} />
 
-        {/* ✅ ajouté ici, accessible depuis n'importe quel onglet */}
-        <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
-        <Stack.Screen name="DevScreen" component={DevScreen} />
-        {/* CrossParty supprimé */}
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* ✅ ajouté ici, accessible depuis n'importe quel onglet */}
+          <Stack.Screen name="AlbumScreenDisabled" component={AlbumScreenDisabled} />
+          <Stack.Screen name="DevScreen" component={DevScreen} />
+          {/* CrossParty supprimé */}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </BackgroundSyncProvider>
   );
 }
 
