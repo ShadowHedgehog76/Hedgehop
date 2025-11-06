@@ -80,6 +80,19 @@ export default function NewsScreen({ navigation }) {
     return new Date(year, month - 1, day);
   };
 
+  // Fonction pour formater les dates avec le nom du mois
+  const formatDateWithMonthName = (dateString) => {
+    if (!dateString) return '';
+    const [day, month, year] = dateString.split('/').map(Number);
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    return `${day} ${monthNames[month - 1]} ${year}`;
+  };
+
   const openNewsModal = (newsItem) => {
     setSelectedNews(newsItem);
     setNewsModalVisible(true);
@@ -126,7 +139,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
           <View style={[styles.newsTag, getTagStyle(item.tag)]}>
             <Text style={styles.newsTagText}>{item.tag}</Text>
           </View>
-          <Text style={styles.newsDate}>{item.date}</Text>
+          <Text style={styles.newsDate}>{formatDateWithMonthName(item.date)}</Text>
         </View>
       </View>
       
@@ -263,7 +276,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                     <View style={[styles.modalTag, getTagStyle(selectedNews.tag)]}>
                       <Text style={styles.modalTagText}>{selectedNews.tag}</Text>
                     </View>
-                    <Text style={styles.modalDate}>{selectedNews.date}</Text>
+                    <Text style={styles.modalDate}>{formatDateWithMonthName(selectedNews.date)}</Text>
                   </View>
 
                   {/* Title */}
