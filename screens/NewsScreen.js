@@ -29,19 +29,20 @@ export default function NewsScreen({ navigation }) {
   const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
 
   useEffect(() => {
+    const timestamp = new Date().getTime();
+    
     // Load albums data
-    fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
+    fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json?t=${timestamp}`)
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error('❌ Error loading JSON:', err))
       .finally(() => setLoading(false));
 
     // Load news data
-    fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/coming_news.json')
+    fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/coming_news.json?t=${timestamp}`)
       .then((res) => res.json())
       .then((data) => {
         const newsData = data.upcomingNews || [];
-        console.log('📰 News data loaded:', newsData);
         // Trier par date (plus récent = plus à gauche)
         const sortedNews = newsData.sort((a, b) => {
           const dateA = parseDate(a.date);
