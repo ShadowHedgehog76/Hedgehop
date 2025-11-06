@@ -1,0 +1,23 @@
+{
+    "upcomingNews": [
+        {
+            "title": "Sample News Title",
+            "images": [
+                "image1.jpg",
+                "image2.jpg"
+            ],
+            "tag": "announcement",
+            "date": "15/01/2024",
+            "message": "# Welcome to our latest update\n\nThis is a **sample news article** with *markdown* support.\n\n## Features:\n- Bullet points\n- **Bold text**\n- *Italic text*\n\n[Learn more](https://example.com)"
+        },
+        {
+            "title": "Another News Item",
+            "images": [
+                "news-banner.png"
+            ],
+            "tag": "update",
+            "date": "20/01/2024",
+            "message": "## Important Update\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\n### What's new:\n1. Feature A\n2. Feature B\n3. Bug fixes\n\n> This is a blockquote with important information."
+        }
+    ]
+}
