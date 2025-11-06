@@ -1,23 +1,60 @@
 {
     "upcomingNews": [
         {
-            "title": "Sample News Title",
-            "images": [
-                "image1.jpg",
-                "image2.jpg"
-            ],
+            "title": "Hedgehop v2.1 - New Features Incoming!",
+            "images": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=300&fit=crop",
             "tag": "announcement",
-            "date": "15/01/2024",
-            "message": "# Welcome to our latest update\n\nThis is a **sample news article** with *markdown* support.\n\n## Features:\n- Bullet points\n- **Bold text**\n- *Italic text*\n\n[Learn more](https://example.com)"
+            "date": "06/11/2025",
+            "message": "# 🎉 Hedgehop v2.1 is Coming!\n\nGet ready for our biggest update yet! We're bringing exciting new features to enhance your Sonic music experience.\n\n## What's New:\n- **Enhanced Audio Quality** - Improved streaming and playback\n- **New UI Elements** - Refreshed interface design\n- **Performance Boost** - Faster loading times\n- **Bug Fixes** - Resolved various issues\n\n### Stay Tuned!\nMore details will be revealed soon. Thank you for your continued support!\n\n> *\"The fastest hedgehog deserves the best music app!\"*"
         },
         {
-            "title": "Another News Item",
-            "images": [
-                "news-banner.png"
-            ],
+            "title": "Sonic Origins Plus Integration",
+            "images": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop",
+            "tag": "feature",
+            "date": "04/11/2025",
+            "message": "## 🎮 New Album Integration\n\nWe're excited to announce support for **Sonic Origins Plus** soundtrack!\n\n### What's Included:\n- All remastered tracks from the collection\n- High-quality audio files\n- Interactive album artwork\n- Behind-the-scenes content\n\n### Technical Details:\n- **Format**: FLAC & MP3 320kbps\n- **Channels**: Stereo & 5.1 Surround\n- **Metadata**: Complete track information\n\n```javascript\n// Example API call\nconst sonicOrigins = await fetchAlbum('sonic-origins-plus');\nconsole.log('Tracks loaded:', sonicOrigins.tracks.length);\n```\n\n*Experience the classic Sonic soundtracks like never before!*"
+        },
+        {
+            "title": "Halloween Special Event Recap",
+            "images": "https://images.unsplash.com/photo-1509909756405-be0199881695?w=400&h=300&fit=crop",
             "tag": "update",
-            "date": "20/01/2024",
-            "message": "## Important Update\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\n### What's new:\n1. Feature A\n2. Feature B\n3. Bug fixes\n\n> This is a blockquote with important information."
+            "date": "02/11/2025",
+            "message": "# 🎃 Halloween Event Was a Success!\n\nThank you to everyone who participated in our **Spooky Sonic** Halloween event!\n\n## Event Highlights:\n- **10,000+** players participated\n- **50** exclusive tracks unlocked\n- **25** special achievements earned\n- **5** community challenges completed\n\n### Most Popular Tracks:\n1. **Pumpkin Hill** - 2,847 plays\n2. **Mystic Cave Zone** - 2,156 plays\n3. **Sandopolis Zone** - 1,923 plays\n4. **Carnival Night Zone** - 1,687 plays\n5. **Flying Battery Zone** - 1,542 plays\n\n### Community Achievements:\n- **Trick or Treat Master**: Complete all Halloween challenges\n- **Sonic Speedster**: Finish event in under 3 hours\n- **Music Collector**: Unlock all limited-time tracks\n\n> Special thanks to our community moderators and all the amazing fan art submissions!"
+        },
+        {
+            "title": "Cross-Party Feature Update",
+            "images": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop",
+            "tag": "feature",
+            "date": "01/11/2025",
+            "message": "## 🎵 Cross-Party Sync Enhancement\n\nWe've been working hard on improving the **Cross-Party** synchronization feature.\n\n### Recent Improvements:\n1. **Better Connection Stability** - Reduced disconnections by 85%\n2. **Real-time Sync** - Sub-50ms audio synchronization\n3. **User Interface** - Cleaner party room design\n4. **Voice Chat Integration** - Built-in communication\n\n### Technical Specifications:\n- **Max Party Size**: 12 users (increased from 8)\n- **Supported Formats**: MP3, FLAC, OGG\n- **Latency**: <50ms globally\n- **Bandwidth**: Optimized for 2G+ connections\n\n### Coming Soon:\n- Party chat functionality\n- Custom room themes\n- Enhanced user controls\n- Playlist collaboration\n- Real-time reactions\n\n*Experience music together like never before!*"
+        },
+        {
+            "title": "Performance Optimization Complete",
+            "images": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop",
+            "tag": "bugfix",
+            "date": "30/10/2025",
+            "message": "## ⚡ Major Performance Boost\n\nOur latest optimization update is now live across all platforms!\n\n### Performance Improvements:\n- **App Startup**: 60% faster cold boot\n- **Memory Usage**: 40% reduction in RAM consumption\n- **Battery Life**: 25% improvement on mobile devices\n- **Network Efficiency**: 50% less data usage\n\n### Technical Changes:\n```bash\n# Build optimizations\nnpm run build:optimize\n# Results:\n- Bundle size: 35MB → 22MB (-37%)\n- Load time: 3.2s → 1.3s (-59%)\n- Memory peak: 180MB → 108MB (-40%)\n```\n\n### Bug Fixes:\n- **Fixed**: Playlist loading crashes on Android 11+\n- **Fixed**: Audio stuttering during network switching\n- **Fixed**: Album artwork not displaying on iOS 16\n- **Fixed**: Search results not updating in real-time\n- **Fixed**: Cross-party sync issues on poor connections\n\n### Device Compatibility:\n- **Minimum Android**: 7.0 (API 24)\n- **Minimum iOS**: 13.0\n- **RAM Requirement**: 2GB (down from 3GB)\n\n> These optimizations make Hedgehop accessible to more devices while providing a smoother experience for everyone!"
+        },
+        {
+            "title": "Developer Behind-the-Scenes",
+            "images": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
+            "tag": "update",
+            "date": "28/10/2025",
+            "message": "# 👨‍💻 Meet the Development Team\n\nEver wondered who's behind Hedgehop? Let's take a peek behind the curtain!\n\n## Our Tech Stack:\n- **Frontend**: React Native + Expo\n- **Backend**: Node.js + Express\n- **Database**: PostgreSQL + Redis\n- **Audio Processing**: FFmpeg + Web Audio API\n- **Cloud**: AWS + CloudFlare CDN\n\n### Development Process:\n1. **Planning**: Weekly team meetings\n2. **Coding**: Git-based collaborative development\n3. **Testing**: Automated CI/CD pipeline\n4. **Deployment**: Staged rollout system\n5. **Monitoring**: Real-time performance tracking\n\n### Current Sprint Focus:\n- [ ] Offline mode implementation\n- [ ] Advanced equalizer settings\n- [ ] Custom playlist sharing\n- [x] Cross-platform sync optimization\n- [x] UI/UX improvements\n\n### Fun Facts:\n- **Lines of Code**: 127,000+ (and growing!)\n- **Coffee Consumed**: 847 cups this month ☕\n- **Bugs Squashed**: 1,247 since launch 🐛\n- **Team Size**: 5 dedicated developers\n- **Office Playlist**: 90% Sonic music, 10% variety\n\n*We love what we do, and we hope it shows in every release!*"
+        },
+        {
+            "title": "Community Spotlight: Your Feedback Matters",
+            "images": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop",
+            "tag": "update",
+            "date": "25/10/2025",
+            "message": "# 💙 Thank You, Hedgehop Community!\n\nYour feedback and support have been incredible! Here's what you've helped us achieve:\n\n## Community Stats:\n- **7,500+** active users (up 50% this month!)\n- **73** bug reports resolved\n- **156** feature suggestions received\n- **4.8/5** average app rating\n- **2.1M** total songs played\n\n### Most Requested Features:\n1. **Offline Mode** - In development! 🚀 (ETA: December 2025)\n2. **Custom Playlists** - Coming in v2.2 (January 2026)\n3. **Lyrics Display** - Under consideration\n4. **Sleep Timer** - Planned for v2.3\n5. **Podcast Support** - Community request analysis\n\n### Community Contributions:\n- **Bug Reports**: Help us identify and fix issues\n- **Feature Ideas**: Shape the future of Hedgehop\n- **Beta Testing**: Early access to new features\n- **Translations**: Make Hedgehop global\n- **Fan Art**: Amazing community creativity!\n\n### How to Stay Connected:\n- **Discord**: Join 2,400+ members in our server\n- **GitHub**: Contribute to open-source components\n- **Twitter**: Follow @HedgehopApp for updates\n- **Reddit**: r/HedgehopApp community discussions\n- **In-App Feedback**: Send us your thoughts directly\n\n### Upcoming Community Events:\n- **December**: Holiday music event\n- **January**: Community playlist contest\n- **February**: Beta testing program expansion\n\n*Together, we're making Hedgehop the ultimate Sonic music experience!*"
+        },
+        {
+            "title": "Security Update & Privacy Improvements",
+            "images": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
+            "tag": "announcement",
+            "date": "22/10/2025",
+            "message": "# 🔒 Enhanced Security & Privacy\n\nWe've implemented significant security improvements to protect your data and privacy.\n\n## Security Enhancements:\n- **End-to-End Encryption**: All user data now encrypted\n- **Two-Factor Authentication**: Optional 2FA for accounts\n- **Secure API Endpoints**: Updated authentication system\n- **Data Minimization**: Reduced data collection practices\n\n### What We Collect:\n- **Essential Only**: App functionality data\n- **Anonymous Analytics**: Usage patterns (no personal info)\n- **Crash Reports**: Help us fix bugs faster\n- **NO Personal Data**: We don't sell or share your info\n\n### Your Privacy Rights:\n- **Data Export**: Download your data anytime\n- **Account Deletion**: Remove all data permanently\n- **Opt-Out Options**: Control what data is shared\n- **Transparency Reports**: Quarterly privacy updates\n\n### Compliance:\n- ✅ **GDPR** compliant (EU)\n- ✅ **CCPA** compliant (California)\n- ✅ **PIPEDA** compliant (Canada)\n- ✅ **App Store** privacy labels updated\n\n> Your trust is our priority. We're committed to transparency and protecting your privacy while delivering the best music experience possible."
         }
     ]
 }

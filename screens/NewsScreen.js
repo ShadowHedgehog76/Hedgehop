@@ -9,24 +9,49 @@ import {
   StyleSheet,
   Dimensions,
   FlatList,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import Markdown from 'react-native-markdown-display';
 
 export default function NewsScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFullText, setShowFullText] = useState(false);
+  const [news, setNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [newsModalVisible, setNewsModalVisible] = useState(false);
   
   const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
 
   useEffect(() => {
+    // Load albums data
     fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json')
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error('❌ Error loading JSON:', err))
       .finally(() => setLoading(false));
+
+    // Load news data
+    fetch('https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/coming_news.json')
+      .then((res) => res.json())
+      .then((data) => {
+        const newsData = data.upcomingNews || [];
+        console.log('📰 News data loaded:', newsData);
+        // Trier par date (plus récent = plus à gauche)
+        const sortedNews = newsData.sort((a, b) => {
+          const dateA = parseDate(a.date);
+          const dateB = parseDate(b.date);
+          return dateB - dateA; // Ordre décroissant (plus récent en premier)
+        });
+        setNews(sortedNews);
+      })
+      .catch((err) => console.error('❌ Error loading news:', err))
+      .finally(() => setNewsLoading(false));
   }, []);
 
   const getAlbumStatus = (album) => {
@@ -45,6 +70,23 @@ export default function NewsScreen({ navigation }) {
     const total = album.tracks?.length || 0;
     const playable = album.tracks?.filter((t) => !!t.url).length || 0;
     return total > 0 ? playable / total : 0;
+  };
+
+  // Fonction pour parser les dates au format DD/MM/YYYY
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0);
+    const [day, month, year] = dateString.split('/').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const openNewsModal = (newsItem) => {
+    setSelectedNews(newsItem);
+    setNewsModalVisible(true);
+  };
+
+  const closeNewsModal = () => {
+    setNewsModalVisible(false);
+    setSelectedNews(null);
   };
 
   if (loading) {
@@ -72,8 +114,65 @@ Thank you for your patience and continued support while Hedgehop grows and impro
   const paragraphs = textPreview.split('\n\n');
   const visibleText = showFullText ? textPreview : paragraphs.slice(0, 2).join('\n\n');
 
+  const renderNewsItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.newsCard}
+      activeOpacity={0.8}
+      onPress={() => openNewsModal(item)}
+    >
+      <View style={styles.newsHeader}>
+        <View style={styles.newsTagContainer}>
+          <View style={[styles.newsTag, getTagStyle(item.tag)]}>
+            <Text style={styles.newsTagText}>{item.tag}</Text>
+          </View>
+          <Text style={styles.newsDate}>{item.date}</Text>
+        </View>
+      </View>
+      
+      <Text style={styles.newsTitle}>{item.title}</Text>
+      
+      {item.images && (
+        <Image 
+          source={{ uri: typeof item.images === 'string' ? item.images : item.images[0] }} 
+          style={styles.newsImage} 
+          resizeMode="cover"
+        />
+      )}
+    </TouchableOpacity>
+  );
+
+  const getTagStyle = (tag) => {
+    switch (tag?.toLowerCase()) {
+      case 'announcement': return { backgroundColor: '#f97316' };
+      case 'update': return { backgroundColor: '#3b82f6' };
+      case 'feature': return { backgroundColor: '#22c55e' };
+      case 'bugfix': return { backgroundColor: '#ef4444' };
+      default: return { backgroundColor: '#6b7280' };
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
+      {/* News Section - Moved to top */}
+      {newsLoading ? (
+        <View style={styles.newsLoading}>
+          <ActivityIndicator color="#1f4cff" size="small" />
+          <Text style={styles.newsLoadingText}>Loading news...</Text>
+        </View>
+      ) : news.length > 0 ? (
+        <FlatList
+          horizontal
+          data={news}
+          keyExtractor={(item, i) => i.toString()}
+          showsHorizontalScrollIndicator={false}
+          style={styles.newsList}
+          contentContainerStyle={styles.newsListContent}
+          renderItem={renderNewsItem}
+        />
+      ) : (
+        <Text style={styles.noNews}>No news available at the moment.</Text>
+      )}
+
       <Text style={styles.header}>📰 News</Text>
       <Text style={styles.description}>{visibleText}</Text>
       <TouchableOpacity onPress={() => setShowFullText((v) => !v)}>
@@ -134,7 +233,64 @@ Thank you for your patience and continued support while Hedgehop grows and impro
   const numColumns = getGridColumns();
 
   return (
-    <FlatList
+    <View style={{ flex: 1 }}>
+      {/* News Detail Modal */}
+      <Modal
+        visible={newsModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closeNewsModal}
+      >
+        <View style={styles.modalContainer}>
+          <ScrollView style={styles.modalContent}>
+            {selectedNews && (
+              <>
+                {/* Header with close button */}
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity 
+                    style={styles.closeButton}
+                    onPress={closeNewsModal}
+                  >
+                    <Ionicons name="close" size={24} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* News content */}
+                <View style={styles.modalNewsContent}>
+                  {/* Tag and date */}
+                  <View style={styles.modalTagContainer}>
+                    <View style={[styles.modalTag, getTagStyle(selectedNews.tag)]}>
+                      <Text style={styles.modalTagText}>{selectedNews.tag}</Text>
+                    </View>
+                    <Text style={styles.modalDate}>{selectedNews.date}</Text>
+                  </View>
+
+                  {/* Title */}
+                  <Text style={styles.modalTitle}>{selectedNews.title}</Text>
+
+                  {/* Main image */}
+                  {selectedNews.images && (
+                    <Image 
+                      source={{ uri: typeof selectedNews.images === 'string' ? selectedNews.images : selectedNews.images[0] }} 
+                      style={styles.modalMainImage} 
+                      resizeMode="cover"
+                    />
+                  )}
+
+                  {/* Markdown content */}
+                  <View style={styles.markdownContainer}>
+                    <Markdown style={markdownStyles}>
+                      {selectedNews.message}
+                    </Markdown>
+                  </View>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <FlatList
       style={styles.container}
       data={workingAlbums}
       keyExtractor={(_, i) => i.toString()}
@@ -215,6 +371,7 @@ Thank you for your patience and continued support while Hedgehop grows and impro
         );
       }}
     />
+    </View>
   );
 }
 
@@ -223,7 +380,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
 
-  headerContainer: { backgroundColor: '#000', paddingBottom: 30, paddingTop: 50 },
+  headerContainer: { backgroundColor: '#000', paddingBottom: 30, paddingTop: 20 },
   footerContainer: { backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
 
   header: { color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
@@ -261,4 +418,218 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: 8, right: -17, flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingLeft: 10, paddingRight: 24, borderTopLeftRadius: 12, borderBottomLeftRadius: 12, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderWidth: 2, borderColor: 'rgba(0,0,0,0.4)', overflow: 'hidden' },
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '700', marginLeft: 4, textShadowColor: 'rgba(255,255,255,0.35)', textShadowRadius: 3 },
   title: { color: 'white', fontSize: 15, fontWeight: '600', textAlign: 'center', marginTop: 8 },
+
+  // === News Section ===
+  newsList: { marginTop: 30, marginBottom: 20 },
+  newsListContent: { paddingLeft: 20, paddingRight: 10 },
+  newsCard: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 12,
+    width: 280,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  newsHeader: {
+    marginBottom: 12,
+  },
+  newsTagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  newsTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  newsTagText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  newsDate: {
+    color: '#888',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  newsTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  newsImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#222',
+  },
+  newsLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  newsLoadingText: {
+    color: '#888',
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  noNews: {
+    color: '#888',
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
+  },
+
+  // === Modal Styles ===
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalNewsContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  modalTagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  modalTagText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  modalDate: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 30,
+    marginBottom: 20,
+  },
+  modalMainImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  markdownContainer: {
+    marginTop: 10,
+  },
 });
+
+// Styles pour le markdown
+const markdownStyles = {
+  body: {
+    color: '#ccc',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  heading1: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '700',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  heading2: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  heading3: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  strong: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  em: {
+    color: '#ddd',
+    fontStyle: 'italic',
+  },
+  link: {
+    color: '#1f4cff',
+    textDecorationLine: 'underline',
+  },
+  blockquote: {
+    backgroundColor: 'rgba(31, 76, 255, 0.1)',
+    borderLeftWidth: 4,
+    borderLeftColor: '#1f4cff',
+    paddingLeft: 16,
+    paddingVertical: 8,
+    marginVertical: 12,
+  },
+  list_item: {
+    color: '#ccc',
+    marginVertical: 2,
+  },
+  bullet_list: {
+    marginVertical: 8,
+  },
+  ordered_list: {
+    marginVertical: 8,
+  },
+  paragraph: {
+    marginVertical: 6,
+  },
+  code_inline: {
+    backgroundColor: '#333',
+    color: '#1f4cff',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontFamily: 'monospace',
+  },
+  fence: {
+    backgroundColor: '#1a1a1a',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+};
