@@ -224,6 +224,22 @@ Thank you for your patience and continued support while Hedgehop grows and impro
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
+      {/* News Section */}
+      {!newsLoading && news.length > 0 && (
+        <View style={{ marginHorizontal: -30, marginBottom: 20 }}>
+          <FlatList
+            horizontal
+            data={news}
+            keyExtractor={(item, i) => i.toString()}
+            showsHorizontalScrollIndicator={false}
+            style={styles.newsList}
+            contentContainerStyle={styles.newsListContent}
+            renderItem={renderNewsItem}
+            scrollEnabled={true}
+          />
+        </View>
+      )}
+
       {/* Reload button - Top Left */}
       <TouchableOpacity 
         style={[styles.reloadButtonSmall, isTablet && styles.reloadButtonSmallTablet]}
@@ -234,26 +250,6 @@ Thank you for your patience and continued support while Hedgehop grows and impro
       >
         <Ionicons name="refresh" size={isTablet ? 18 : 16} color="#1f4cff" />
       </TouchableOpacity>
-
-      {/* News Section - Moved to top */}
-      {newsLoading ? (
-        <View style={styles.newsLoading}>
-          <ActivityIndicator color="#1f4cff" size="small" />
-          <Text style={styles.newsLoadingText}>Loading news...</Text>
-        </View>
-      ) : news.length > 0 ? (
-        <FlatList
-          horizontal
-          data={news}
-          keyExtractor={(item, i) => i.toString()}
-          showsHorizontalScrollIndicator={false}
-          style={styles.newsList}
-          contentContainerStyle={styles.newsListContent}
-          renderItem={renderNewsItem}
-        />
-      ) : (
-        <Text style={styles.noNews}>No news available at the moment.</Text>
-      )}
 
       <Text style={styles.header}>📰 News</Text>
       <Text style={styles.description}>{visibleText}</Text>
@@ -416,18 +412,18 @@ Thank you for your patience and continued support while Hedgehop grows and impro
       data={workingAlbums}
       keyExtractor={(_, i) => i.toString()}
       numColumns={numColumns}
-      key={numColumns} // Force re-render when columns change
+      key={numColumns}
       ListHeaderComponent={renderHeader}
       ListFooterComponent={renderFooter}
       contentContainerStyle={{ 
         paddingBottom: 120,
-        paddingHorizontal: isTablet ? 16 : 8
+        paddingHorizontal: isTablet ? 16 : 8,
       }}
       columnWrapperStyle={numColumns > 1 ? styles.row : null}
       renderItem={({ item }) => {
         const progress = getAlbumProgress(item);
         const cardWidth = getCardWidth();
-        const cardHeight = cardWidth + 80; // Maintenir le ratio
+        const cardHeight = cardWidth + 60; // Réduire la hauteur
         
         return (
           <TouchableOpacity
@@ -514,6 +510,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(31, 76, 255, 0.3)',
     marginTop: 15,
+    marginLeft: 20,
   },
   reloadButtonSmallTablet: {
     width: 44,
@@ -558,8 +555,8 @@ const styles = StyleSheet.create({
   title: { color: 'white', fontSize: 15, fontWeight: '600', textAlign: 'center', marginTop: 8 },
 
   // === News Section ===
-  newsList: { marginTop: 30, marginBottom: 20 },
-  newsListContent: { paddingLeft: 20, paddingRight: 10 },
+  newsList: { marginTop: 30, marginBottom: 20, width: '100%' },
+  newsListContent: { paddingLeft: 20, paddingRight: 20 },
   newsCard: {
     backgroundColor: '#111',
     borderRadius: 12,
