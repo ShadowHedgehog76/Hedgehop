@@ -157,10 +157,16 @@ Thank you for your patience and continued support while Hedgehop grows and impro
 
   const getTagStyle = (tag) => {
     switch (tag?.toLowerCase()) {
+      // announcement, update, feature, bugfix, update, important, what's next, launch, album news, news
       case 'announcement': return { backgroundColor: '#f97316' };
       case 'update': return { backgroundColor: '#3b82f6' };
       case 'feature': return { backgroundColor: '#22c55e' };
       case 'bugfix': return { backgroundColor: '#ef4444' };
+      case 'important': return { backgroundColor: '#eab308' };
+      case "what's next": return { backgroundColor: '#fbbf24' };
+      case 'launch': return { backgroundColor: '#34d399' };
+      case 'album news': return { backgroundColor: '#60a5fa' };
+      case 'news': return { backgroundColor: '#818cf8' };
       default: return { backgroundColor: '#6b7280' };
     }
   };
