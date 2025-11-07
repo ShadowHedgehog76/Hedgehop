@@ -11,7 +11,6 @@ import {
   FlatList,
   Modal,
   ScrollView,
-  RefreshControl,
   Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -28,7 +27,6 @@ export default function NewsScreen({ navigation }) {
   const [newsLoading, setNewsLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState(null);
   const [newsModalVisible, setNewsModalVisible] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   
   const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
 
@@ -82,12 +80,6 @@ export default function NewsScreen({ navigation }) {
       loadData();
     }, [loadData])
   );
-
-  // Fonction pull-to-refresh
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadData();
-  }, [loadData]);
 
   const getAlbumStatus = (album) => {
     const tracks = album.tracks || [];
@@ -232,6 +224,17 @@ Thank you for your patience and continued support while Hedgehop grows and impro
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
+      {/* Reload button - Top Left */}
+      <TouchableOpacity 
+        style={[styles.reloadButtonSmall, isTablet && styles.reloadButtonSmallTablet]}
+        onPress={() => {
+          setNewsLoading(true);
+          loadData();
+        }}
+      >
+        <Ionicons name="refresh" size={isTablet ? 18 : 16} color="#1f4cff" />
+      </TouchableOpacity>
+
       {/* News Section - Moved to top */}
       {newsLoading ? (
         <View style={styles.newsLoading}>
@@ -421,14 +424,6 @@ Thank you for your patience and continued support while Hedgehop grows and impro
         paddingHorizontal: isTablet ? 16 : 8
       }}
       columnWrapperStyle={numColumns > 1 ? styles.row : null}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor="#1f4cff"
-          colors={['#1f4cff']}
-        />
-      }
       renderItem={({ item }) => {
         const progress = getAlbumProgress(item);
         const cardWidth = getCardWidth();
@@ -506,8 +501,25 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
 
-  headerContainer: { backgroundColor: '#000', paddingBottom: 30, paddingTop: 20 },
+  headerContainer: { backgroundColor: '#000', paddingBottom: 30, paddingTop: 20, paddingHorizontal: 20, position: 'relative' },
   footerContainer: { backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
+
+  reloadButtonSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(31, 76, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(31, 76, 255, 0.3)',
+    marginTop: 15,
+  },
+  reloadButtonSmallTablet: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
 
   header: { color: 'white', fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
   description: { color: '#ccc', fontSize: 15, lineHeight: 22, marginHorizontal: 20, textAlign: 'justify' },
