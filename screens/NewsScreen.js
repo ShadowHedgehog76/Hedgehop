@@ -1,5 +1,5 @@
 // NewsScreen.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,10 @@ import {
   FlatList,
   Modal,
   ScrollView,
+  RefreshControl,
+  Linking,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
@@ -25,35 +28,66 @@ export default function NewsScreen({ navigation }) {
   const [newsLoading, setNewsLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState(null);
   const [newsModalVisible, setNewsModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
 
-  useEffect(() => {
+  // Fonction pour charger les données
+  const loadData = useCallback(async () => {
     const timestamp = new Date().getTime();
     
-    // Load albums data
-    fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json?t=${timestamp}`)
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => console.error('❌ Error loading JSON:', err))
-      .finally(() => setLoading(false));
+    try {
+      // Load albums data
+      const albumsResponse = await fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/sonic_data.json?t=${timestamp}`);
+      const albumsData = await albumsResponse.json();
+      setCategories(albumsData);
+    } catch (err) {
+      console.error('❌ Error loading albums JSON:', err);
+    } finally {
+      setLoading(false);
+    }
 
-    // Load news data
-    fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/coming_news.json?t=${timestamp}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const newsData = data.upcomingNews || [];
-        // Trier par date (plus récent = plus à gauche)
-        const sortedNews = newsData.sort((a, b) => {
-          const dateA = parseDate(a.date);
-          const dateB = parseDate(b.date);
-          return dateB - dateA; // Ordre décroissant (plus récent en premier)
-        });
-        setNews(sortedNews);
-      })
-      .catch((err) => console.error('❌ Error loading news:', err))
-      .finally(() => setNewsLoading(false));
+    try {
+      // Load news data
+      const newsResponse = await fetch(`https://raw.githubusercontent.com/ShadowHedgehog76/Hedgehop/master/assets/coming_news.json?t=${timestamp}`);
+      const newsData = await newsResponse.json();
+      const upcomingNews = newsData.upcomingNews || [];
+      
+      // Trier par date (plus récent = plus à gauche)
+      const sortedNews = upcomingNews.sort((a, b) => {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        return dateB - dateA; // Ordre décroissant (plus récent en premier)
+      });
+      setNews(sortedNews);
+    } catch (err) {
+      console.error('❌ Error loading news:', err);
+    } finally {
+      setNewsLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  // Charger les données au premier montage
+  useEffect(() => {
+    setLoading(true);
+    setNewsLoading(true);
+    loadData();
+  }, [loadData]);
+
+  // Recharger les données à chaque fois que l'écran est en focus
+  useFocusEffect(
+    useCallback(() => {
+      setNewsLoading(true);
+      loadData();
+    }, [loadData])
+  );
+
+  // Fonction pull-to-refresh
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
 
   const getAlbumStatus = (album) => {
     const tracks = album.tracks || [];
@@ -101,6 +135,31 @@ export default function NewsScreen({ navigation }) {
   const closeNewsModal = () => {
     setNewsModalVisible(false);
     setSelectedNews(null);
+  };
+
+  // Fonction pour gérer les actions des boutons
+  const handleButtonPress = async (button) => {
+    if (!button) return;
+
+    try {
+      switch (button.action) {
+        case 'download':
+        case 'link':
+          if (button.url) {
+            await Linking.openURL(button.url);
+          }
+          break;
+        case 'navigation':
+          if (button.screen && navigation) {
+            navigation.navigate(button.screen, button.params || {});
+          }
+          break;
+        default:
+          console.warn('Unknown button action:', button.action);
+      }
+    } catch (error) {
+      console.error('Error handling button press:', error);
+    }
   };
 
   if (loading) {
@@ -303,6 +362,45 @@ Thank you for your patience and continued support while Hedgehop grows and impro
                       {selectedNews.message}
                     </Markdown>
                   </View>
+
+                  {/* Buttons Section */}
+                  {selectedNews.buttons && selectedNews.buttons.length > 0 && (
+                    <View style={styles.buttonsContainer}>
+                      {selectedNews.buttons.map((button, index) => {
+                        // Règle: le bouton 1 ne peut jamais être désactivé
+                        // Si button.label est 'none', on le saute
+                        if (button.label === 'none' && index > 0) {
+                          return null;
+                        }
+                        if (button.label === 'none' && index === 0) {
+                          return null; // Impossible selon la règle, mais on le gère quand même
+                        }
+
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            style={[
+                              styles.newsButton,
+                              index === 1 && styles.newsButtonSecondary
+                            ]}
+                            activeOpacity={0.8}
+                            onPress={() => handleButtonPress(button)}
+                          >
+                            <LinearGradient
+                              colors={index === 0 ? ['#1f4cff', '#1a3aa3'] : ['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={styles.buttonGradient}
+                            >
+                              <Text style={[styles.newsButtonText, index === 1 && styles.newsButtonTextSecondary]}>
+                                {button.label}
+                              </Text>
+                            </LinearGradient>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
               </>
             )}
@@ -323,6 +421,14 @@ Thank you for your patience and continued support while Hedgehop grows and impro
         paddingHorizontal: isTablet ? 16 : 8
       }}
       columnWrapperStyle={numColumns > 1 ? styles.row : null}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#1f4cff"
+          colors={['#1f4cff']}
+        />
+      }
       renderItem={({ item }) => {
         const progress = getAlbumProgress(item);
         const cardWidth = getCardWidth();
@@ -574,6 +680,42 @@ const styles = StyleSheet.create({
   },
   markdownContainer: {
     marginTop: 10,
+  },
+  // === Buttons Styles ===
+  buttonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  newsButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  newsButtonSecondary: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  buttonGradient: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  newsButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  newsButtonTextSecondary: {
+    color: 'rgba(255,255,255,0.9)',
   },
 });
 
