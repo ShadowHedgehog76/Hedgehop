@@ -17,6 +17,7 @@ import { syncFavoritesToCloud, syncFavoritesToLocal } from '../src/api/favorites
 import statsService from '../src/services/StatsService';
 import { useAlert } from '../src/components/CustomAlert';
 import crossPartyService from '../src/services/crossPartyService';
+import { APP_VERSION } from '../src/config/version';
 
 // Composants extraits pour éviter les re-rendus
 const SettingsSection = ({ title, children }) => (
@@ -397,7 +398,7 @@ export default function YouScreen({ navigation }) {
             <SettingItem
               icon="information-circle"
               title="About Hedgehop"
-              onPress={() => showAlert({ title: 'Hedgehop', message: 'Version 1.0.0\nMusic Player App', type: 'info' })}
+              onPress={() => showAlert({ title: 'Hedgehop', message: `Version ${APP_VERSION}\nMusic Player App`, type: 'info' })}
               rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
             />
           </SettingsSection>
@@ -593,7 +594,7 @@ export default function YouScreen({ navigation }) {
           <SettingItem
             icon="information-circle"
             title="About"
-            onPress={() => showAlert({ title: 'Hedgehop', message: 'Version 1.0.0\nMusic Player App', type: 'info' })}
+            onPress={() => showAlert({ title: 'Hedgehop', message: `Version ${APP_VERSION}\nMusic Player App`, type: 'info' })}
             rightComponent={<Ionicons name="chevron-forward" size={20} color="#666" />}
           />
         </SettingsSection>

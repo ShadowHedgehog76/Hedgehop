@@ -11,13 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAlert } from '../src/components/CustomAlert';
+import { APP_VERSION } from '../src/config/version';
 
 export default function DevScreen({ navigation, onDisableDevMode }) {
   const [activeTab, setActiveTab] = useState('info');
   const { showAlert } = useAlert();
 
   const devInfo = {
-    appVersion: '1.0.0',
+    appVersion: APP_VERSION,
     buildDate: new Date().toLocaleDateString(),
     environment: 'Development',
     reactNativeVersion: '0.81.4',

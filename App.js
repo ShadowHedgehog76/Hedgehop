@@ -17,6 +17,7 @@ import PlayerBar from './src/components/PlayerBar';
 import DevBanner from './src/components/DevBanner'; // ✅ banderole dev
 import AlbumScreenDisabled from './screens/AlbumScreenDisabled'; // ✅ ajouté ici
 import DevScreen from './screens/DevScreen'; // ✅ page dev secrète
+import { UpdateNotification } from './src/components/UpdateNotification';
 
 // (CrossParty supprimé)
 
@@ -30,6 +31,7 @@ import authService from './src/services/auth';
 import { loadFavorites } from './src/api/favorites';
 import { AlertProvider } from './src/components/CustomAlert';
 import { useCrossPartySyncHost, useCrossPartySyncClient } from './src/hooks/useCrossPartySync';
+import { useUpdateChecker } from './src/hooks/useUpdateChecker';
 import crossPartyService from './src/services/crossPartyService';
 
 const Stack = createStackNavigator();
@@ -257,9 +259,16 @@ function MainLayout({ navigation }) {
   const [homeClickCount, setHomeClickCount] = useState(0);
   const [devModeEnabled, setDevModeEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState('Home');
+  const [updateInfo, setUpdateInfo] = useState(null);
   const clickTimeoutRef = useRef(null);
   
   const { isTablet, isLandscape } = useDeviceType();
+
+  // Vérifier les mises à jour au démarrage
+  useUpdateChecker((info) => {
+    console.log('📦 Update available:', info);
+    setUpdateInfo(info);
+  });
 
 
 
@@ -442,6 +451,12 @@ function MainLayout({ navigation }) {
       
       {/* ✅ Banderole de développement - positionnée en overlay */}
       {devModeEnabled && <DevBanner />}
+
+      {/* ✅ Notification de mise à jour */}
+      <UpdateNotification 
+        updateInfo={updateInfo} 
+        onDismiss={() => setUpdateInfo(null)} 
+      />
     </View>
   );
 }

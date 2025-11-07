@@ -88,6 +88,7 @@ function AlertModal({ alert, onDismiss }) {
             {alert.buttons.map((button, index) => {
               const isCancelStyle = button.style === 'cancel';
               const isDestructive = button.style === 'destructive';
+              const isDisabled = button.style === 'disabled';
               return (
                 <TouchableOpacity
                   key={index}
@@ -95,6 +96,7 @@ function AlertModal({ alert, onDismiss }) {
                     styles.button,
                     isCancelStyle && styles.cancelButton,
                     isDestructive && styles.destructiveButton,
+                    isDisabled && styles.disabledButton,
                     alert.buttons.length === 1 && styles.singleButton,
                   ]}
                   onPress={() => handleButtonPress(button)}
@@ -104,6 +106,7 @@ function AlertModal({ alert, onDismiss }) {
                       styles.buttonText,
                       isCancelStyle && styles.cancelButtonText,
                       isDestructive && styles.destructiveButtonText,
+                      isDisabled && styles.disabledButtonText,
                     ]}
                   >
                     {button.text}
@@ -189,6 +192,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 59, 48, 0.4)',
   },
+  disabledButton: {
+    backgroundColor: 'rgba(128, 128, 128, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(128, 128, 128, 0.3)',
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
@@ -199,5 +207,8 @@ const styles = StyleSheet.create({
   },
   destructiveButtonText: {
     color: '#ff3b30',
+  },
+  disabledButtonText: {
+    color: '#888',
   },
 });
