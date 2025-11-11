@@ -16,6 +16,8 @@ import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import { useAlert } from '../src/components/CustomAlert';
+import { useAnalyticsTracking } from '../src/hooks/useAnalyticsTracking';
+import { trackSongPlay, trackUserEngagement } from '../src/services/analytics';
 import {
   playerEmitter,
   getCurrentTrack,
@@ -56,6 +58,20 @@ export default function PlayerScreen({ navigation }) {
   const [plistModal, setPlistModal] = useState(false);
   const [playlists, setPlaylists] = useState([]);
   const [newPlName, setNewPlName] = useState('');
+
+  // Tracker l'écran
+  useAnalyticsTracking('PlayerScreen');
+
+  // Tracker quand une chanson est jouée
+  useEffect(() => {
+    if (track && isPlaying) {
+      trackSongPlay(
+        track.title || 'Unknown',
+        track.album || 'Unknown',
+        track.duration || 0
+      );
+    }
+  }, [track?.id, isPlaying]);
 
   // Vérifier et mettre à jour le statut de room
   useEffect(() => {

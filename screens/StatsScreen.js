@@ -11,6 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useStats } from '../src/hooks/useStats';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import { useAlert } from '../src/components/CustomAlert';
+import { useAnalyticsTracking } from '../src/hooks/useAnalyticsTracking';
+import { trackUserEngagement } from '../src/services/analytics';
 import authService from '../src/services/auth';
 import { useState, useEffect } from 'react';
 
@@ -19,6 +21,9 @@ export default function StatsScreen({ navigation }) {
   const { formattedStats, loading, recordPlay, loadStats, resetStats, exportStats } = useStats();
   const { isTablet, getGridColumns, isLandscape } = useDeviceType();
   const { showAlert } = useAlert();
+
+  // Tracker l'écran
+  useAnalyticsTracking('StatsScreen');
 
   // Écouter les changements d'authentification en temps réel
   useEffect(() => {

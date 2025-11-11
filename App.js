@@ -33,6 +33,7 @@ import { AlertProvider } from './src/components/CustomAlert';
 import { useCrossPartySyncHost, useCrossPartySyncClient } from './src/hooks/useCrossPartySync';
 import { useUpdateChecker } from './src/hooks/useUpdateChecker';
 import crossPartyService from './src/services/crossPartyService';
+import { initializeAnalytics, trackScreenView, setUserProperty, trackUserDemographics } from './src/services/analytics';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -464,12 +465,32 @@ function MainLayout({ navigation }) {
 function AppContent() {
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialiser la persistance au démarrage
+  // Initialiser la persistance et Analytics au démarrage
   useEffect(() => {
-    authService.initializePersistence().then(() => {
-      console.log('🔐 Persistance initialisée');
-      setIsInitialized(true);
-    });
+    const initialize = async () => {
+      try {
+        // Initialiser la persistance Firebase
+        await authService.initializePersistence();
+        console.log('🔐 Persistance initialisée');
+
+        // Initialiser Analytics
+        await initializeAnalytics();
+        
+        // Tracker les propriétés utilisateur
+        const user = authService.getCurrentUser();
+        if (user) {
+          await setUserProperty('user_id', user.uid);
+          await trackScreenView('AppStarted');
+        }
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation:', error);
+        setIsInitialized(true);
+      }
+    };
+
+    initialize();
   }, []);
 
   // Écouter les changements d'état d'authentification

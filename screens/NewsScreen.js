@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import { useAnalyticsTracking } from '../src/hooks/useAnalyticsTracking';
 import Markdown from 'react-native-markdown-display';
 
 export default function NewsScreen({ navigation }) {
@@ -29,6 +30,9 @@ export default function NewsScreen({ navigation }) {
   const [newsModalVisible, setNewsModalVisible] = useState(false);
   
   const { isTablet, getCardWidth, getGridColumns } = useDeviceType();
+
+  // Tracker l'écran
+  useAnalyticsTracking('NewsScreen');
 
   // Fonction pour charger les données
   const loadData = useCallback(async () => {

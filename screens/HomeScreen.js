@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useDeviceType } from '../src/hooks/useDeviceType';
 import { getPlaylists, playlistEmitter } from '../src/api/playlists';
 import authService from '../src/services/auth';
+import { trackScreenView } from '../src/services/analytics';
 
 export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
@@ -63,6 +64,9 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     const isAuth = authService.isAuthenticated();
     setIsAuthenticated(isAuth);
+    
+    // Tracker la vue de l'écran
+    trackScreenView('HomeScreen');
   }, []);
 
   useEffect(() => {

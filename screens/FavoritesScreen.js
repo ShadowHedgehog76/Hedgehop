@@ -22,6 +22,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { playTrack, setGlobalTracks } from '../src/api/player';
 import { getFavorites, toggleFavorite, favEmitter } from '../src/api/favorites';
 import { useDeviceType } from '../src/hooks/useDeviceType';
+import { useAnalyticsTracking } from '../src/hooks/useAnalyticsTracking';
+import { trackFavoriteAdded, trackUserEngagement } from '../src/services/analytics';
 import authService from '../src/services/auth';
 import { getPlaylists, createPlaylist, addTrack } from '../src/api/playlists';
 import crossPartyService from '../src/services/crossPartyService';
@@ -54,6 +56,9 @@ export default function FavoritesScreen() {
   const { isTablet } = useDeviceType();
   const { showAlert } = useAlert();
   console.log('🚀 Mode tablette:', isTablet);
+
+  // Tracker l'écran
+  useAnalyticsTracking('FavoritesScreen');
 
   const imageScale = useRef(new Animated.Value(0.8)).current;
   const listOpacity = useRef(new Animated.Value(0)).current;
@@ -203,6 +208,9 @@ export default function FavoritesScreen() {
       return;
     }
     await toggleFavorite(track);
+    
+    // Tracker l'ajout aux favoris
+    trackFavoriteAdded(track.title || 'Unknown');
   };
 
   // --- Ajouter à une playlist ---
