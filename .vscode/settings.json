@@ -1,4 +1,7 @@
 {
     "java.compile.nullAnalysis.mode": "disabled",
-    "java.configuration.updateBuildConfiguration": "disabled"
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "marquee.widgets.npm-stats.packageNames": [
+        "hedgehop"
+    ]
 }
