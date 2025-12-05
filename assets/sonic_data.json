@@ -109,44 +109,52 @@
         "year": 1993,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934375/sonic-cd_ns38.600_jngvzg.webp",
         "tracks": [
-          { "title": "Sonic – You Can Do Anything", "url": "", "shufle": "false" },
-          { "title": "Title", "url": "", "shufle": "false" },
-          { "title": "Little Planet", "url": "", "shufle": "false" },
-          { "title": "Palmtree Panic", "url": "", "shufle": "true" },
-          { "title": "Palmtree Panic 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Palmtree Panic 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Palmtree Panic 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Collision Chaos", "url": "", "shufle": "true" },
-          { "title": "Collision Chaos 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Collision Chaos 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Collision Chaos 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Tidal Tempest", "url": "", "shufle": "true" },
-          { "title": "Tidal Tempest 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Tidal Tempest 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Tidal Tempest 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Quartz Quadrant", "url": "", "shufle": "true" },
-          { "title": "Quartz Quadrant 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Quartz Quadrant 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Quartz Quadrant 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Wacky Workbench", "url": "", "shufle": "true" },
-          { "title": "Wacky Workbench 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Wacky Workbench 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Wacky Workbench 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Stardust Speedway", "url": "", "shufle": "true" },
-          { "title": "Stardust Speedway 'G' mix", "url": "", "shufle": "true" },
-          { "title": "Stardust Speedway 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Stardust Speedway 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Metallic Madness", "url": "", "shufle": "true" },
-          { "title": "Metallic Madness 'P' mix", "url": "", "shufle": "true" },
-          { "title": "Metallic Madness 'B' mix", "url": "", "shufle": "true" },
-          { "title": "Boss!!", "url": "", "shufle": "false" },
-          { "title": "Final Fever", "url": "", "shufle": "false" },
-          { "title": "Zone Clear", "url": "", "shufle": "false" },
-          { "title": "Speed Up!!", "url": "", "shufle": "false" },
-          { "title": "Invincible!!", "url": "", "shufle": "false" },
-          { "title": "Game Over", "url": "", "shufle": "false" },
-          { "title": "Special Stage", "url": "", "shufle": "true" },
-          { "title": "Cosmic Eternity – Believe in Yourself", "url": "", "shufle": "false" }
+          { "title": "Sonic – You Can Do Anything", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938559/Sonic_You_Can_Do_Anything_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_bw4zn5.mp4", "shufle": "false" },
+          { "title": "Title", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938556/Title_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_hef0di.mp4", "shufle": "false" },
+          { "title": "Little Planet", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938643/Little_Planet_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_xt39uh.mp4", "shufle": "false" },
+          { "title": "Palmtree Panic", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938606/Palmtree_Panic_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_lrsmyf.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938614/Palmtree_Panic_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_jkkqsd.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938602/Palmtree_Panic_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_jppnbx.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938600/Palmtree_Panic_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_g1uw2x.mp4" }
+          ] },
+          { "title": "Collision Chaos", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938637/Collision_Chaos_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_huzni7.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938626/Collision_Chaos_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_uku3oe.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938624/Collision_Chaos_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_vhzyxj.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938637/Collision_Chaos_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_diewdu.mp4" }
+          ] },
+          { "title": "Tidal Tempest", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938572/Tidal_Tempest_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_ecqvun.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938571/Tidal_Tempest_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_ucoe8h.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938573/Tidal_Tempest_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_hrsitg.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938632/Tidal_Tempest_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_jadoki.mp4" }
+          ] },
+          { "title": "Quartz Quadrant", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938600/Quartz_Quadrant_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_j95x4i.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938595/Quartz_Quadrant_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_uvzlpe.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938591/Quartz_Quadrant_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_cm1dzw.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938636/Quartz_Quadrant_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_rb98la.mp4" }
+          ] },
+          { "title": "Wacky Workbench", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938639/Wacky_Workbench_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_xaqhpq.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938578/Wacky_Workbench_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_phljfu.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938572/Wacky_Workbench_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_shnyqj.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938567/Wacky_Workbench_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_cctuzm.mp4" }
+          ] },
+          { "title": "Stardust Speedway", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938588/Stardust_Speedway_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_tcq5wo.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938585/Stardust_Speedway_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_kmbgg0.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938580/Stardust_Speedway_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_jq2z7w.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938586/Stardust_Speedway_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_yiunab.mp4" }
+          ] },
+          { "title": "Metallic Madness", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938616/Metallic_Madness_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_otmctj.mp4", "shufle": "true", "crossmusic": [
+            { "title": "B remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938614/Metallic_Madness_B_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_v6kpj7.mp4" },
+            { "title": "P remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938610/Metallic_Madness_P_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_mptp93.mp4" },
+            { "title": "G remix", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938612/Metallic_Madness_G_mix_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_kbo9fw.mp4" }
+          ] },
+          { "title": "Boss!!", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938635/Boss_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_esc3bw.mp4", "shufle": "false" },
+          { "title": "Final Fever", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938618/Final_Fever_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_nzdf5k.mp4", "shufle": "false" },
+          { "title": "Zone Clear", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938556/Zone_Clear_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_tyhwuy.mp4", "shufle": "false" },
+          { "title": "Speed Up!!", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938557/Speed_Up_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_uldouu.mp4", "shufle": "false" },
+          { "title": "Invincible!!", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938557/Invincible_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_irdhxw.mp4", "shufle": "false" },
+          { "title": "Game Over", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938558/Game_Over_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_lfrh8x.mp4", "shufle": "false" },
+          { "title": "Special Stage", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938595/Special_Stage_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_iqt0eq.mp4", "shufle": "true" },
+          { "title": "Cosmic Eternity – Believe in Yourself", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1764938624/Cosmic_Eternity_Believe_in_Yourself_-_Sonic_the_Hedgehog_CD_OST_128kbit_AAC_jwx8pd.mp4", "shufle": "false" }
         ]
       },
       {
