@@ -6,10 +6,6 @@
         "title": "Sonic the Hedgehog",
         "year": 1991,
         "image": "https://res.cloudinary.com/dea75cb3v/image/upload/v1760934356/SI_3DSDS_3DSonicTheHedgehog_image1600w_xd172a.jpg",
-        "progressIcons": {
-          "play": "assets/icons/test-play.png",
-          "pause": "assets/icons/test-pause.png"
-        },
         "tracks": [
           { "title": "Title Screen", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761141467/Title_Screen_-_Sonic_the_Hedgehog_OST_128kbit_AAC_zorbvr.mp4", "shufle": "false" },
           { "title": "Green Hill Zone", "url": "https://res.cloudinary.com/dea75cb3v/video/upload/v1761141468/Green_Hill_Zone_-_Sonic_the_Hedgehog_OST_128kbit_AAC_atimym.mp4", "shufle": "true" },
